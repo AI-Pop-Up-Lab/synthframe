@@ -1,185 +1,90 @@
-# voteframe
+# VoteFrame
 
-`voteframe` now contains two R modules plus thin CLI and Python wrappers.
+VoteFrame aims to extend a population stratification frame with a categorical
+variable observed in survey data. The planned workflow fits a multilevel model
+using shared covariates and area-level predictors, then uses posterior draws
+to estimate the population count in each cell for each outcome category.
 
-## Modules
+## Country input layout
 
-### 1. Initial Extension
+Each country and election cycle has its own folder under [data/input/](data/input/).
+The folder contains three modeling inputs and two subfolders.
 
-This module takes three inputs:
+| Entry | Contents |
+| --- | --- |
+| `election_results.csv` | Area-level results from the last general election before the study election |
+| `frame.csv` | Deepest available population stratification frame before extension |
+| `auxiliary_survey.csv` | Processed national election study |
+| `raw/` | Downloaded source extracts and metadata |
+| `processing/` | Recoding code, intermediate files, and candidate rebuilds |
 
-- a skeleton frame
-- an auxiliary survey
-- municipality vote totals
+## Denmark 2026
 
-Preferred columns:
+The [Denmark 2026 inputs](data/input/denmark%202026/) were prepared for studies
+before the 2026 election. Past vote refers to the 1 November 2022 election.
 
-- Skeleton frame: `municipality`, `gender`, `age_group`, `education_level`, `N`
-- Auxiliary survey: `municipality`, `gender`, `age_group`, `education_level`, `past_vote`
-- Municipality vote totals: `party`, `municipality`, `vote_share`
+| Input snapshot | Rows |
+| --- | ---: |
+| [`election_results.csv`](data/input/denmark%202026/election_results.csv) | 988 |
+| [`frame.csv`](data/input/denmark%202026/frame.csv) | 28,984 |
+| [`auxiliary_survey.csv`](data/input/denmark%202026/auxiliary_survey.csv) | 2,823 |
 
-Accepted aliases:
+### Rebuild from public sources
 
-- frame `education` -> `education_level`
-- survey `education` -> `education_level`
-- vote totals `vote_pct` or `pop_pct` -> `vote_share`
-- survey `vote_in_2022` or `party` -> `past_vote`
+Run from the repository root with Python 3.10 or later.
 
-Main entrypoints:
-
-- `run_initial_extension(skeleton_frame, auxiliary_survey, vote_totals, config = list())`
-- `write_initial_extension_outputs(result, output_dir)`
-
-Files:
-
-- [R/initial_extension_module.R](/Users/danjonaitis/Documents/GitHub/voteframe/R/initial_extension_module.R)
-- [scripts/run_initial_extension_cli.R](/Users/danjonaitis/Documents/GitHub/voteframe/scripts/run_initial_extension_cli.R)
-
-What it does:
-
-- estimates `past_vote` probabilities for each frame cell using the auxiliary survey
-- smooths sparse cells with demographic, municipality, and overall priors
-- calibrates those probabilities within each municipality to match the municipality vote totals
-- returns and writes an extended frame with one row per cell-by-party
-
-Written outputs:
-
-- `initial_extended_frame.csv`
-- `initial_municipality_targets.csv`
-- `initial_municipality_achieved.csv`
-- `initial_calibration_diagnostics.csv`
-- `initial_cell_summary.csv`
-
-### 2. Secondary Extension / Post-stratification
-
-This module takes two inputs:
-
-- a survey with `past_vote` and `predicted_vote`
-- a post-stratification frame with `expected_N_raked`
-
-Preferred columns:
-
-- Survey: `age_group`, `gender`, `municipality`, `education_level`, `past_vote`, `predicted_vote`
-- Frame: `age_group`, `gender`, `municipality`, `education_level`, `past_vote`, `expected_N_raked`
-
-Accepted aliases:
-
-- `vote_in_2022` -> `past_vote`
-- `party` -> `past_vote`
-- `vote_2026` -> `predicted_vote`
-- frame `education` is not used here; use `education_level`
-
-Main entrypoints:
-
-- `run_post_stratification(survey, frame, config = list())`
-- `write_post_strat_outputs(result, output_dir)`
-
-Files:
-
-- [R/post_strat_module.R](/Users/danjonaitis/Documents/GitHub/voteframe/R/post_strat_module.R)
-- [post_strat.r](/Users/danjonaitis/Documents/GitHub/voteframe/post_strat.r)
-- [scripts/run_post_strat_cli.R](/Users/danjonaitis/Documents/GitHub/voteframe/scripts/run_post_strat_cli.R)
-
-Outcome ordering:
-
-- if `"Did not vote"` exists in `predicted_vote`, it is always first in the stick-breaking order
-- all remaining outcomes are ordered from highest observed survey share to lowest
-
-Written outputs:
-
-- `mrp_point_estimates.csv`
-- `mrp_quartile_table.csv`
-- `mrp_share_draws_quartiles.csv`
-- `mrp_extended_frame_predictions.csv`
-- `mrp_stage_diagnostics.csv`
-- `mrp_aggregate_counts.csv`
-- `mrp_share_draws.csv`
-- `mrp_share_draws_long.csv`
-- `mrp_cell_party_probabilities.csv`
-- `mrp_stickbreaking_conditional_probs.csv`
-- `mrp_municipality_party_point_estimates.csv`
-- `mrp_municipality_party_draws_long.csv`
-- `mrp_municipality_party_quartiles.csv`
-
-## Running From R
-
-### Initial Extension
-
-```r
-source("R/initial_extension_module.R")
-
-result <- run_initial_extension(
-  skeleton_frame = frame_df,
-  auxiliary_survey = survey_df,
-  vote_totals = totals_df
-)
-
-write_initial_extension_outputs(result, "path/to/output_dir")
+```sh
+python3 data/input/build_denmark_2026.py
 ```
 
-CLI:
+The [build script](data/input/build_denmark_2026.py) downloads into
+`raw/` and runs the [recodes](data/input/denmark%202026/processing/recodes.py).
+It writes the three candidate CSVs to `processing/rebuilt/` for comparison.
+Use `--refresh` to fetch fresh extracts. The archive and generated files are
+ignored by Git.
+
+- **Frame.** FOLK1D supplies 2026 Q1 Danish-citizen counts by municipality, sex
+  and age. HFUDD11 supplies 2025 educational attainment counts across all
+  ancestries. The rebuild allocates the FOLK1D counts using the HFUDD11
+  education proportions within each municipality, sex, and five-year age
+  band. For ages 70–94 it uses the local 65–69 distribution. Christiansø is
+  outside the frame, matching the snapshot. All 2,940
+  municipality-by-sex-by-age population totals match the snapshot, including
+  the total of 4,163,940. The education allocation differs and produces
+  31,208 rows. The original education extract and older-age allocation
+  rules have yet to be recovered.
+  [FOLK1D](https://www.statbank.dk/FOLK1D) ·
+  [HFUDD11](https://www.statbank.dk/HFUDD11)
+- **Election results.** FVKOM supplies 2022 municipality-level votes and
+  electorate counts. The rebuild computes nonvoting as electorate minus
+  ballots cast, groups minor parties and invalid ballots, and divides
+  by the electorate. It produces 990 rows across 99 areas, including
+  Christiansø. The snapshot uses a different share calculation.
+  [FVKOM](https://www.statbank.dk/FVKOM) ·
+  [Official 2022 results](https://www.dst.dk/valg/Valg1968094/valgopg/valgopg.htm)
+- **Auxiliary survey.** The rebuild reads the archived DNES 2022 release,
+  table `FV22_MAIN_8feb2024`. It exports the five modeling columns and
+  reproduces gender, age group, education level, and past vote for all
+  2,823 respondents. Municipality labels match for 2,791 respondents.
+  [Rigsarkivet, DNES 2022](https://doi.org/10.5279/dk-ra-51035)
+
+### Verify the exact snapshots
+
+The country folder contains the archived inputs. Verify their bytes against
+the original commit with these commands.
 
 ```bash
-Rscript scripts/run_initial_extension_cli.R /path/to/survey.csv /path/to/frame.csv /path/to/vote_totals.csv /path/to/output_dir
+archive=315b2c165d08cf9178aec7b0073002335f504866:python_test/data/denmark
+country='data/input/denmark 2026'
+git show "$archive/frame.csv" | cmp - "$country/frame.csv"
+git show "$archive/election_results.csv" | cmp - "$country/election_results.csv"
+git show "$archive/survey_DNES.csv" | cmp - "$country/auxiliary_survey.csv"
 ```
 
-Optional year filter:
+[data/output/](data/output/) is the destination for generated modeling files.
 
-```bash
-Rscript scripts/run_initial_extension_cli.R /path/to/survey.csv /path/to/frame.csv /path/to/vote_totals.csv /path/to/output_dir 2022
-```
+## Legacy workflow
 
-### Secondary Extension
-
-```r
-source("R/post_strat_module.R")
-
-result <- run_post_stratification(
-  survey = survey_df,
-  frame = frame_df,
-  config = list(
-    verbose = TRUE,
-    n_sims = 250
-  )
-)
-
-write_post_strat_outputs(result, "path/to/output_dir")
-```
-
-CLI:
-
-```bash
-Rscript scripts/run_post_strat_cli.R /path/to/survey.csv /path/to/frame.csv /path/to/output_dir 250
-```
-
-Repo runner:
-
-```bash
-Rscript post_strat.r
-```
-
-## Running From Python
-
-Python helpers live in [python_test](/Users/danjonaitis/Documents/GitHub/voteframe/python_test).
-
-Script:
-
-```bash
-python3 python_test/run_post_strat_via_python.py
-```
-
-The script auto-detects whether your files match the initial or secondary schema
-and then runs the corresponding R CLI.
-
-Notebook:
-
-- [python_test/run_post_strat_via_python.ipynb](/Users/danjonaitis/Documents/GitHub/voteframe/python_test/run_post_strat_via_python.ipynb)
-
-The notebook reads the CSV names from `python_test/data`, previews them, detects
-the workflow, and runs the matching R CLI wrapper.
-
-## Notes
-
-- The core R modules operate on in-memory data frames and only write files when asked.
-- The Python helpers are wrappers around the R CLI scripts, not part of the core modeling code.
-- The local R environment may still show `vglmer` / `Matrix` ABI warnings for the secondary module; if that happens, reinstall those R packages before production runs.
+[legacy/](legacy/) contains the previous R modules, scripts, Python harness,
+and documentation. The [previously extended Denmark frame](legacy/python_test/data/denmark/denmark_strat_frame_extended.csv)
+is available there as a reference.
