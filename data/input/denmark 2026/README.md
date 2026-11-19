@@ -9,7 +9,7 @@ survey responses both refer to the preceding parliamentary election on
 | File | What each row describes | Modeling columns |
 | --- | --- | --- |
 | `frame.csv` | A population cell | `municipality`, `gender`, `age_group`, `education`, `N` |
-| `election_results.csv` | An election outcome in an area | `party`, `municipality`, `year`, `pop_pct` |
+| `election_results.csv` | A 2022 election outcome in an area | `vote_choice_2022`, `municipality`, `pop_pct` |
 | `auxiliary_survey.csv` | One survey respondent | `municipality`, `gender`, `age_group`, `education`, `vote_choice_2022` |
 
 ## Rebuild the inputs
@@ -130,7 +130,7 @@ past vote for estimating their relationship with the shared covariates.
 
 The survey uses the frame's names and labels for `municipality`, `gender`,
 `age_group`, and `education`. The survey exports those four covariates and
-`vote_choice_2022`, whose labels match the election results' `party` column.
+`vote_choice_2022`, which uses the same labels in the survey and election results.
 The frame's `N` is an aggregate population count. Empty survey cells mark
 missing or unmapped responses, including gender responses outside the frame's
 two categories and education responses

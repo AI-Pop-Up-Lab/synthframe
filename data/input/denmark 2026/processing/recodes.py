@@ -149,11 +149,10 @@ def build_election(election, frame, labels):
         outcome_counts = valid_votes_by_party.copy()
         outcome_counts["Blank vote"] = blank_ballots
         outcome_counts["Did not vote"] = frame_population - modeled_vote_total
-        for party, count in sorted(outcome_counts.items()):
+        for outcome, count in sorted(outcome_counts.items()):
             rows.append({
-                "party": party,
+                "vote_choice_2022": outcome,
                 "municipality": municipality,
-                "year": 2022,
                 "pop_pct": count / frame_population,
             })
     return rows
@@ -217,7 +216,7 @@ def validate_input_labels(frame, election_results, survey):
         column: {row[column] for row in frame}
         for column in ("municipality", "gender", "age_group", "education")
     }
-    allowed_labels["vote_choice_2022"] = {row["party"] for row in election_results}
+    allowed_labels["vote_choice_2022"] = {row["vote_choice_2022"] for row in election_results}
     for column, labels in allowed_labels.items():
         survey_labels = {row[column] for row in survey if row[column]}
         unexpected_labels = survey_labels - labels
