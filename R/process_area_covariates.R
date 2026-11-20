@@ -4,7 +4,7 @@ process_area_covariates <- function(area_data, area_variable,
                                     outcome_order = NULL) {
   # A data frame is one dataset. A named list supplies several predictors.
   multiple <- is.list(area_data) && !is.data.frame(area_data)
-  datasets <- if (multiple) area_data else list(past_share = area_data)
+  datasets <- if (multiple) area_data else list(area_covariate = area_data)
   # Each dataset name becomes a predictor column.
   predictor_names <- names(datasets)
   if (!length(datasets) || is.null(predictor_names) || anyNA(predictor_names) ||
@@ -77,7 +77,7 @@ conditional_area_shares <- function(totals, outcome_order) {
   datasets <- if (inherits(totals, "voteframe_area_covariate_list")) {
     totals
   } else {
-    list(past_share = totals)
+    list(area_covariate = totals)
   }
   outcome_order <- as.character(outcome_order)
   if (length(outcome_order) < 2L || anyNA(outcome_order) || anyDuplicated(outcome_order)) {

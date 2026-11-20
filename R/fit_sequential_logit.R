@@ -60,6 +60,8 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
   fit_log <- data.frame()
   for (i in seq_along(stages)) {
     outcome <- stages[i]
+    stage_label <- paste0("Stage ", i, "/", length(stages), " ", sQuote(outcome))
+    message(stage_label, " — preparing data and selecting depth.")
     # The current outcome is a success. Every later outcome is a failure.
     successes <- as.numeric(survey$counts[, i])
     failures <- rowSums(survey$counts[, seq.int(i + 1L, length(outcomes)), drop = FALSE])
@@ -73,22 +75,11 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     area_predictors <- setdiff(names(stage), predictors)
     # Count respondents, including those who share a cell.
     observations <- sum(successes + failures)
-    # Start from the requested depth at every stage.
-    # Interaction orders beyond the number of predictors give the same formula.
-    # Include the requested depth once, then try smaller depth values.
-    next_integer <- min(depth - 1, ncol(stage) - 1)
-    lower_integers <- if (next_integer >= 1) seq.int(next_integer, 1)
-    candidate_depths <- unique(c(depth, lower_integers, 0.75, 0.5, 0))
-    candidate_depths <- candidate_depths[candidate_depths <= depth]
-    attempted <- character()
-    for (candidate in candidate_depths) {
-      design <- sequential_stage_design(stage, area_variable, candidate, splines,
-                                        area_predictors)
-      attempted <- c(attempted, paste0(candidate, "=", design$parameter_count))
-      # Accept equality. One respondent per estimated coefficient is enough.
-      if (observations >= design$parameter_count) break
-    }
-    design$depth <- candidate
+    selection <- select_sequential_stage_design(
+      stage, area_variable, depth, splines, area_predictors, observations
+    )
+    design <- selection$design
+    candidate <- design$depth
     fit_log <- rbind(fit_log, data.frame(
       stage = i, outcome = outcome, observations = observations,
       cells = sum(at_risk), omitted_survey_rows = survey$omitted, requested_depth = depth,
@@ -98,7 +89,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
       random_coefficients = design$random_coefficients,
       spline_coefficients = design$spline_coefficients,
       observations_per_parameter = observations / design$parameter_count,
-      candidate_depths_and_counts = paste(attempted, collapse = "; "),
+      candidate_depths_and_counts = paste(selection$attempted, collapse = "; "),
       frame_only_random_coefficients = NA_integer_,
       frame_only_fixed_coefficients = NA_integer_,
       engine = "vglmer", status = "started", error = ""
@@ -112,8 +103,10 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     design <- tryCatch(
       {
         if (observations < design$parameter_count) {
-          stop("Even depth 0 needs ", design$parameter_count, " estimated coefficients for ",
-               observations, " eligible respondents.")
+          warning("Outcome ", sQuote(outcome), " exceeds the coefficient limit at depth 0 (",
+                  design$parameter_count, " estimated coefficients for ", observations,
+                  " eligible respondents). Attempting the depth 0 fit.",
+                  call. = FALSE, immediate. = TRUE)
         }
         if (!design$hierarchical) {
           stop("The selected depth has no random effect or spline. An area random ",
@@ -128,16 +121,20 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
           frame_stage <- prepare_prediction_stage(prediction_inputs, design, outcome,
                                                   frame_predictors)
         }
-        warning("Outcome ", sQuote(outcome), " is being fitted at depth ", candidate,
+        message(stage_label, " — fitting at depth ", candidate,
                 if (candidate < depth) paste0(" (requested ", depth, ")"),
-                " with ", observations, " observations and ", design$parameter_count,
-                " estimated parameters.", call. = FALSE, immediate. = TRUE)
+                " with ", observations, " eligible respondents and ", design$parameter_count,
+                " estimated coefficients.")
         # Resolve v_s() inside vglmer's namespace without attaching the package.
         environment(design$formula) <- asNamespace("vglmer")
         if (is.null(control)) control <- vglmer::vglmer_control()
-        design$fit <- vglmer::vglmer(design$formula, data = design$data, family = "binomial",
-                                    control = control)
+        design$fit <- withCallingHandlers(
+          vglmer::vglmer(design$formula, data = design$data, family = "binomial",
+                         control = control),
+          warning = function(w) message(stage_label, " — warning from vglmer.")
+        )
         if (!is.null(frame_predictors)) {
+          message(stage_label, " — registering frame levels.")
           # With zero survey trials, frame-only effects have no likelihood contribution.
           # Integrate them out during fitting and draw them from their term at prediction.
           design$frame_levels <- register_frame_levels(design$fit, frame_stage)
@@ -163,6 +160,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     fit_log$status[i] <- "returned"
     utils::write.csv(fit_log, log_file, row.names = FALSE)
     fits[[outcome]] <- design
+    message(stage_label, " — model returned (", i, " of ", length(stages), " completed).")
   }
 
   # Save the stage designs and area covariates needed to rebuild prediction data.
@@ -172,4 +170,26 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                  extension_variable = extension_variable, area_covariates = area_covariates,
                  frame = frame, fit_log = fit_log, log_file = normalizePath(log_file)),
             class = "voteframe_sequential_logit")
+}
+
+# Select the deepest candidate supported by the stage's eligible respondents.
+select_sequential_stage_design <- function(stage, area_variable, depth, splines,
+                                           area_predictors, observations) {
+  # Start from the requested depth at every stage.
+  # Interaction orders beyond the number of predictors give the same formula.
+  # Include the requested depth once, then try smaller depth values.
+  next_integer <- min(depth - 1, ncol(stage) - 1)
+  lower_integers <- if (next_integer >= 1) seq.int(next_integer, 1)
+  candidate_depths <- unique(c(depth, lower_integers, 0.75, 0.5, 0))
+  candidate_depths <- candidate_depths[candidate_depths <= depth]
+  attempted <- character()
+  for (candidate in candidate_depths) {
+    design <- sequential_stage_design(stage, area_variable, candidate, splines,
+                                      area_predictors)
+    attempted <- c(attempted, paste0(candidate, "=", design$parameter_count))
+    # Accept equality. One respondent per estimated coefficient is enough.
+    if (observations >= design$parameter_count) break
+  }
+  design$depth <- candidate
+  list(design = design, attempted = attempted)
 }

@@ -5,6 +5,8 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   if (!inherits(fit, "voteframe_sequential_logit")) stop("Supply a sequential logit fit.")
   # Use the fit's population frame unless the caller supplies a different one.
   if (is.null(frame)) stop("Supply a prediction frame or pass frame when fitting the model.")
+  count_draws <- prediction_count_draws(frame, count_variable)
+  if (missing(n_draws) && length(count_draws)) n_draws <- length(count_draws)
   if (!is.numeric(n_draws) || length(n_draws) != 1L || !is.finite(n_draws) ||
       n_draws < 1 || n_draws != floor(n_draws) || n_draws > .Machine$integer.max) {
     stop("n_draws must be a positive integer.")
@@ -14,15 +16,20 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   if (!is.character(output_dir) || length(output_dir) != 1L || is.na(output_dir) ||
       !nzchar(output_dir)) stop("Supply an output directory.")
 
-  # All frame columns except the population count identify a cell.
-  cell_columns <- setdiff(names(frame), count_variable)
+  # Counts and count draws are payload, so only other columns identify a cell.
+  cell_columns <- setdiff(names(frame), c(count_variable, count_draws))
   validate_prediction_frame(frame, cell_columns, count_variable)
   frame <- as.data.frame(frame)
   if (!all(fit$predictors %in% cell_columns)) stop("The frame is missing survey predictors.")
   outcomes <- fit$outcome_order
-  draw_names <- paste0("draw_", seq_len(n_draws))
-  if (any(c(fit$extension_variable, draw_names) %in% names(frame)) ||
-      fit$extension_variable %in% draw_names) stop("Frame and output column names must be distinct.")
+  draw_names <- paste0(count_variable, "_draw_", seq_len(n_draws))
+  if (length(count_draws) && length(count_draws) != n_draws) {
+    stop("n_draws must match the number of incoming population draws (",
+         length(count_draws), ").")
+  }
+  if (fit$extension_variable %in% c(names(frame), draw_names)) {
+    stop("The new extension column must have a distinct name.")
+  }
 
   # The axes are frame cell, outcome, and posterior draw.
   draws <- array(0, dim = c(nrow(frame), length(outcomes), n_draws),
@@ -60,6 +67,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   posterior <- structure(list(cells = frame[, cell_columns, drop = FALSE],
                               draws = draws, extension_variable = fit$extension_variable,
                               count_variable = count_variable,
+                              paired_population_draws = length(count_draws) > 0L,
                               allow_missing_levels = allow_missing_levels,
                               new_fixed_sd = new_fixed_sd, posterior_file = paths[1L],
                               extended_frame_file = paths[2L]),
@@ -74,7 +82,10 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
     rows <- seq.int(start, min(start + 999L, nrow(frame)))
     block <- expand_expected_counts(frame[rows, cell_columns, drop = FALSE],
                                     draws[rows, , , drop = FALSE],
-                                    frame[[count_variable]][rows], posterior)
+                                    frame[[count_variable]][rows], posterior,
+                                    population_draws = if (length(count_draws)) {
+                                      as.matrix(frame[rows, count_draws, drop = FALSE])
+                                    })
     utils::write.table(block, temporary[2L], sep = ",", row.names = FALSE,
                        col.names = start == 1L, append = start != 1L)
   }

@@ -82,8 +82,8 @@ A data frame with area IDs as row names also supports categorical area
 predictors. The area covariate helper accepts a CSV path, a data frame, or a named
 list of either. Each dataset uses the same area, outcome, and value column
 names, contains one row per area and outcome, and covers the same set of
-areas. The list names become predictor column names. Areas are matched by
-ID, so rows can be in any order.
+areas. The list names become predictor column names. A single unnamed input
+uses `area_covariate`. Areas are matched by ID, so rows can be in any order.
 
 For each dataset, the helper divides the stage outcome's
 value by the sum over the remaining outcomes. An absent area/outcome pair is
@@ -110,14 +110,25 @@ effect, and constant predictors are omitted. Set `splines = FALSE` for linear
 effects and their interactions.
 All stages use `vglmer`. It requires a random effect or spline, and an area
 random intercept requires at least two observed areas. A stage that cannot
-meet those requirements or the coefficient limit at an allowed depth stops
-the fit and records the reason in the log.
+meet those engine requirements stops the fit and records the reason in the log.
 The fitted object retains each stage's formula, data, and model fit for
 inspection. [Supplementary material](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS0003055423000035/resource/name/S0003055423000035sup001.pdf)
 
+An area-level predictor has one value per area within a stage. The formula
+builder excludes terms that combine an area-level predictor with a grouping
+that contains the area itself. Within such a group, the predictor is constant,
+so its varying slope or smooth is confounded with the group intercept. This
+rule applies before counting coefficients. The area random intercept and its
+interactions with demographic factors are eligible, as are each area
+predictor's overall effect and its varying slopes and smooths by demographic
+groups, subject to depth and spline settings. See [Goplerud, supplement
+§A.4](https://mgoplerud.com/papers/Goplerud_MMM_Full.pdf#page=19) for the
+factor-by-curve specification.
+
 Each stage starts from the requested depth and selects the highest allowed
-depth at which the number of respondents still at risk is at least the
-estimated number of parameters. Each respondent contributes one trial,
+depth at which the number of eligible respondents is at least the
+estimated number of parameters. If every candidate exceeds that limit,
+the fitter warns and attempts depth 0 anyway. Each respondent contributes one trial,
 including respondents who share an aggregated cell. A later stage may
 select a higher depth than an earlier stage if its design has shrunk enough.
 The requested depth is the ceiling for every stage. The estimate counts
@@ -185,8 +196,9 @@ and zero for new coefficients.
 `extended_frame.csv` to `data/output/` by default. Set `output_dir` to choose
 another directory. A rerun replaces those files. The saved R object holds a
 cell-by-outcome-by-draw probability array and the frame keys. The CSV has one
-row per frame cell and extension category. Its `draw_1`, `draw_2`, and subsequent
+row per frame cell and extension category. Its `N_draw_1`, `N_draw_2`, and subsequent
 columns are draw-specific expected counts. `N` is their posterior mean.
+The draw names use the supplied count column name as a prefix.
 
 Aggregation multiplies the probabilities by the frame's population counts
 and sums the result within each draw. Supply any combination of frame columns
@@ -194,3 +206,79 @@ in `by`, or use `by = character()` for totals by outcome. The original frame
 can be reordered or subsetted because cell keys match it to the saved draws.
 The collapsed frame keeps just the posterior mean expected count for each
 cell and category. Those means add back to each original cell population.
+
+Use `check_extended_frame(extended_frame, targets, by, extension_variable)`
+to compare expected counts aggregated as shares against target shares on
+the 0–1 scale. Target rows are keyed by the grouping columns in `by`
+and the extension category. Set `target_variable` to the target share
+column and `plot_file` to save the identity-line panels as a PNG.
+Pass `outcome_order = fit$outcome_order` to use the fitted sequence.
+The function returns the matched estimates and pooled and outcome-level
+bias, RMSE, Spearman correlation, and 90% interval coverage. A mean-only extended
+frame can be checked with a warning that intervals and coverage are unavailable.
+
+Use `rake_extended_frame(extended_frame, frame, targets, by, extension_variable)`
+to balance each expected count column to the original joint frame and the
+outcome targets within each group defined by `by`. The solver uses
+`SQUAREM::squarem()` to accelerate the outcome-scaling update, with the
+original cell totals enforced algebraically. On the full Denmark rake,
+the benchmark took 13.4 seconds versus 25.1 seconds for the original
+loop, excluding file I/O. Install `SQUAREM` to run the rake. The
+[mathematical note](raking_method.Rmd) derives the update. Supply target shares
+or use `target_scale = "count"` for count targets. Supply at least one
+outcome target per group. Untargeted outcomes share the remaining
+population in their group. The function preserves each original cell
+population and matches group and outcome keys by value. Missing
+cell–outcome combinations and zero counts remain zero. If those zeros
+make a margin unreachable, the error names the group and count column.
+When draws are present, each draw and the mean-count column are raked
+independently.
+
+Use `check_post_rake()` to compare the raked outcome shares with their
+targets and the raked counts with the original joint cell populations.
+It returns both comparisons and can save a separate identity-line plot
+for each.
+
+Use `plot_raking_changes()` with the aligned extended and raked frames
+to generate one diagnostic figure for the outcome margins left
+unconstrained by a municipality rake. The
+[Denmark vignette](vignette_denmark_2026.Rmd#step-10-visualize-changes-on-margins-left-unconstrained)
+defines total variation and explains how to read the figure.
+
+Use `rake_with_diagnostics()` to run the same rake and generate the
+target, original-joint, and unconstrained-margin plots automatically.
+It returns the raked frame and the diagnostics. The Denmark vignette
+uses this entry point.
+
+### Extending a frame twice
+
+Use the first extended frame as the prediction frame for the second fit.
+When it contains `N_draw_1`, `N_draw_2`, and so on,
+`predict_sequential_logit()` defaults to that number of draws. An explicit
+`n_draws` must match. It multiplies the second extension's probability for
+each outcome in draw `i` by the incoming `N_draw_i`. The new `N` is the
+mean of those products. With only an incoming `N`, the second extension
+uses it as the population in every draw. Save each prediction in its own
+output directory.
+
+After the second extension, rake to both outcome margins in one call with
+the **original** stratification frame. Supply target tables named for the
+extension variables. Use a shared `by` vector or name a grouping vector for
+each target table.
+
+```r
+second <- predict_sequential_logit(
+  second_fit, frame = first_extended, output_dir = "data/output/second-extension"
+)
+twice_extended <- read.csv(second$extended_frame_file)
+final <- rake_joint_extended_frame(
+  twice_extended, original_frame,
+  targets = list(first_outcome = first_targets, second_outcome = second_targets),
+  by = list(first_outcome = "municipality", second_outcome = "education")
+)
+```
+
+The joint rake enforces the original cell populations and both sets of
+outcome targets on `N` and on every draw. Its solver verifies all margins
+together before returning. As in the single-extension rake, the mean-count
+column is raked independently of the draws.

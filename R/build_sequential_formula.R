@@ -40,10 +40,10 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
   predictors <- c(factors, continuous)
   # Below depth one, only depth 0.75 adds area covariates, as fixed effects.
   area_group <- unname(predictor_names[area_variable])
+  area_columns <- unname(predictor_names[area_predictors])
   # Depth zero keeps the global intercept and an area random intercept.
   if (depth == 0 && area_group %in% factors) group_slopes[[area_group]] <- "1"
   if (depth %in% c(0.5, 0.75)) {
-    area_columns <- unname(predictor_names[area_predictors])
     # At depth 0.5, categorical survey predictors get random intercepts.
     for (group in setdiff(factors, area_columns)) group_slopes[[group]] <- "1"
     if (depth == 0.75) fixed <- intersect(area_columns, predictors)
@@ -51,6 +51,8 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
   # A term uses one unit of depth for each predictor it contains.
   for (size in seq_len(min(depth, length(predictors)))) {
     for (terms in utils::combn(predictors, size, simplify = FALSE)) {
+      # Area covariates are constant within the area at a given stage.
+      if (area_group %in% terms && any(terms %in% area_columns)) next
       # Factors determine the grouping. Numeric predictors determine the slopes.
       groups <- intersect(terms, factors)
       numeric <- intersect(terms, continuous)

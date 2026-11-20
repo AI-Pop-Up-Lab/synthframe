@@ -6,7 +6,8 @@ aggregate_extended_frame <- function(frame, posterior, by = character()) {
   if (!is.character(by) || anyNA(by) || anyDuplicated(by) ||
       !all(by %in% names(frame)) ||
       any(by %in% c(posterior$count_variable, posterior$extension_variable,
-                    dimnames(posterior$draws)[[3L]]))) {
+                    dimnames(posterior$draws)[[3L]],
+                    extended_frame_draw_columns(frame, posterior$count_variable)))) {
     stop("Supply distinct grouping columns from the frame.")
   }
 
@@ -22,6 +23,7 @@ aggregate_extended_frame <- function(frame, posterior, by = character()) {
 
   draws <- posterior$draws
   population <- frame[[posterior$count_variable]]
+  population_draws <- paired_frame_counts(frame, posterior)
   first <- !duplicated(group_ids)
   # Keep outcomes and draws separate while replacing cells with groups.
   totals <- array(0, dim = c(sum(first), dim(draws)[2:3]),
@@ -31,7 +33,8 @@ aggregate_extended_frame <- function(frame, posterior, by = character()) {
     probabilities <- matrix(draws[rows, category, , drop = FALSE],
                             nrow(frame), dim(draws)[3L])
     # Summing draw by draw preserves the variation in each group's totals.
-    totals[, category, ] <- rowsum(probabilities * population, group_ids, reorder = FALSE)
+    counts <- probabilities * if (is.null(population_draws)) population else population_draws
+    totals[, category, ] <- rowsum(counts, group_ids, reorder = FALSE)
   }
   # Totals are already on the count scale.
   expand_expected_counts(groups[first, , drop = FALSE], totals, 1, posterior)
@@ -77,7 +80,8 @@ frame_cell_keys <- function(cells, reference) {
 }
 
 # Put each cell and outcome on its own row. Each draw column is an expected count.
-expand_expected_counts <- function(cells, draws, population, posterior, include_draws = TRUE) {
+expand_expected_counts <- function(cells, draws, population, posterior, include_draws = TRUE,
+                                   population_draws = NULL) {
   outcomes <- dimnames(draws)[[2L]]
   # Repeat each cell once per outcome, with outcomes varying fastest.
   cell_rows <- rep(seq_len(nrow(cells)), each = length(outcomes))
@@ -88,15 +92,65 @@ expand_expected_counts <- function(cells, draws, population, posterior, include_
   population <- rep_len(population, nrow(cells))[cell_rows]
 
   # Transpose the cell-by-outcome mean to match the expanded row order.
-  means <- rowMeans(matrix(draws, nrow(cells) * length(outcomes)))
-  expanded[[posterior$count_variable]] <-
-    as.vector(t(matrix(means, nrow(cells), length(outcomes)))) * population
+  if (is.null(population_draws)) {
+    means <- rowMeans(matrix(draws, nrow(cells) * length(outcomes)))
+    expanded[[posterior$count_variable]] <-
+      as.vector(t(matrix(means, nrow(cells), length(outcomes)))) * population
+  } else {
+    expanded[[posterior$count_variable]] <- numeric(nrow(expanded))
+  }
   # Apply the same row order and population weights to every draw.
-  if (include_draws) {
+  if (include_draws || !is.null(population_draws)) {
     for (i in seq_len(dim(draws)[3L])) {
       draw <- matrix(draws[, , i], nrow(cells), length(outcomes))
-      expanded[[dimnames(draws)[[3L]][i]]] <- as.vector(t(draw)) * population
+      weight <- if (is.null(population_draws)) population else population_draws[cell_rows, i]
+      counts <- as.vector(t(draw)) * weight
+      if (!is.null(population_draws)) {
+        expanded[[posterior$count_variable]] <-
+          expanded[[posterior$count_variable]] + counts / dim(draws)[3L]
+      }
+      if (include_draws) expanded[[dimnames(draws)[[3L]][i]]] <- counts
     }
   }
   expanded
+}
+
+# Draw labels carry their simulation number, regardless of CSV column order.
+prediction_count_draws <- function(frame, count_variable) {
+  if (!is.data.frame(frame) || !is.character(count_variable) ||
+      length(count_variable) != 1L || is.na(count_variable) || !nzchar(count_variable)) {
+    stop("Supply a prediction frame and a valid population count column name.")
+  }
+  columns <- extended_frame_draw_columns(frame, count_variable)
+  index <- suppressWarnings(as.integer(sub("^.*draw_", "", columns)))
+  if (!identical(sort(index, na.last = TRUE), seq_along(columns))) {
+    stop("Population draws must be numbered consecutively from 1.")
+  }
+  columns <- columns[order(index)]
+  if (!all(vapply(frame[columns], function(x) {
+    is.numeric(x) && all(is.finite(x) & x >= 0)
+  }, logical(1)))) stop("Population draws must be finite and nonnegative.")
+  columns
+}
+
+paired_frame_counts <- function(frame, posterior) {
+  if (!isTRUE(posterior$paired_population_draws)) return(NULL)
+  columns <- prediction_count_draws(frame, posterior$count_variable)
+  if (length(columns) != dim(posterior$draws)[3L]) {
+    stop("Supply the original population draw columns to summarize this extension.")
+  }
+  as.matrix(frame[columns])
+}
+
+# Discover the count draws in current and earlier extended-frame exports.
+extended_frame_draw_columns <- function(extended_frame, count_variable) {
+  prefix <- paste0(count_variable, "_draw_")
+  draw_columns <- names(extended_frame)[startsWith(names(extended_frame), prefix)]
+  draw_columns <- draw_columns[grepl("^[1-9][0-9]*$",
+                                     substring(draw_columns, nchar(prefix) + 1L))]
+  # Earlier extended-frame exports used draw_1, draw_2, and so on.
+  if (!length(draw_columns)) {
+    draw_columns <- grep("^draw_[1-9][0-9]*$", names(extended_frame), value = TRUE)
+  }
+  draw_columns
 }
