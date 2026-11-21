@@ -3,11 +3,11 @@ check_post_rake <- function(raked_frame, frame, targets, by, extension_variable,
                             target_variable = "target", count_variable = "N",
                             outcome_order = NULL, outcome_plot_file = NULL,
                             joint_plot_file = NULL, share_tolerance = 0.000000000002,
-                            count_tolerance = 0.00000001) {
+                            count_tolerance = 0.00000001, no_vote = NULL) {
   margins <- check_extended_frame(
     raked_frame, targets, by, extension_variable, target_variable, count_variable,
     plot_file = outcome_plot_file, outcome_order = outcome_order,
-    coverage_tolerance = share_tolerance
+    coverage_tolerance = share_tolerance, no_vote = no_vote
   )
 
   cell_columns <- setdiff(names(frame), count_variable)

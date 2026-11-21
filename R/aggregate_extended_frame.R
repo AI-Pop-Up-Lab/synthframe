@@ -47,8 +47,8 @@ validate_prediction_frame <- function(frame, cell_columns, count_variable) {
       !all(c(cell_columns, count_variable) %in% names(frame))) {
     stop("Supply a nonempty frame with unique column names, cell keys, and a count column.")
   }
-  if (anyNA(frame[, cell_columns, drop = FALSE]) ||
-      anyDuplicated(frame[, cell_columns, drop = FALSE])) {
+  cells <- frame[, cell_columns, drop = FALSE]
+  if (anyNA(cells) || anyDuplicated(frame_cell_keys(cells, cells))) {
     stop("Frame cells must have complete, unique keys.")
   }
   population <- frame[[count_variable]]

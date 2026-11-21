@@ -29,7 +29,11 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
   if (!is.data.frame(extended_frame) || !nrow(extended_frame) ||
       anyDuplicated(names(extended_frame)) || any(extension_variables %in% names(frame)) ||
       !all(c(row_keys, count_variable) %in% names(extended_frame)) ||
-      anyNA(extended_frame[row_keys]) || anyDuplicated(extended_frame[row_keys])) {
+      anyNA(extended_frame[row_keys])) {
+    stop("Supply unique complete rows keyed by the original frame and all extension variables.")
+  }
+  row_ids <- extended_frame[row_keys]
+  if (anyDuplicated(frame_cell_keys(row_ids, row_ids))) {
     stop("Supply unique complete rows keyed by the original frame and all extension variables.")
   }
   if (!requireNamespace("SQUAREM", quietly = TRUE)) {

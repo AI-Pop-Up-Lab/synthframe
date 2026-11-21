@@ -34,15 +34,34 @@ includes the source selections, recoding rules, and rebuild instructions.
 
 [data/output/](data/output/) is the destination for generated modeling files.
 
-The [Denmark 2026 vignette](vignette_denmark_2026.md) shows the R code,
+The [Denmark 2026 vignette](vignettes/vignette_denmark_2026.md) shows the R code,
 captured results, diagnostic plots, and a preview of the final raked frame.
-Edit the [R Markdown source](vignette_denmark_2026.Rmd) and regenerate the
+Edit the [R Markdown source](vignettes/vignette_denmark_2026.Rmd) and regenerate the
 GitHub view from the repository root with `knitr`. This uses the captured
 results and existing figures.
 
 ```r
+knitr::opts_knit$set(root.dir = getwd())
 knitr::opts_chunk$set(eval = FALSE)
-knitr::knit("vignette_denmark_2026.Rmd", output = "vignette_denmark_2026.md")
+knitr::knit("vignettes/vignette_denmark_2026.Rmd", output = "vignettes/vignette_denmark_2026.md")
+```
+
+## US 2026
+
+The [US 2026 inputs](data/input/us%202026/README.md) cover 2024 House and
+presidential vote on the 2026 congressional district map.
+The [US 2026 vignette](vignettes/vignette_us_2026.md) extends the frame first
+with presidential vote and then with House vote conditional on it, and
+calibrates both margins jointly. Its [R Markdown source](vignettes/vignette_us_2026.Rmd)
+contains the input preparation and model code.
+
+Regenerate the US walkthrough, including its results and figures, from the
+repository root with `knitr`, `vglmer`, and `SQUAREM` installed.
+
+```r
+knitr::opts_knit$set(root.dir = getwd())
+knitr::opts_chunk$set(error = FALSE)
+knitr::knit("vignettes/vignette_us_2026.Rmd", output = "vignettes/vignette_us_2026.md")
 ```
 
 ## Fitting the extension variable
@@ -79,18 +98,25 @@ fit$stages[["Did not vote"]]$formula
 By default the fitter uses every survey column except the outcome. Supply
 `predictors` to select columns. The area is always a categorical predictor.
 Use factors for other categorical predictors stored as numbers. Frequency
-uses all recorded outcomes, with ties broken by label. The fit uses complete
-survey rows. Missing outcomes or selected predictors, including empty strings,
+uses all recorded outcomes, with ties broken by label. Supply
+`outcome_order` to set the sequence explicitly, including the final
+category that receives the remaining probability. The fit records
+`no_vote` as the nonvoter label. Without an explicit order, that label
+moves to the first stage.
+The fit uses complete survey rows. Missing outcomes or selected predictors, including empty strings,
 trigger a warning with the number of rows removed before aggregation. Each
 stage's failures are the counts for later outcomes in the same cell. To recover a category probability,
 multiply its conditional probability by the probability of passing every
 earlier stage. The final category receives the remaining probability, so there
 is one fewer fit than outcome categories.
 
-Use a named list of matrices for custom area covariates. Name each matrix after
-its stage outcome, each row after its area, and each column after its predictor.
-A data frame with area IDs as row names also supports categorical area
-predictors. The area covariate helper accepts a CSV path, a data frame, or a named
+Use a named list of matrices or data frames for custom area covariates.
+Name each entry after its stage outcome, each row after its area, and each
+column after its predictor. Each stage can have its own predictor columns
+and values. For shared predictors, reuse the same table with
+`setNames(rep(list(area_predictors), length(stages)), stages)`, where
+`stages` contains the fitted outcomes. A data frame supports categorical
+area predictors. The area covariate helper accepts a CSV path, a data frame, or a named
 list of either. Each dataset uses the same area, outcome, and value column
 names, contains one row per area and outcome, and covers the same set of
 areas. The list names become predictor column names. A single unnamed input
@@ -206,7 +232,10 @@ and zero for new coefficients.
 `predict_sequential_logit()` writes `posterior_probabilities.rds` and
 `extended_frame.csv` to `data/output/` by default. Set `output_dir` to choose
 another directory. A rerun replaces those files. The saved R object holds a
-cell-by-outcome-by-draw probability array and the frame keys. The CSV has one
+cell-by-outcome-by-draw probability array and the frame keys.
+Use `write_files = FALSE` to return the same posterior in memory without
+writing the files.
+The CSV has one
 row per frame cell and extension category. Its `N_draw_1`, `N_draw_2`, and subsequent
 columns are draw-specific expected counts. `N` is their posterior mean.
 The draw names use the supplied count column name as a prefix.
@@ -224,6 +253,10 @@ the 0–1 scale. Target rows are keyed by the grouping columns in `by`
 and the extension category. Set `target_variable` to the target share
 column and `plot_file` to save the identity-line panels as a PNG.
 Pass `outcome_order = fit$outcome_order` to use the fitted sequence.
+Pass `no_vote = fit$no_vote` for vote diagnostics. With this option, each
+group's targets must include its population share for No Vote. The party
+panels and Overall compare shares among voters, and the No Vote panel
+uses shares of the population. Draw intervals use turnout in the same draw.
 The function returns the matched estimates and pooled and outcome-level
 bias, RMSE, Spearman correlation, and 90% interval coverage. A mean-only extended
 frame can be checked with a warning that intervals and coverage are unavailable.
@@ -253,7 +286,7 @@ for each.
 Use `plot_raking_changes()` with the aligned extended and raked frames
 to generate one diagnostic figure for the outcome margins left
 unconstrained by a municipality rake. The
-[Denmark vignette](vignette_denmark_2026.md#step-10-visualize-changes-on-margins-left-unconstrained)
+[Denmark vignette](vignettes/vignette_denmark_2026.md#step-10-visualize-changes-on-margins-left-unconstrained)
 defines total variation and explains how to read the figure.
 
 Use `rake_with_diagnostics()` to run the same rake and generate the

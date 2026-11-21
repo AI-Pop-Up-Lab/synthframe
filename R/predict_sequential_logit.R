@@ -1,7 +1,7 @@
 # Draw outcome probabilities for each cell and save the draws and extended frame.
 predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, count_variable = "N",
                                      output_dir = "data/output", allow_missing_levels = TRUE,
-                                     new_fixed_sd = NULL) {
+                                     new_fixed_sd = NULL, write_files = TRUE) {
   if (!inherits(fit, "voteframe_sequential_logit")) stop("Supply a sequential logit fit.")
   # Use the fit's population frame unless the caller supplies a different one.
   if (is.null(frame)) stop("Supply a prediction frame or pass frame when fitting the model.")
@@ -13,6 +13,9 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   }
   if (!is.logical(allow_missing_levels) || length(allow_missing_levels) != 1L ||
       is.na(allow_missing_levels)) stop("allow_missing_levels must be TRUE or FALSE.")
+  if (!is.logical(write_files) || length(write_files) != 1L || is.na(write_files)) {
+    stop("write_files must be TRUE or FALSE.")
+  }
   if (!is.character(output_dir) || length(output_dir) != 1L || is.na(output_dir) ||
       !nzchar(output_dir)) stop("Supply an output directory.")
 
@@ -60,18 +63,23 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   # The last outcome has no fitted stage. It receives the remaining probability.
   draws[, length(outcomes), ] <- remaining
 
-  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
-  paths <- file.path(normalizePath(output_dir, mustWork = TRUE),
-                     c("posterior_probabilities.rds", "extended_frame.csv"))
+  paths <- NULL
+  if (write_files) {
+    if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+    paths <- file.path(normalizePath(output_dir, mustWork = TRUE),
+                       c("posterior_probabilities.rds", "extended_frame.csv"))
+  }
   # Save the cell keys alongside the draws so later calls can match by value.
   posterior <- structure(list(cells = frame[, cell_columns, drop = FALSE],
                               draws = draws, extension_variable = fit$extension_variable,
                               count_variable = count_variable,
                               paired_population_draws = length(count_draws) > 0L,
                               allow_missing_levels = allow_missing_levels,
-                              new_fixed_sd = new_fixed_sd, posterior_file = paths[1L],
-                              extended_frame_file = paths[2L]),
+                              new_fixed_sd = new_fixed_sd,
+                              posterior_file = if (write_files) paths[1L],
+                              extended_frame_file = if (write_files) paths[2L]),
                          class = "voteframe_posterior")
+  if (!write_files) return(posterior)
   # Finish both files before replacing the previous exports.
   temporary <- tempfile(tmpdir = dirname(paths), fileext = c(".rds", ".csv"))
   on.exit(unlink(temporary), add = TRUE)

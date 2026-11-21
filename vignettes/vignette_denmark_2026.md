@@ -3,7 +3,7 @@
 This walkthrough fits a sequential logit model for reported 2022 parliamentary
 vote choice using the Denmark 2026 case-study inputs. Run the R chunks in
 order from the repository root to reproduce the analysis. The captured R
-output below shows the results of the saved run. The [input documentation](data/input/denmark%202026/README.md)
+output below shows the results of the saved run. The [input documentation](../data/input/denmark%202026/README.md)
 describes the source files and recodes.
 
 ## Step 1. Load the three inputs
@@ -16,7 +16,8 @@ describes the source files and recodes.
   municipality and outcome pair. These shares will supply an area-level
   predictor.
 
-```{r load-inputs, results="hide", warning=FALSE}
+
+``` r
 options(scipen = 999)
 
 country <- file.path("data", "input", "denmark 2026")
@@ -55,7 +56,8 @@ $election
 
 ### Auxiliary survey
 
-```{r preview-survey, results="hide", warning=FALSE}
+
+``` r
 head(survey)
 ```
 
@@ -85,7 +87,8 @@ head(survey)
 
 ### Population frame
 
-```{r preview-frame, results="hide", warning=FALSE}
+
+``` r
 head(frame)
 ```
 
@@ -108,7 +111,8 @@ head(frame)
 
 ### 2022 election results
 
-```{r preview-election, results="hide", warning=FALSE}
+
+``` r
 head(election)
 ```
 
@@ -134,7 +138,8 @@ and education. The fitter also needs a recorded outcome for each respondent
 it uses. An empty string or `NA` in any of those five columns makes the
 row incomplete.
 
-```{r check-missing, results="hide", warning=FALSE}
+
+``` r
 predictors <- c("municipality", "gender", "age_group", "education")
 outcome <- "vote_choice_2022"
 
@@ -176,7 +181,8 @@ Warning: Removed 221 incomplete survey rows before aggregation.
 The fitter's aggregation helper keeps 2,602 respondents in 2,088
 distinct cells and reports 221 incomplete rows.
 
-```{r check-coverage, results="hide", warning=FALSE}
+
+``` r
 survey_areas <- unique(survey$municipality[!missing(survey$municipality)])
 setdiff(frame$municipality, survey_areas)
 setdiff(survey_areas, frame$municipality)
@@ -225,7 +231,8 @@ has one row per municipality and one column named `vote_share_2022`.
 Additional area covariates can have their own columns and retain their
 original units.
 
-```{r build-area-predictors, results="hide"}
+
+``` r
 source(file.path("R", "process_area_covariates.R"))
 historical_shares <- process_area_covariates(
   election,
@@ -284,7 +291,8 @@ missing demographics. At each stage, “for” counts the current outcome and
 denominator. The `respondents` column gives the eligible complete-case
 count used to select the depth.
 
-```{r inspect-stage-designs, results="hide"}
+
+``` r
 source(file.path("R", "build_sequential_formula.R"))
 source(file.path("R", "fit_sequential_logit.R"))
 
@@ -379,7 +387,8 @@ Stages can share a formula structure while using different eligible
 respondents, area predictor values, and fitted coefficients. Each distinct
 selected formula appears once below.
 
-```{r selected-formulas, results="hide"}
+
+``` r
 formula_text <- vapply(stage_designs, function(stage) {
   paste(deparse(stage$formula), collapse = "\n")
 }, character(1))
@@ -411,7 +420,8 @@ The engine prints optimization progress, and R prints warnings as they
 occur. A fitting error stops the run and preserves the failure in the stage
 log.
 
-```{r fit-denmark, results="hide", warning=FALSE, message=FALSE}
+
+``` r
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
 
 options(warn = 1)
@@ -560,7 +570,8 @@ cells. Extending each cell across 11 outcomes gives 318,780 cell–outcome
 rows. In the extended frame, `N` is the arithmetic mean of the 125 expected
 counts in `N_draw_1` through `N_draw_125` for that row.
 
-```{r predict-denmark, results="hide", message=FALSE, warning=FALSE}
+
+``` r
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
 fit_dir <- file.path("data", "output", "denmark-2026-fit")
 fit <- readRDS(file.path(fit_dir, "fit.rds"))
@@ -584,7 +595,8 @@ frame_cells    outcomes       draws
 The first six rows show different outcomes for the same demographic
 cell. The preview displays three of the 125 draw columns.
 
-```{r preview-extended-frame, results="hide"}
+
+``` r
 extended_preview <- read.csv(posterior$extended_frame_file, nrows = 6)
 preview_columns <- c(names(posterior$cells), posterior$extension_variable,
                      posterior$count_variable,
@@ -613,7 +625,8 @@ Check that the outcome probabilities sum to one for each cell and draw,
 and that the expected counts in the exported CSV sum back to the original
 cell populations. Read the CSV in blocks of complete cells.
 
-```{r check-prediction-totals, results="hide"}
+
+``` r
 frame <- fit$frame
 outcomes <- fit$outcome_order
 n_outcomes <- length(outcomes)
@@ -687,7 +700,8 @@ the original 2022 `pop_pct`, which also supplies the area predictor.
 This is an agreement check against that target. Other applications can
 supply target data from a separate source.
 
-```{r check-denmark-target, results="hide"}
+
+``` r
 extended_path <- posterior$extended_frame_file
 header <- names(read.csv(text = readLines(extended_path, n = 1L), nrows = 0))
 count_columns <- c(posterior$count_variable, dimnames(posterior$draws)[[3L]])
@@ -736,7 +750,7 @@ equal weight within an outcome. A frame with only posterior means produces
 the same point comparison and a warning that intervals and coverage
 are unavailable.
 
-![Municipality estimates versus the 2022 target](data/output/denmark-2026-fit/municipality_target_check.png)
+![Municipality estimates versus the 2022 target](../data/output/denmark-2026-fit/municipality_target_check.png)
 
 ## Step 8. Rake the extended frame
 
@@ -761,7 +775,8 @@ Raking adjusts `N` and every draw independently. In the raked frame,
 Because raking is nonlinear, independently raking that column can give
 a different result from averaging the raked draws.
 
-```{r rake-denmark, results="hide"}
+
+``` r
 raking <- rake_with_diagnostics(
   extended, fit$frame, election,
   by = "municipality", extension_variable = fit$extension_variable,
@@ -810,7 +825,8 @@ Raked population (range across count columns): 4163940 4163940
 Maximum absolute target share error: 0.00000000000001
 ```
 
-```{r save-raked-frame, results="hide"}
+
+``` r
 raked_path <- file.path(fit_dir, "raked_extended_frame.csv")
 temporary <- tempfile(tmpdir = fit_dir, fileext = ".csv")
 for (start in seq.int(1L, nrow(raked), by = 11000L)) {
@@ -837,7 +853,8 @@ within each original municipality × gender × age × education cell and
 compares that total to the original cell population. The municipality
 panels use shares, and the original-joint plot uses population counts.
 
-```{r check-denmark-post-rake, results="hide"}
+
+``` r
 post_rake <- raking$target_check
 cat("Outcome targets checked:", nrow(post_rake$outcome$comparison), "\n")
 print(round(post_rake$outcome$metrics, 2))
@@ -869,9 +886,9 @@ Coverage here checks whether the raked draws respect the targets used to
 constrain them. The comparisons allow for numerical precision when an
 interval collapses onto its target.
 
-![Raked municipality vote shares versus the outcome targets](data/output/denmark-2026-fit/raked_municipality_target_check.png)
+![Raked municipality vote shares versus the outcome targets](../data/output/denmark-2026-fit/raked_municipality_target_check.png)
 
-![Raked population counts versus the original joint frame](data/output/denmark-2026-fit/raked_original_joint_check.png)
+![Raked population counts versus the original joint frame](../data/output/denmark-2026-fit/raked_original_joint_check.png)
 
 ## Step 10. Visualize changes on margins left unconstrained
 
@@ -910,7 +927,8 @@ its values are nonnegative. All axes use percentage points, with ranges
 that vary by panel. An independent target is needed to evaluate accuracy
 on these margins.
 
-```{r visualize-raking-changes, results="hide"}
+
+``` r
 change_plot <- raking$change_plot
 print(basename(change_plot))
 ```
@@ -919,11 +937,11 @@ print(basename(change_plot))
 [1] "raking_changes_diagnostic.png"
 ```
 
-![Vote-share changes across all unconstrained groupings after raking](data/output/denmark-2026-fit/raking_changes_diagnostic.png)
+![Vote-share changes across all unconstrained groupings after raking](../data/output/denmark-2026-fit/raking_changes_diagnostic.png)
 
 ## Final output. Preview the raked extended frame
 
-The final export is [raked_extended_frame.csv](data/output/denmark-2026-fit/raked_extended_frame.csv),
+The final export is [raked_extended_frame.csv](../data/output/denmark-2026-fit/raked_extended_frame.csv),
 a Git LFS file. This extract shows all
 11 vote outcomes for four original demographic cells spread across the
 frame. It displays `N`, the raked mean-count column, and three of the 125
@@ -932,7 +950,8 @@ population for all 126 count columns. The original cells also sum to the
 original municipality populations. Step 9 shows the municipality outcome
 checks.
 
-```{r preview-final-raked-frame, results="hide"}
+
+``` r
 preview_cells <- round(seq(1L, nrow(fit$frame), length.out = 4L))
 draws_to_show <- paste0("N_draw_", c(1, 2, 125))
 preview_columns <- c(names(posterior$cells), fit$extension_variable,

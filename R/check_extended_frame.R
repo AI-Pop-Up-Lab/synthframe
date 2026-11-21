@@ -2,7 +2,7 @@
 check_extended_frame <- function(extended_frame, targets, by, extension_variable,
                                  target_variable = "target", count_variable = "N",
                                  plot_file = NULL, outcome_order = NULL,
-                                 coverage_tolerance = 0) {
+                                 coverage_tolerance = 0, no_vote = NULL) {
   keys <- c(by, extension_variable)
   result_names <- c("estimate", "lower_90", "upper_90")
   if (!is.character(by) || !is.character(extension_variable) ||
@@ -58,7 +58,33 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
                    frame_cell_keys(unique(group_keys), group_keys))
   }
   denominators <- rowsum(grouped_counts, group, reorder = FALSE)
-  shares <- as.matrix(grouped_counts) / as.matrix(denominators)[group, , drop = FALSE]
+  counts_matrix <- as.matrix(grouped_counts)
+  share_denominator <- as.matrix(denominators)[group, , drop = FALSE]
+  if (!is.null(no_vote)) {
+    if (!is.character(no_vote) || length(no_vote) != 1L ||
+        !no_vote %in% grouped_keys[[extension_variable]]) {
+      stop("no_vote must identify an outcome in the extended frame.")
+    }
+    voted <- grouped_keys[[extension_variable]] != no_vote
+    vote_counts <- counts_matrix
+    vote_counts[!voted, ] <- 0
+    turnout <- rowsum(vote_counts, group, reorder = FALSE)
+    share_denominator[voted, ] <- turnout[group[voted], , drop = FALSE]
+
+    # Targets arrive on the population scale, even when only some parties are plotted.
+    target_voted <- targets[[extension_variable]] != no_vote
+    if (any(target_voted)) {
+      target_group <- if (length(by)) frame_cell_keys(targets[by], targets[by]) else
+        rep.int(1L, nrow(targets))
+      nonvoter <- match(target_group[target_voted], target_group[!target_voted])
+      target_turnout <- 1 - target_values[!target_voted][nonvoter]
+      if (anyNA(target_turnout) || any(target_turnout <= 0)) {
+        stop("Each party target group needs a No Vote target implying positive turnout.")
+      }
+      targets[[target_variable]][target_voted] <- target_values[target_voted] / target_turnout
+    }
+  }
+  shares <- counts_matrix / share_denominator
 
   estimates <- grouped_keys
   estimates$estimate <- shares[, 1L]
@@ -74,10 +100,10 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
   comparison <- merge(targets[c(keys, target_variable)], estimates,
                       by = keys, all.x = TRUE, sort = FALSE)
   if (any(!is.finite(comparison$estimate))) {
-    stop("Every target must match an extended-frame group and outcome with positive population.")
+    stop("Every target must match an extended-frame group and outcome with a positive share denominator.")
   }
   if (length(draw_columns) && anyNA(comparison$lower_90)) {
-    stop("Every matched group must have positive population in every draw.")
+    stop("Every matched group must have a positive share denominator in every draw.")
   }
 
   if (is.null(outcome_order)) {
@@ -92,11 +118,23 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
   outcome_panels <- lapply(outcomes, function(outcome) {
     comparison[comparison[[extension_variable]] == outcome, , drop = FALSE]
   })
-  panels <- c(list(comparison), outcome_panels)
-  panel_titles <- c("Overall", outcomes)
+  overall <- if (is.null(no_vote)) comparison else
+    comparison[comparison[[extension_variable]] != no_vote, , drop = FALSE]
+  panels <- outcome_panels
+  panel_titles <- outcomes
+  if (nrow(overall)) {
+    panels <- c(list(overall), panels)
+    panel_titles <- c("Overall", panel_titles)
+  }
   metrics <- frame_target_metrics(panels, panel_titles, target_variable,
                                   scale = 100, coverage_tolerance = coverage_tolerance)
-  plot_frame_target_panels(panels, panel_titles, metrics, target_variable,
+  plot_labels <- panel_titles
+  if (!is.null(no_vote)) {
+    plot_labels <- ifelse(panel_titles == no_vote,
+                          paste0(panel_titles, " (% of population)"),
+                          paste0(panel_titles, " (% of votes cast)"))
+  }
+  plot_frame_target_panels(panels, plot_labels, metrics, target_variable,
                            extension_variable, plot_file)
   names(metrics)[1:2] <- c("bias_pp", "RMSE_pp")
   invisible(list(comparison = comparison, metrics = metrics, plot_file = plot_file))

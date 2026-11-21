@@ -4,7 +4,7 @@ rake_with_diagnostics <- function(extended_frame, frame, targets, by, extension_
                                   target_scale = c("share", "count"),
                                   output_dir = "data/output", outcome_order = NULL,
                                   area = by, tolerance = 0.000000000001,
-                                  max_iterations = 1000L) {
+                                  max_iterations = 1000L, no_vote = NULL) {
   target_scale <- match.arg(target_scale)
   if (!is.character(area) || anyNA(area) ||
       !all(area %in% setdiff(names(frame), count_variable))) {
@@ -42,7 +42,7 @@ rake_with_diagnostics <- function(extended_frame, frame, targets, by, extension_
     outcome_order = outcome_order,
     outcome_plot_file = file.path(output_dir, paste0("raked_", group_name, "_target_check.png")),
     joint_plot_file = file.path(output_dir, "raked_original_joint_check.png"),
-    share_tolerance = 2 * tolerance
+    share_tolerance = 2 * tolerance, no_vote = no_vote
   )
   change_plot <- plot_raking_changes(
     extended_frame, raked, frame, area, extension_variable,

@@ -4,7 +4,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                                  depth = 1L, splines = TRUE, predictors = NULL,
                                  control = NULL, log_file = tempfile(
                                    "voteframe-fit-", tmpdir = ".", fileext = ".csv"),
-                                 frame = NULL) {
+                                 frame = NULL, outcome_order = NULL) {
   # The outcome and area ID are separate survey columns.
   if (!is.character(extension_variable) || length(extension_variable) != 1L ||
       !is.character(area_variable) || length(area_variable) != 1L ||
@@ -32,7 +32,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     frame <- as.data.frame(frame)
   }
   survey <- aggregate_extension_survey(auxiliary_survey, extension_variable,
-                                       predictors, no_vote)
+                                       predictors, no_vote, outcome_order = outcome_order)
   outcomes <- survey$outcome_order
   # The last outcome gets whatever probability remains.
   stages <- utils::head(outcomes, -1L)
@@ -164,7 +164,9 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
   }
 
   # Save the stage designs and area covariates needed to rebuild prediction data.
-  structure(list(stages = fits, outcome_order = outcomes, survey_counts = survey$counts,
+  no_vote <- if (length(no_vote) && !is.na(no_vote)) as.character(no_vote)
+  structure(list(stages = fits, outcome_order = outcomes, no_vote = no_vote,
+                 survey_counts = survey$counts,
                  survey_cells = survey$cells, omitted_rows = survey$omitted,
                  predictors = predictors, area_variable = area_variable,
                  extension_variable = extension_variable, area_covariates = area_covariates,
