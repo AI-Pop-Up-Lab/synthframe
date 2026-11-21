@@ -1,12 +1,9 @@
----
-title: "Extending the Denmark 2026 population frame"
-output: html_document
----
+# Extending the Denmark 2026 population frame
 
 This walkthrough fits a sequential logit model for reported 2022 parliamentary
 vote choice using the Denmark 2026 case-study inputs. Run the R chunks in
-order from the repository root. Each chunk is followed by its captured R
-output so you can also read the results directly in this file. The [input documentation](data/input/denmark%202026/README.md)
+order from the repository root to reproduce the analysis. The captured R
+output below shows the results of the saved run. The [input documentation](data/input/denmark%202026/README.md)
 describes the source files and recodes.
 
 ## Step 1. Load the three inputs
@@ -457,6 +454,9 @@ data.frame(
 )
 ```
 
+<details>
+<summary>Model fitting log</summary>
+
 ```text
 Fitting the Denmark outcome models with vglmer 1.0.8 on R 4.5.3.
 Warning: Removed 221 incomplete survey rows before aggregation.
@@ -531,6 +531,11 @@ The largest change in any variational parameter was 0.00001
 Stage 10/10 ‘Blank vote’ — registering frame levels.
 Stage 10/10 ‘Blank vote’ — model returned (10 of 10 completed).
 Saved the fit, stage log, and run settings in data/output/denmark-2026-fit.
+```
+
+</details>
+
+```text
                            outcome depth iterations reached_iteration_limit
 1                     Did not vote     1         43                   FALSE
 2             A: Socialdemokratiet     1         13                   FALSE
@@ -918,7 +923,8 @@ print(basename(change_plot))
 
 ## Final output. Preview the raked extended frame
 
-The final export is `raked_extended_frame.csv`. This extract shows all
+The final export is [raked_extended_frame.csv](data/output/denmark-2026-fit/raked_extended_frame.csv),
+a Git LFS file. This extract shows all
 11 vote outcomes for four original demographic cells spread across the
 frame. It displays `N`, the raked mean-count column, and three of the 125
 raked draws. Step 8 checks the original joint cell totals and the national

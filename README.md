@@ -34,6 +34,17 @@ includes the source selections, recoding rules, and rebuild instructions.
 
 [data/output/](data/output/) is the destination for generated modeling files.
 
+The [Denmark 2026 vignette](vignette_denmark_2026.md) shows the R code,
+captured results, diagnostic plots, and a preview of the final raked frame.
+Edit the [R Markdown source](vignette_denmark_2026.Rmd) and regenerate the
+GitHub view from the repository root with `knitr`. This uses the captured
+results and existing figures.
+
+```r
+knitr::opts_chunk$set(eval = FALSE)
+knitr::knit("vignette_denmark_2026.Rmd", output = "vignette_denmark_2026.md")
+```
+
 ## Fitting the extension variable
 
 Load the R functions from the repository root with `vglmer` installed.
@@ -242,7 +253,7 @@ for each.
 Use `plot_raking_changes()` with the aligned extended and raked frames
 to generate one diagnostic figure for the outcome margins left
 unconstrained by a municipality rake. The
-[Denmark vignette](vignette_denmark_2026.Rmd#step-10-visualize-changes-on-margins-left-unconstrained)
+[Denmark vignette](vignette_denmark_2026.md#step-10-visualize-changes-on-margins-left-unconstrained)
 defines total variation and explains how to read the figure.
 
 Use `rake_with_diagnostics()` to run the same rake and generate the
