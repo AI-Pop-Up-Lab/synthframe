@@ -1,7 +1,8 @@
 # Draw outcome probabilities for each cell and save the draws and extended frame.
 predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, count_variable = "N",
                                      output_dir = "data/output", allow_missing_levels = TRUE,
-                                     new_fixed_sd = NULL, write_files = TRUE) {
+                                     new_fixed_sd = NULL, write_files = TRUE,
+                                     draw_state = NULL, batch_size = nrow(frame)) {
   if (!inherits(fit, "voteframe_sequential_logit")) stop("Supply a sequential logit fit.")
   # Use the fit's population frame unless the caller supplies a different one.
   if (is.null(frame)) stop("Supply a prediction frame or pass frame when fitting the model.")
@@ -16,6 +17,10 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   if (!is.logical(write_files) || length(write_files) != 1L || is.na(write_files)) {
     stop("write_files must be TRUE or FALSE.")
   }
+  if (!is.numeric(batch_size) || length(batch_size) != 1L || !is.finite(batch_size) ||
+      batch_size < 1 || batch_size != floor(batch_size)) {
+    stop("batch_size must be a positive integer.")
+  }
   if (!is.character(output_dir) || length(output_dir) != 1L || is.na(output_dir) ||
       !nzchar(output_dir)) stop("Supply an output directory.")
 
@@ -25,6 +30,24 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   frame <- as.data.frame(frame)
   if (!all(fit$predictors %in% cell_columns)) stop("The frame is missing survey predictors.")
   outcomes <- fit$outcome_order
+  if (is.null(draw_state) && batch_size < nrow(frame)) draw_state <- new.env(parent = emptyenv())
+  if (!is.null(draw_state)) {
+    if (!is.environment(draw_state)) stop("draw_state must be an environment.")
+    if (is.null(draw_state$stages)) {
+      draw_state$fit <- fit
+      draw_state$n_draws <- n_draws
+      draw_state$new_fixed_sd <- new_fixed_sd
+      draw_state$stages <- lapply(fit$stages, function(stage) {
+        state <- new.env(parent = emptyenv())
+        state$fixed <- new.env(parent = emptyenv())
+        state$random <- list()
+        state
+      })
+    } else if (!identical(draw_state$fit, fit) || !identical(draw_state$n_draws, n_draws) ||
+               !identical(draw_state$new_fixed_sd, new_fixed_sd)) {
+      stop("Reuse draw_state only with the same fit, draw count, and fixed-effect prior.")
+    }
+  }
   draw_names <- paste0(count_variable, "_draw_", seq_len(n_draws))
   if (length(count_draws) && length(count_draws) != n_draws) {
     stop("n_draws must match the number of incoming population draws (",
@@ -44,21 +67,22 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
     stage <- fit$stages[[outcome]]
     newdata <- prepare_prediction_stage(fit, stage, outcome, frame)
     # Each draw combines fitted coefficients with any frame-only effects.
-    logits <- tryCatch(
-      predict_vglmer_levels(stage$fit, newdata, n_draws,
-                            allow_missing_levels = allow_missing_levels,
-                            new_fixed_sd = new_fixed_sd),
-      error = function(error) stop("Prediction failed for ", sQuote(outcome), ": ",
-                                    conditionMessage(error), call. = FALSE)
-    )
-    if (!identical(dim(logits), c(as.integer(n_draws), nrow(frame))) ||
-        any(!is.finite(logits))) stop("Invalid posterior draws for ", sQuote(outcome), ".")
-    # Transpose to cell-by-draw order before converting log odds to probabilities.
-    conditional <- stats::plogis(t(as.matrix(logits)))
-    # Multiply by the chance of reaching this stage in the same draw.
-    draws[, i, ] <- remaining * conditional
-    # Only the probability that skipped this outcome reaches the next stage.
-    remaining <- remaining * (1 - conditional)
+    for (start in seq.int(1L, nrow(frame), by = batch_size)) {
+      rows <- seq.int(start, min(start + batch_size - 1L, nrow(frame)))
+      logits <- tryCatch(
+        predict_vglmer_levels(stage$fit, newdata[rows, , drop = FALSE], n_draws,
+                              allow_missing_levels = allow_missing_levels,
+                              new_fixed_sd = new_fixed_sd,
+                              draw_state = draw_state$stages[[outcome]]),
+        error = function(error) stop("Prediction failed for ", sQuote(outcome), ": ",
+                                      conditionMessage(error), call. = FALSE)
+      )
+      if (!identical(dim(logits), c(as.integer(n_draws), length(rows))) ||
+          any(!is.finite(logits))) stop("Invalid posterior draws for ", sQuote(outcome), ".")
+      conditional <- stats::plogis(t(as.matrix(logits)))
+      draws[rows, i, ] <- remaining[rows, , drop = FALSE] * conditional
+      remaining[rows, ] <- remaining[rows, , drop = FALSE] * (1 - conditional)
+    }
   }
   # The last outcome has no fitted stage. It receives the remaining probability.
   draws[, length(outcomes), ] <- remaining
@@ -106,7 +130,8 @@ prepare_prediction_stage <- function(fit, stage, outcome, frame) {
   formula_columns <- all.vars(stage$formula[[3L]])
   # Crossed terms need their original columns to rebuild the group labels.
   group_columns <- unlist(stage$grouping_columns, use.names = FALSE)
-  needed <- stage$predictor_names %in% c(formula_columns, group_columns)
+  contrast_columns <- vapply(stage$fixed_contrasts, function(x) x$predictor, character(1))
+  needed <- stage$predictor_names %in% c(formula_columns, group_columns, contrast_columns)
   # Keep the area ID available for the join even if the formula omits it.
   predictors <- unique(c(fit$area_variable, names(stage$predictor_names)[needed]))
   # Start with survey predictors carried over to the population frame.
@@ -132,6 +157,14 @@ prepare_prediction_stage <- function(fit, stage, outcome, frame) {
   # Rebuild crossed group labels in the same way as during fitting.
   for (group in names(stage$grouping_columns)) {
     newdata[[group]] <- sequential_group(newdata, stage$grouping_columns[[group]])
+  }
+  for (column in names(stage$fixed_contrasts)) {
+    contrast <- stage$fixed_contrasts[[column]]
+    values <- unname(contrast$values[as.character(newdata[[contrast$predictor]])])
+    if (anyNA(values)) {
+      stop("A rank-reduced fixed factor has unseen levels in ", sQuote(contrast$predictor), ".")
+    }
+    newdata[[column]] <- values
   }
   newdata
 }

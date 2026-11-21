@@ -56,7 +56,7 @@ calibrates both margins jointly. Its [R Markdown source](vignettes/vignette_us_2
 contains the input preparation and model code.
 
 Regenerate the US walkthrough, including its results and figures, from the
-repository root with `knitr`, `vglmer`, and `SQUAREM` installed.
+repository root with `knitr`, `vglmer`, `gKRLS`, and `SQUAREM` installed.
 
 ```r
 knitr::opts_knit$set(root.dir = getwd())
@@ -143,7 +143,13 @@ factor-by-curve term includes its own global spline. Joint smooths of multiple
 continuous predictors use `gKRLS`, which must be installed for those models.
 The `gKRLS` sketch uses R's random seed.
 A numeric predictor with fewer than four distinct values uses a linear main
-effect, and constant predictors are omitted. Set `splines = FALSE` for linear
+effect. Predictions at a stage use the design estimable from its eligible
+survey rows. Constant predictors are omitted before constructing terms.
+The fitter checks the unpenalized fixed-effects columns for linear dependence
+and keeps an independent set, including when a product duplicates a main
+effect. The selected stage warns and records omitted predictors and columns in
+its fit log. The rank check leaves the hierarchical interaction and spline
+bases intact. Set `splines = FALSE` for linear
 effects and their interactions.
 All stages use `vglmer`. It requires a random effect or spline, and an area
 random intercept requires at least two observed areas. A stage that cannot
@@ -175,8 +181,9 @@ one coefficient per spline basis column. Truncated linear splines use
 `floor(min(distinct values / 4, 35))` basis columns. Joint kernel smooths
 use the default sketch width, capped at the number of aggregated cells.
 Each by-smooth counts its global basis and one basis per observed group.
-This is a pre-fit coefficient count that gives no discount for shrinkage
-or rank deficiency and excludes variance and covariance hyperparameters.
+This is a pre-fit coefficient count after fixed-effect rank reduction. It
+gives no discount for shrinkage and excludes variance and covariance
+hyperparameters.
 
 The fitter warns with the selected depth for each stage. It writes a CSV
 in the working directory by default. Supply `log_file` to choose its path.
@@ -235,6 +242,10 @@ another directory. A rerun replaces those files. The saved R object holds a
 cell-by-outcome-by-draw probability array and the frame keys.
 Use `write_files = FALSE` to return the same posterior in memory without
 writing the files.
+Use `batch_size` to limit how many rows enter each stage design at a time.
+For multiple prediction calls with the same fit, pass the same initially
+empty environment as `draw_state` to reuse fitted coefficient draws and
+frame-only effects across batches. Use a separate environment per fit.
 The CSV has one
 row per frame cell and extension category. Its `N_draw_1`, `N_draw_2`, and subsequent
 columns are draw-specific expected counts. `N` is their posterior mean.

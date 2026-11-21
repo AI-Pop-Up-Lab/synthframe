@@ -19,7 +19,7 @@ counts are zero.
 All three inputs use the 2026 district map (CD120), including DC. The
 [US input guide](../data/input/us%202026/README.md) records the upstream
 commit, checksums, and the rules for observed and modeled House returns.
-Run the chunks from the repository root with `vglmer` and `SQUAREM` installed.
+Run the chunks from the repository root with `vglmer`, `gKRLS`, and `SQUAREM` installed.
 
 ## 1. Read the survey, district data, and population frame
 
@@ -139,7 +139,9 @@ Its numeric `target` column contains shares on the 0–1 scale. Changing
 
 The presidential model uses district and the five demographic predictors.
 Each fit uses its own complete cases. For a compact national run, this
-vignette uses 30 posterior draws and depth 1. Increase the draw count
+vignette uses 30 posterior draws and requests depth 2 with interactions
+and splines. The fitter checks the candidate coefficient counts against
+the eligible respondents in each stage. Increase the draw count
 for analyses that need more precise posterior intervals. The second extension
 pairs draw indices with the first.
 
@@ -171,12 +173,13 @@ out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
                   unset = file.path("data", "output", "us-2026-fit"))
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 n_draws <- 30L
+requested_depth <- 2L
 control <- vglmer::vglmer_control(quiet = TRUE)
 set.seed(2026)
 
 pres_fit <- fit_sequential_logit(
   survey, pres, "district_id", area_covariates, no_vote = "No Vote", outcome_order = choices,
-  predictors = predictors, depth = 1, control = control, frame = frame,
+  predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
   log_file = file.path(out, "presidential_fit_log.csv")
 )
 pres_fit$fit_log[c("outcome", "observations", "fitted_depth", "estimated_parameters")]
@@ -188,11 +191,11 @@ for (stage in names(pres_fit$stages)) {
 ```
 
 ```{r presidential-extension}
+pres_draw_state <- new.env(parent = emptyenv())
 predict_presidential_state <- function(original) {
-  set.seed(2026)
   prediction <- predict_sequential_logit(
-    pres_fit, frame = original, n_draws = n_draws, allow_missing_levels = FALSE,
-    write_files = FALSE
+    pres_fit, frame = original, n_draws = n_draws, write_files = FALSE,
+    draw_state = pres_draw_state, batch_size = 4000L
   )
   aggregate_extended_frame(original, prediction, by = names(prediction$cells))
 }
@@ -206,16 +209,16 @@ first extension. Each conditional House probability multiplies the expected
 population in its presidential category in the same draw. This produces
 16 joint vote combinations per original cell. Fit on the national CES and
 predict both outcomes one state at a time to limit memory use. Each model
-uses the same prediction seed in every state so a draw reuses the national
-fit's coefficient draw. Prediction requires all effect levels to have been
-estimated in the national fit. An unseen level raises an error, since
-sampling new effects independently by state could change their dependence.
+reuses the national coefficient draws in every prediction batch. For
+interaction levels found only in the population frame, prediction draws
+from the fitted variance distribution and reuses the sampled effect
+whenever that level appears again.
 
 ```{r house-fit}
 set.seed(2027)
 house_fit <- fit_sequential_logit(
   survey, house, "district_id", area_covariates, no_vote = "No Vote", outcome_order = choices,
-  predictors = c(predictors, pres), depth = 1, control = control,
+  predictors = c(predictors, pres), depth = requested_depth, splines = TRUE, control = control,
   log_file = file.path(out, "house_fit_log.csv")
 )
 house_fit$fit_log[c("outcome", "observations", "fitted_depth", "estimated_parameters")]
@@ -227,11 +230,11 @@ for (stage in names(house_fit$stages)) {
 ```
 
 ```{r house-extension}
+house_draw_state <- new.env(parent = emptyenv())
 predict_house_state <- function(incoming) {
-  set.seed(2028)
   prediction <- predict_sequential_logit(
-    house_fit, frame = incoming, allow_missing_levels = FALSE,
-    write_files = FALSE
+    house_fit, frame = incoming, write_files = FALSE,
+    draw_state = house_draw_state, batch_size = 4000L
   )
   aggregate_extended_frame(incoming, prediction, by = names(prediction$cells))
 }
@@ -295,6 +298,7 @@ rake_states <- function() {
   })
 }
 
+set.seed(2028)
 summaries <- rake_states()
 max(vapply(summaries, function(x) x$cell_error, numeric(1)))
 ```

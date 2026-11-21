@@ -1,0 +1,170 @@
+# US 2026 frame extension handoff
+
+The completed national baseline uses depth 1 and 30 posterior draws. It
+extends the CD120 population frame with 2024 presidential choice and then
+with 2024 House choice conditional on presidential choice. A full depth-2
+rerun with splines stopped during the first presidential fit after the
+fixed-effects rank fix. Resume with that fit before running prediction or
+raking again.
+
+## Repository and result status
+
+- The branch is `package`. Commit `4db4070` is on `origin/package`. It includes
+  the US inputs, the eight-draw vignette and plots, the Denmark vignette
+  move into `vignettes/`, and removal of `legacy/`.
+- The working tree contains the completed 30-draw Markdown and updated
+  plots, the source configured for full depth 2, the fixed-effects rank
+  fix, and support for reusing posterior draws across prediction batches.
+  These changes are local and uncommitted.
+- The [rendered vignette](vignettes/vignette_us_2026.md) shows the verified
+  depth-1 run, including all six fitted formulas, diagnostics, and a
+  six-row preview with every demographic key and draws 1, 15, and 30.
+  The [R Markdown source](vignettes/vignette_us_2026.Rmd) requests the
+  depth-2 rerun. Its expected output therefore differs from the captured
+  baseline until the new run succeeds.
+
+## Inputs and model specification
+
+The three original files in [the US input directory](data/input/us%202026/README.md)
+come from upstream commit `b302fb476c710896f53f7583ac5528bf31ce2524`. The
+input guide records the SHA-256 checksums and the distinction between
+observed 2024 House returns and modeled results on redrawn CD120
+districts. This is the nine-column election CSV release. The original
+files retain their upstream filenames.
+
+| Input | Role |
+| --- | --- |
+| `ces_2024_harmonized.rds` | 58,627 eligible survey respondents with both reported vote outcomes |
+| `pums_cd_cells.rds` | 497,550 original PUMS cells representing about 240,960,972 citizen adults |
+| `district_election_inputs_cd120.csv` | 1,744 district-by-choice rows across 436 districts including DC |
+
+All US-specific preparation lives in the vignette. Preserve the two FIPS
+codes as text and join on their composite district ID. Cell keys include
+district and age, gender, race, Hispanic ethnicity, and education.
+The first extension produces 1,990,200 rows. The second produces 7,960,800.
+The eventual use is prediction of 2026 House vote. Conditioning 2024
+House choice on 2024 presidential choice lets the frame carry their
+association forward.
+
+Both fits use the order Democratic, Republican, Other, then No Vote.
+Each of the three fitted stages gets the party's district House share,
+statewide presidential share, district lineup, ballot presence, and
+incumbency. No Vote receives the residual probability. Its ballot and
+incumbency fields are blank. The House fit also includes each CES
+respondent's 2024 presidential choice. In the population frame, matching
+presidential and House draw indices are multiplied to obtain joint counts.
+
+The general fitter accepts a named list of area-by-predictor tables.
+Each stage can have its own columns, or several stages can reuse one
+table. The interaction and spline specification follows the existing
+builder, including crossed random effects, varying slopes, truncated
+linear splines, factor-by-curve terms, and the implementation's joint
+smooths. Keep these terms enabled for the requested rerun. [Goplerud supplement, pp. 9–10](https://static.cambridge.org/content/id/urn:cambridge.org:id:article:S0003055423000035/resource/name/S0003055423000035sup001.pdf#page=9)
+
+## Calibration and completed results
+
+The three joint constraints are the original district-by-demographic
+PUMS count per cell, 2024 House vote shares in every district, and 2024
+presidential vote shares in every state. Each vote share sums over the
+other vote choice. The mean-count column and all 30 draws are raked
+separately. States are computational partitions because all district and
+cell constraints are nested inside states.
+
+The comparison plots can use independent target tables and geography for
+each vote outcome. Party estimates and targets are conditional on their
+own turnout. The Overall panel pools party comparisons. No Vote retains
+its population denominator. Draw intervals divide by each draw's own
+turnout. Calibration itself uses the original population-share targets.
+
+| 30-draw depth-1 result | Value |
+| --- | ---: |
+| Pre-rake party RMSE, presidential / House | 6.50 / 7.70 percentage points |
+| Largest original-cell count error after raking | 7.28 × 10⁻¹² people |
+| Mean / median posterior count variance across joint rows | 40.37 / 0.0129 people² |
+| Average 90% interval width, district 2024 House shares | Effectively zero |
+| Average 90% interval width, district presidential shares | 2.41 percentage points |
+| Average 90% interval width, district joint presidential–House shares | 0.69 percentage points |
+
+The intervals use the 5th and 95th percentiles across 30 draws and average
+equally across district–outcome combinations. House margins are fixed by
+the rake. District presidential shares can vary because that margin is
+fixed at the state level. These are historical frame diagnostics. The
+effect on a 2026 forecast remains to be measured by passing the mean
+frame and draw-specific frames through the same forecast model.
+
+## Depth-2 failure and changes made
+
+The design audit before rank reduction found that depth 2 met the
+respondent-to-coefficient rule for the Democratic and Republican stages
+in both fits. The Other stages selected depth 1, and all depth-3
+candidates exceeded the stage respondent count.
+
+1. The first full depth-2 spline fit was terminated before returning,
+   with memory nearly exhausted. The first stage is presidential
+   Democratic, with 57,603 eligible respondents in 42,019 cells.
+2. A linear-only diagnostic retry failed during a matrix factorization
+   with a non-positive leading minor. The user subsequently confirmed
+   that the requested fit should retain the full interactions and splines.
+3. The general rank fix now omits constant predictors before term
+   construction and checks the unpenalized fixed design for linear
+   dependence. It retains estimable columns, preserves surviving
+   contrasts for partially aliased fixed factors, and records omissions
+   in stage warnings and log columns. The first US stage dropped
+   `on_ballot:incumbent`, leaving 10 fixed, 13,379 random, and 2,802 spline
+   coefficients, for 16,191 total.
+4. The full spline retry after rank reduction again ended with exit
+   status 143 during that first stage. The fit log last recorded
+   `started`. No fit or prediction was returned. The exit status alone
+   does not identify the allocation or confirm an operating-system OOM
+   kill. The retry was stopped at this point as requested.
+
+Synthetic checks covered constants, duplicate predictors, dependent
+interaction products, partially aliased factor contrasts, and retention
+of spline terms. Prediction batching was checked on reused fitted and
+frame-only effects. The national depth-2 run never reached prediction.
+
+## Files and environment for resuming
+
+| Path | Contents |
+| --- | --- |
+| [US vignette source](vignettes/vignette_us_2026.Rmd) | Inline input preparation, full spline fit, joint rake, diagnostic plots, and final preview |
+| [Formula builder](R/build_sequential_formula.R) and [fitter](R/fit_sequential_logit.R) | Stage-specific rank check, warnings, and logged omissions |
+| [Sequential prediction](R/predict_sequential_logit.R) and [effect draws](R/predict_vglmer_levels.R) | State and row batching with an independent shared draw environment for each fit |
+| `/tmp/voteframe-us-2026-draw30/raked/` | 51 completed depth-1 state/DC RDS partitions, about 1.6 GiB total |
+| `/tmp/voteframe-us-draw30-variance.log` | Draw variance and district interval summary |
+| `/tmp/voteframe-us-depth2-rank.log` | Console log for the full spline retry |
+| `/tmp/voteframe-us-depth2-rank-results/presidential_fit_log.csv` | First-stage design and omitted column from the stopped retry |
+
+The files under `/tmp` are specific to this workspace and may disappear
+when it is recycled. The run used R 4.3.3, `vglmer` 1.0.8, `gKRLS` 1.0.5,
+`SQUAREM` 2026.1, and `knitr` 1.52. The temporary R package library is
+`/tmp/voteframe-r-lib`. The machine reported about 7.8 GiB of RAM and no swap.
+
+## Where to resume
+
+Start by choosing a larger-memory machine for the full specification or
+profiling the first presidential Democratic fit to identify the largest
+allocation. Profile the fitting stage before investing in the national
+prediction and rake. The rank issue and the termination are distinct
+findings. The broad question is whether sparse or lower-memory construction
+can preserve the exact hierarchical design and spline bases.
+
+Once the full first stage fits, run the vignette from the repository root
+and direct its generated RDS partitions to a fresh output directory.
+Render the Markdown to a temporary destination until it finishes. The
+figure chunk writes its plots under `vignettes/assets/us-2026/`.
+
+```sh
+VOTEFRAME_US_OUTPUT_DIR=/path/to/us-2026-depth2-results Rscript -e '
+knitr::opts_knit$set(root.dir = getwd())
+knitr::opts_chunk$set(error = FALSE)
+knitr::knit("vignettes/vignette_us_2026.Rmd", output = "/tmp/us-2026-depth2.md")
+'
+```
+
+Check the selected stages and logged omissions, then confirm that all 51
+partitions contain 30 draws and sum to 7,960,800 rows. Compare depth 2 with
+the depth-1 baseline using the **pre-rake** turnout-conditional diagnostics
+and, if evaluating predictive performance, held-out CES respondents.
+The post-rake plots verify calibration to the supplied benchmarks. Publish
+the refreshed Markdown and figures together after these checks.

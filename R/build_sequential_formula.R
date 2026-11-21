@@ -118,7 +118,10 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
 
   # Count fixed columns, random coefficients per group level, and spline columns.
   # Include the global intercept. Count columns as built, before shrinkage.
-  fixed_width <- ncol(stats::model.matrix(stats::reformulate(c("1", fixed)), data))
+  fixed_design <- independent_sequential_fixed_effects(fixed, data)
+  fixed <- fixed_design$terms
+  data <- fixed_design$data
+  fixed_width <- fixed_design$rank
   # Each observed level gets its own coefficient for every term in its group.
   random_width <- sum(vapply(names(group_slopes), function(group) {
     nlevels(data[[group]]) * length(group_slopes[[group]])
@@ -131,11 +134,51 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
                                 response = "cbind(.success, .failure)", env = baseenv())
   list(data = data, formula = formula, predictor_names = predictor_names,
        grouping_columns = grouping_columns, factors = factors,
+       fixed_contrasts = fixed_design$contrasts,
+       constant_predictors = names(predictor_names)[unique_values[unname(predictor_names)] == 1L],
+       aliased_fixed = fixed_design$aliased,
        parameter_count = parameter_count,
        fixed_coefficients = fixed_width, random_coefficients = random_width,
        spline_coefficients = spline_width,
        hierarchical = length(random) + length(smooth) > 0L,
        joint_smooth = any(grepl('type = "gKRLS"', smooth, fixed = TRUE)))
+}
+
+# Keep an independent basis for the unpenalized design. Hierarchical terms
+# have their own priors and do not enter this rank check.
+independent_sequential_fixed_effects <- function(fixed, data) {
+  terms <- stats::terms(stats::reformulate(c("1", fixed)), keep.order = TRUE)
+  columns <- stats::model.matrix(terms, data)
+  norms <- sqrt(colSums(columns^2))
+  rank <- qr(sweep(columns, 2L, ifelse(norms > 0, norms, 1), "/"), tol = 1e-10)
+  keep <- sort(rank$pivot[seq_len(rank$rank)])
+  aliases <- colnames(columns)[-keep]
+  term_labels <- attr(terms, "term.labels")
+  assignment <- attr(columns, "assign")
+  retained <- character()
+  contrasts <- list()
+  for (i in seq_along(term_labels)) {
+    term_columns <- which(assignment == i)
+    retained_columns <- intersect(term_columns, keep)
+    if (!length(retained_columns)) next
+    label <- term_labels[[i]]
+    if (length(retained_columns) == length(term_columns)) {
+      retained <- c(retained, label)
+      next
+    }
+    # A partially aliased term can only be a categorical fixed main effect
+    # in these designs. Represent its surviving contrasts explicitly.
+    predictor <- data[[label]]
+    levels <- levels(predictor)
+    level_rows <- match(levels, predictor)
+    for (column in retained_columns) {
+      name <- tail(make.unique(c(names(data), paste0(".fixed_", make.names(colnames(columns)[column])))), 1L)
+      data[[name]] <- columns[, column]
+      contrasts[[name]] <- list(predictor = label, values = setNames(columns[level_rows, column], levels))
+      retained <- c(retained, name)
+    }
+  }
+  list(terms = retained, data = data, rank = rank$rank, aliased = aliases, contrasts = contrasts)
 }
 
 # Use the same group labels in the survey and the prediction frame.

@@ -1,6 +1,8 @@
 # Extending the US 2026 congressional district frame
 
-This page shows the completed eight-draw run. The R Markdown source is configured for 30 draws.
+The results below are from the completed 30-draw, depth-1 run. The R Markdown
+source requests depth 2 with splines. The depth-2 retry stopped during the
+first presidential fit and produced no replacement results.
 
 The goal is a population frame for predicting the 2026 House vote. We first
 estimate 2024 presidential vote in each demographic cell, then estimate
@@ -154,7 +156,7 @@ Its numeric `target` column contains shares on the 0–1 scale. Changing
 
 The presidential model uses district and the five demographic predictors.
 Each fit uses its own complete cases. For a compact national run, this
-vignette uses eight posterior draws and depth 1. Increase the draw count
+vignette uses 30 posterior draws and depth 1. Increase the draw count
 for analyses that need more precise posterior intervals. The second extension
 pairs draw indices with the first.
 
@@ -170,7 +172,8 @@ manageable means keeping peak RAM and scratch storage within the machine's
 limits and fitting the prediction, raking, and export into the time
 available for the run.
 
-The vignette already partitions House prediction and raking by state.
+The vignette already partitions both predictions and raking by state
+and keeps intermediate predictions in memory only for the current state.
 To scale further, run both predictions and the joint rake in small batches
 of draws within each state. Keep draw IDs paired across the two extensions
 and reuse the same sampled coefficients across all applicable states for a
@@ -185,7 +188,7 @@ House totals per draw and calculate intervals from those totals.
 out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
                   unset = file.path("data", "output", "us-2026-fit"))
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
-n_draws <- 8L
+n_draws <- 30L
 control <- vglmer::vglmer_control(quiet = TRUE)
 set.seed(2026)
 
@@ -259,40 +262,44 @@ pres_fit$fit_log[c("outcome", "observations", "fitted_depth", "estimated_paramet
 ## 3      Other         6696            1                  523
 ```
 
-
-Full fitted formulas
-
-```text
-Democratic
-cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
-    incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
-    (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
-    lineup) + v_s(house_share) + v_s(pres_share)
-
-Republican
-cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
-    incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
-    (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
-    lineup) + v_s(house_share) + v_s(pres_share)
-
-Other
-cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
-    incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
-    (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
-    lineup) + v_s(house_share) + v_s(pres_share)
+``` r
+for (stage in names(pres_fit$stages)) {
+  cat(stage, "\n")
+  cat(trimws(deparse(pres_fit$stages[[stage]]$formula), which = "right"), sep = "\n")
+  cat("\n")
+}
 ```
 
-``` r
-pres_posterior <- predict_sequential_logit(
-  pres_fit, n_draws = n_draws, output_dir = file.path(out, "presidential")
-)
+```
+## Democratic
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
+##     incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
+##     (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
+##     lineup) + v_s(house_share) + v_s(pres_share)
+##
+## Republican
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
+##     incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
+##     (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
+##     lineup) + v_s(house_share) + v_s(pres_share)
+##
+## Other
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
+##     incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
+##     (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
+##     lineup) + v_s(house_share) + v_s(pres_share)
+```
 
-# Expand in memory from the existing posterior to retain key types.
-presidential_frame <- aggregate_extended_frame(
-  frame, pres_posterior, by = setdiff(names(frame), "N")
-)
-rm(pres_posterior)
-invisible(gc())
+
+``` r
+predict_presidential_state <- function(original) {
+  set.seed(2026)
+  prediction <- predict_sequential_logit(
+    pres_fit, frame = original, n_draws = n_draws, allow_missing_levels = FALSE,
+    write_files = FALSE
+  )
+  aggregate_extended_frame(original, prediction, by = names(prediction$cells))
+}
 ```
 
 ## 4. Fit and extend with 2024 House vote
@@ -302,9 +309,9 @@ In the population frame it uses the presidential categories created in the
 first extension. Each conditional House probability multiplies the expected
 population in its presidential category in the same draw. This produces
 16 joint vote combinations per original cell. Fit on the national CES and
-predict one state at a time to limit memory use. Reset the same House
-prediction seed for every state so each draw reuses the national fit's
-coefficient draw. Prediction requires all effect levels to have been
+predict both outcomes one state at a time to limit memory use. Each model
+uses the same prediction seed in every state so a draw reuses the national
+fit's coefficient draw. Prediction requires all effect levels to have been
 estimated in the national fit. An unseen level raises an error, since
 sampling new effects independently by state could change their dependence.
 
@@ -373,35 +380,41 @@ house_fit$fit_log[c("outcome", "observations", "fitted_depth", "estimated_parame
 ## 3      Other         8146            1                  527
 ```
 
-
-Full fitted formulas
-
-```text
-Democratic
-cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
-    incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
-    (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
-    vote_pres_2024) + (1 | lineup) + v_s(house_share) + v_s(pres_share)
-
-Republican
-cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
-    incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
-    (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
-    vote_pres_2024) + (1 | lineup) + v_s(house_share) + v_s(pres_share)
-
-Other
-cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
-    incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
-    (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
-    vote_pres_2024) + (1 | lineup) + v_s(house_share) + v_s(pres_share)
+``` r
+for (stage in names(house_fit$stages)) {
+  cat(stage, "\n")
+  cat(trimws(deparse(house_fit$stages[[stage]]$formula), which = "right"), sep = "\n")
+  cat("\n")
+}
 ```
 
+```
+## Democratic
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
+##     incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
+##     (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
+##     vote_pres_2024) + (1 | lineup) + v_s(house_share) + v_s(pres_share)
+##
+## Republican
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
+##     incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
+##     (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
+##     vote_pres_2024) + (1 | lineup) + v_s(house_share) + v_s(pres_share)
+##
+## Other
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + on_ballot +
+##     incumbent + (1 | district_id) + (1 | age_cat) + (1 | gender_cat) +
+##     (1 | race_cat) + (1 | hispanic_cat) + (1 | educ_cat) + (1 |
+##     vote_pres_2024) + (1 | lineup) + v_s(house_share) + v_s(pres_share)
+```
+
+
 ``` r
-predict_house_state <- function(state, incoming) {
+predict_house_state <- function(incoming) {
   set.seed(2028)
   prediction <- predict_sequential_logit(
     house_fit, frame = incoming, allow_missing_levels = FALSE,
-    output_dir = file.path(out, "house", paste0("state_", state))
+    write_files = FALSE
   )
   aggregate_extended_frame(incoming, prediction, by = names(prediction$cells))
 }
@@ -422,7 +435,6 @@ rake_tolerance <- 1e-8
 raked_dir <- file.path(out, "raked")
 dir.create(raked_dir, showWarnings = FALSE)
 states <- split(seq_len(nrow(frame)), frame$state_fips)
-presidential_rows <- split(seq_len(nrow(presidential_frame)), presidential_frame$state_fips)
 count_columns <- c("N", paste0("N_draw_", seq_len(n_draws)))
 
 # Reduce each block to group-outcome draw totals for the comparison plots.
@@ -437,8 +449,8 @@ plot_totals <- function(block, extension) {
 rake_states <- function() {
   lapply(names(states), function(state) {
     original <- frame[states[[state]], , drop = FALSE]
-    incoming <- presidential_frame[presidential_rows[[state]], , drop = FALSE]
-    joint <- predict_house_state(state, incoming)
+    incoming <- predict_presidential_state(original)
+    joint <- predict_house_state(incoming)
     stopifnot(nrow(joint) == nrow(original) * length(choices)^2L)
     # Use the same named configuration for the rake in every block.
     targets <- lapply(names(rake_targets), function(outcome) {
@@ -511,38 +523,38 @@ for (phase in c("before", "after")) {
 
 ```
 ##                  bias_pp   RMSE_pp  spearman coverage_90_pct
-## Overall    -1.046401e-15  6.648370 0.9027817        4.575163
-## Democratic  6.207436e+00  6.986260 0.9650679        9.803922
-## Republican -8.266431e+00  8.906953 0.9667873        3.921569
-## Other       2.058995e+00  2.112065 0.8424434        0.000000
-## No Vote    -2.581322e+01 26.231573 0.8659729        0.000000
+## Overall    -1.683405e-15  6.498797 0.9067790        4.575163
+## Democratic  6.069814e+00  6.823634 0.9727602        9.803922
+## Republican -8.090537e+00  8.708720 0.9709502        3.921569
+## Other       2.020723e+00  2.073478 0.8406335        0.000000
+## No Vote    -2.575223e+01 26.170325 0.8713122        0.000000
 ```
 
 ```
 ##                  bias_pp   RMSE_pp  spearman coverage_90_pct
-## Overall    -5.614163e-16  7.689616 0.9304638      19.8776758
-## Democratic  5.576381e+00  8.960825 0.9503700      19.7247706
-## Republican -6.448868e+00  9.439736 0.9546970      21.1009174
-## Other       8.724867e-01  2.825875 0.6138721      18.8073394
-## No Vote    -2.314487e+01 24.073270 0.8050717       0.2293578
+## Overall    -3.227647e-16  7.696671 0.9307125      25.5351682
+## Democratic  5.594692e+00  8.979772 0.9511983      26.3761468
+## Republican -6.426024e+00  9.446105 0.9550218      25.4587156
+## Other       8.313322e-01  2.801968 0.6150587      24.7706422
+## No Vote    -2.313553e+01 24.050545 0.8140960       0.2293578
 ```
 
 ```
 ##                  bias_pp      RMSE_pp spearman coverage_90_pct
-## Overall    -6.836851e-16 9.571570e-09        1             100
-## Democratic -2.929784e-09 1.170882e-08        1             100
-## Republican  2.915810e-09 1.173494e-08        1             100
-## Other       1.397182e-11 1.989356e-10        1             100
-## No Vote    -8.869744e-10 6.830168e-09        1             100
+## Overall    -4.161069e-16 1.194543e-08        1             100
+## Democratic -1.654226e-09 1.454889e-08        1             100
+## Republican  1.581327e-09 1.470821e-08        1             100
+## Other       7.289760e-11 2.801707e-10        1             100
+## No Vote     1.029418e-09 7.207703e-09        1             100
 ```
 
 ```
 ##                  bias_pp      RMSE_pp  spearman coverage_90_pct
-## Overall    -3.174499e-16 3.344527e-10 0.9999997             100
-## Democratic  7.583215e-11 3.867297e-10 0.9999961             100
-## Republican -8.508905e-11 4.100677e-10 0.9999999             100
-## Other       9.255946e-12 1.336427e-10 1.0000000             100
-## No Vote     6.326591e-11 1.105052e-09 1.0000000             100
+## Overall    -1.180059e-16 3.669187e-10 0.9999997             100
+## Democratic  4.684468e-11 4.103290e-10 0.9999961             100
+## Republican -5.306658e-11 4.493817e-10 0.9999999             100
+## Other       6.221542e-12 1.832327e-10 1.0000000             100
+## No Vote    -1.370922e-10 1.269862e-09 1.0000000             100
 ```
 
 ### Presidential vote by state
@@ -570,17 +582,17 @@ demographic keys, both vote outcomes, and three draw counts.
 alabama <- readRDS(file.path(raked_dir, "state_01.rds"))
 preview_rows <- round(seq(1L, nrow(alabama), length.out = 6L))
 preview_columns <- c("state_fips", predictors, pres, house, "N",
-                     paste0("N_draw_", c(1L, 4L, 8L)))
+                     paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
 knitr::kable(alabama[preview_rows, preview_columns], digits = 3, row.names = FALSE)
 ```
 
 
 
-|state_fips |district_id |age_cat |gender_cat |race_cat        |hispanic_cat |educ_cat     |vote_pres_2024 |vote_house_2024 |      N| N_draw_1| N_draw_4| N_draw_8|
-|:----------|:-----------|:-------|:----------|:---------------|:------------|:------------|:--------------|:---------------|------:|--------:|--------:|--------:|
-|01         |01-01       |18-22   |Male       |White           |Hispanic     |No HS        |Democratic     |Democratic      |  4.069|    4.490|    4.297|    3.864|
-|01         |01-02       |43-47   |Male       |White           |Not Hispanic |Some college |Other          |Republican      | 12.951|   13.253|   15.046|   12.846|
-|01         |01-03       |73-77   |Male       |Native American |Not Hispanic |Post-grad    |Democratic     |No Vote         |  0.757|    0.847|    0.591|    0.762|
-|01         |01-05       |33-37   |Male       |Asian           |Not Hispanic |4-year       |No Vote        |Democratic      |  0.000|    0.000|    0.000|    0.000|
-|01         |01-06       |58-62   |Male       |Native American |Not Hispanic |No HS        |Republican     |Other           |  0.000|    0.000|    0.000|    0.000|
-|01         |01-07       |83+     |Female     |Other/Multi     |Not Hispanic |Post-grad    |No Vote        |No Vote         |  3.335|    3.501|    2.996|    3.266|
+|state_fips |district_id |age_cat |gender_cat |race_cat        |hispanic_cat |educ_cat     |vote_pres_2024 |vote_house_2024 |      N| N_draw_1| N_draw_15| N_draw_30|
+|:----------|:-----------|:-------|:----------|:---------------|:------------|:------------|:--------------|:---------------|------:|--------:|---------:|---------:|
+|01         |01-01       |18-22   |Male       |White           |Hispanic     |No HS        |Democratic     |Democratic      |  4.027|    4.517|     4.169|     4.055|
+|01         |01-02       |43-47   |Male       |White           |Not Hispanic |Some college |Other          |Republican      | 12.587|   11.854|    12.279|    14.786|
+|01         |01-03       |73-77   |Male       |Native American |Not Hispanic |Post-grad    |Democratic     |No Vote         |  0.727|    0.706|     0.692|     0.717|
+|01         |01-05       |33-37   |Male       |Asian           |Not Hispanic |4-year       |No Vote        |Democratic      |  0.000|    0.000|     0.000|     0.000|
+|01         |01-06       |58-62   |Male       |Native American |Not Hispanic |No HS        |Republican     |Other           |  0.000|    0.000|     0.000|     0.000|
+|01         |01-07       |83+     |Female     |Other/Multi     |Not Hispanic |Post-grad    |No Vote        |No Vote         |  3.262|    3.422|     3.094|     3.687|

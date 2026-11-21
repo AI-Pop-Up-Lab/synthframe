@@ -1,7 +1,8 @@
 # Return log-odds with draws in rows and prediction cells in columns.
 # With n_draws = 0, return one row using fitted means and zero for new effects.
 predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
-                                  allow_missing_levels = TRUE, new_fixed_sd = NULL) {
+                                  allow_missing_levels = TRUE, new_fixed_sd = NULL,
+                                  draw_state = NULL) {
   if (!inherits(fit, "vglmer")) stop("Supply a vglmer fit.")
   if (!is.numeric(n_draws) || length(n_draws) != 1L || !is.finite(n_draws) ||
       n_draws < 0 || n_draws != floor(n_draws) || n_draws > .Machine$integer.max) {
@@ -26,11 +27,14 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
   fixed_names <- rownames(fit$beta$mean)
   random_names <- rownames(fit$alpha$mean)
   # Use vglmer's own variational draws for every coefficient learned in the fit.
-  coefficients <- if (n_draws == 0) {
+  coefficients <- if (!is.null(draw_state$coefficients)) {
+    draw_state$coefficients
+  } else if (n_draws == 0) {
     t(as.matrix(rbind(fit$beta$mean, fit$alpha$mean)))
   } else {
     vglmer::posterior_samples.vglmer(fit, samples = n_draws)
   }
+  if (!is.null(draw_state)) draw_state$coefficients <- coefficients
   if (!identical(colnames(coefficients), c(fixed_names, random_names))) {
     stop("The vglmer coefficient order does not match the fitted design.")
   }
@@ -49,8 +53,14 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
            paste(colnames(fixed)[new_fixed], collapse = ", "), ".")
     }
     # Draw each new contrast once per simulation. All matching rows reuse it.
-    prior <- matrix(stats::rnorm(length(new_fixed) * n_draws, sd = new_fixed_sd),
-                    nrow = length(new_fixed))
+    prior <- if (is.null(draw_state)) {
+      matrix(stats::rnorm(length(new_fixed) * n_draws, sd = new_fixed_sd),
+             nrow = length(new_fixed))
+    } else {
+      cached_prediction_effects(draw_state$fixed, colnames(fixed)[new_fixed],
+                                function(n) matrix(stats::rnorm(n * n_draws, sd = new_fixed_sd),
+                                                   nrow = n))
+    }
     logits <- logits + fixed[, new_fixed, drop = FALSE] %*% prior
   }
 
@@ -83,11 +93,64 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
       stop("Partially matched coefficient block for ", sQuote(term), ".")
     }
     new_levels <- level_columns[, missing_per_level == width, drop = FALSE]
-    new_coefficients <- draw_new_vglmer_effects(fit, i, ncol(new_levels), n_draws)
+    new_coefficients <- if (is.null(draw_state)) {
+      draw_new_vglmer_effects(fit, i, ncol(new_levels), n_draws)
+    } else {
+      if (is.null(draw_state$random[[term]])) {
+        draw_state$random[[term]] <- list(
+          effects = new.env(parent = emptyenv()),
+          roots = draw_vglmer_variance_roots(fit, i, n_draws)
+        )
+      }
+      cached <- draw_state$random[[term]]
+      cached_prediction_effects(cached$effects, colnames(block)[new_levels[1L, ]],
+                                function(n) sample_new_prediction_effects(cached$roots, width, n, n_draws),
+                                width)
+    }
     # Multiply by this term's intercept, slope, or spline basis values.
     logits <- logits + as.matrix(block[, as.vector(new_levels), drop = FALSE] %*% new_coefficients)
   }
   t(logits)
+}
+
+# Reuse an effect whenever its level appears in another prediction batch.
+cached_prediction_effects <- function(cache, labels, sample, width = 1L) {
+  new <- unique(labels[!vapply(labels, exists, logical(1), envir = cache, inherits = FALSE)])
+  if (length(new)) {
+    draws <- sample(length(new))
+    for (i in seq_along(new)) {
+      rows <- (i - 1L) * width + seq_len(width)
+      cache[[new[i]]] <- draws[rows, , drop = FALSE]
+    }
+  }
+  do.call(rbind, mget(labels, envir = cache, inherits = FALSE))
+}
+
+draw_vglmer_variance_roots <- function(fit, block, n_draws) {
+  scale <- as.matrix(fit$sigma$cov[[block]])
+  df <- fit$sigma$df[[block]]
+  width <- fit$internal_parameters$d_j[[block]]
+  if (!identical(dim(scale), rep(as.integer(width), 2L)) ||
+      any(!is.finite(scale)) || !is.finite(df) || df <= width - 1L) {
+    stop("Missing or invalid variance posterior for ", names(fit$sigma$df)[block], ".")
+  }
+  if (width == 1L) {
+    if (scale[1L, 1L] <= 0) stop("The fitted variance scale must be positive.")
+    return(sqrt(scale[1L, 1L] / stats::rchisq(n_draws, df)))
+  }
+  covariance <- CholWishart::rInvWishart(n_draws, df, scale)
+  lapply(seq_len(n_draws), function(i) t(chol(covariance[, , i])))
+}
+
+sample_new_prediction_effects <- function(roots, width, n_levels, n_draws) {
+  z <- matrix(stats::rnorm(width * n_levels * n_draws), width * n_levels, n_draws)
+  apply_prediction_variance_roots(z, roots, width)
+}
+
+apply_prediction_variance_roots <- function(z, roots, width) {
+  if (width == 1L) return(sweep(z, 2L, roots, "*"))
+  for (i in seq_len(ncol(z))) z[, i] <- as.vector(roots[[i]] %*% matrix(z[, i], width))
+  z
 }
 
 # Extend factor contrasts while keeping the original columns and coding intact.
@@ -183,27 +246,7 @@ build_prediction_random_blocks <- function(fit, newdata) {
 
 # Draw one covariance per term and draw. All new levels share it in that draw.
 draw_new_vglmer_effects <- function(fit, block, n_levels, n_draws) {
-  # vglmer stores the inverse-Wishart scale and degrees of freedom for each term.
-  scale <- as.matrix(fit$sigma$cov[[block]])
-  df <- fit$sigma$df[[block]]
   width <- fit$internal_parameters$d_j[[block]]
-  if (!identical(dim(scale), rep(as.integer(width), 2L)) ||
-      any(!is.finite(scale)) || !is.finite(df) || df <= width - 1L) {
-    stop("Missing or invalid variance posterior for ", names(fit$sigma$df)[block], ".")
-  }
-  # Start with independent standard normals. Rows are grouped by new level.
   draws <- matrix(stats::rnorm(width * n_levels * n_draws), width * n_levels, n_draws)
-  if (width == 1L) {
-    # The scalar inverse-Wishart is scale divided by a chi-squared draw.
-    if (scale[1L, 1L] <= 0) stop("The fitted variance scale must be positive.")
-    return(sweep(draws, 2L, sqrt(scale[1L, 1L] / stats::rchisq(n_draws, df)), "*"))
-  }
-  # Draw a covariance for each simulation, then apply it to every new level.
-  covariance <- CholWishart::rInvWishart(n_draws, df, scale)
-  for (i in seq_len(n_draws)) {
-    independent <- matrix(draws[, i], width, n_levels)
-    # The same covariance preserves intercept/slope correlations for each new level.
-    draws[, i] <- as.vector(t(chol(covariance[, , i])) %*% independent)
-  }
-  draws
+  apply_prediction_variance_roots(draws, draw_vglmer_variance_roots(fit, block, n_draws), width)
 }

@@ -90,6 +90,8 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
       spline_coefficients = design$spline_coefficients,
       observations_per_parameter = observations / design$parameter_count,
       candidate_depths_and_counts = paste(selection$attempted, collapse = "; "),
+      dropped_constant_predictors = paste(design$constant_predictors, collapse = "; "),
+      dropped_fixed_columns = paste(design$aliased_fixed, collapse = "; "),
       frame_only_random_coefficients = NA_integer_,
       frame_only_fixed_coefficients = NA_integer_,
       engine = "vglmer", status = "started", error = ""
@@ -102,6 +104,14 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     design$data$.failure <- failures[at_risk]
     design <- tryCatch(
       {
+        if (length(design$constant_predictors)) {
+          warning(stage_label, " omitted constant predictors: ",
+                  paste(design$constant_predictors, collapse = ", "), call. = FALSE)
+        }
+        if (length(design$aliased_fixed)) {
+          warning(stage_label, " omitted linearly dependent fixed columns: ",
+                  paste(design$aliased_fixed, collapse = ", "), call. = FALSE)
+        }
         if (observations < design$parameter_count) {
           warning("Outcome ", sQuote(outcome), " exceeds the coefficient limit at depth 0 (",
                   design$parameter_count, " estimated coefficients for ", observations,
