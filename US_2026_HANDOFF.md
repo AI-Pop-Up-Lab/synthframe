@@ -8,6 +8,11 @@ running. It was left active. First check
 `results/presidential_fit_log.csv`, `results/house_fit_log.csv` if present,
 and `exit-status` in that run directory. Its memory trace is `memory.csv`.
 The run directory is temporary and can disappear on workspace recycle.
+The code checkpoint is commit `bfb3aff` on the local `package` branch.
+If the run is still active, continue monitoring it. If it finished, use
+its outputs and verify them before publishing. If the run directory is
+gone or the fit exited without completing, restart with the code from
+the checkpoint and the current vignette source.
 
 - The vignette uses stock `vglmer` 1.0.8 with joint updates and verbose
   per-iteration diagnostics. VoteFrame's default stopping thresholds are
@@ -36,6 +41,29 @@ The run directory is temporary and can disappear on workspace recycle.
   `vglmer` 1.0.8, `gKRLS` 1.0.5, and `SQUAREM` 2026.1. The repository
   contains `MasterP()` for the general pipeline. The live US run uses
   the existing state-partitioned vignette workflow.
+
+To restart after a workspace recycle, restore the stock R dependencies
+if needed. From the repository root, create a scratch copy of the
+vignette so the existing published Markdown and figures are preserved
+until the new results are verified:
+
+```sh
+repo_dir="$PWD"
+run_dir=$(mktemp -d /tmp/voteframe-us-resume.XXXXXX)
+mkdir -p "$run_dir/vignettes"
+ln -s "$repo_dir/R" "$run_dir/R"
+ln -s "$repo_dir/data" "$run_dir/data"
+cp vignettes/vignette_us_2026.Rmd "$run_dir/vignettes/"
+cd "$run_dir"
+VOTEFRAME_US_OUTPUT_DIR="$run_dir/results" Rscript -e '
+knitr::opts_knit$set(root.dir = getwd())
+knitr::opts_chunk$set(error = FALSE)
+knitr::knit("vignettes/vignette_us_2026.Rmd", output = "vignettes/vignette_us_2026.md")
+' > run.log 2>&1
+```
+
+Set `R_LIBS` for the restart if the dependencies are only in a temporary
+library. The prior run used one BLAS thread and `R_GC_MEM_GROW=0`.
 
 ## Historical baseline
 
