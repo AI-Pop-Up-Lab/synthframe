@@ -39,14 +39,15 @@ aggregate_extension_survey <- function(survey, extension_variable, predictors, n
   if (!is.null(no_vote) && !is.na(no_vote) && !as.character(no_vote) %in% order) {
     stop("no_vote was not observed in the survey.")
   }
-  # Move non-voting to the front and keep the relative order of the rest.
   if (!is.null(outcome_order)) {
     if (!is.character(outcome_order) || anyDuplicated(outcome_order) ||
         !setequal(outcome_order, order)) {
       stop("outcome_order must list each observed outcome exactly once.")
     }
     order <- outcome_order
-  } else if (!is.null(no_vote) && !is.na(no_vote)) {
+  }
+  # For vote extensions, fit non-voting before any party choices.
+  if (!is.null(no_vote) && !is.na(no_vote)) {
     order <- c(as.character(no_vote), setdiff(order, as.character(no_vote)))
   }
 

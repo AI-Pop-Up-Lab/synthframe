@@ -4,7 +4,8 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                                  depth = 1L, splines = TRUE, predictors = NULL,
                                  control = NULL, log_file = tempfile(
                                    "voteframe-fit-", tmpdir = ".", fileext = ".csv"),
-                                 frame = NULL, outcome_order = NULL) {
+                                 frame = NULL, outcome_order = NULL,
+                                 no_interactions = character()) {
   # The outcome and area ID are separate survey columns.
   if (!is.character(extension_variable) || length(extension_variable) != 1L ||
       !is.character(area_variable) || length(area_variable) != 1L ||
@@ -19,6 +20,10 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
   }
   if (!is.logical(splines) || length(splines) != 1L || is.na(splines)) {
     stop("splines must be TRUE or FALSE.")
+  }
+  if (!is.character(no_interactions) || anyNA(no_interactions) ||
+      any(!nzchar(no_interactions))) {
+    stop("Supply no_interactions as a character vector of predictor names.")
   }
   # Use all survey predictors by default. The area ID is always needed.
   if (is.null(predictors)) predictors <- setdiff(names(auxiliary_survey), extension_variable)
@@ -48,6 +53,14 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
        any(vapply(area_covariates[stages], is.null, logical(1))))) {
     stop("Supply an area covariate matrix named for each fitted outcome.")
   }
+  stage_covariates <- if (is.list(area_covariates)) {
+    unlist(lapply(area_covariates[intersect(stages, names(area_covariates))], colnames),
+           use.names = FALSE)
+  }
+  unknown <- setdiff(no_interactions, c(predictors, stage_covariates))
+  if (length(unknown)) {
+    stop("Unknown no_interactions predictors: ", paste(unknown, collapse = ", "), ".")
+  }
   if (!is.character(log_file) || length(log_file) != 1L ||
       is.na(log_file) || !nzchar(log_file)) stop("Supply a path for the fit log.")
 
@@ -76,7 +89,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     # Count respondents, including those who share a cell.
     observations <- sum(successes + failures)
     selection <- select_sequential_stage_design(
-      stage, area_variable, depth, splines, area_predictors, observations
+      stage, area_variable, depth, splines, area_predictors, observations, no_interactions
     )
     design <- selection$design
     candidate <- design$depth
@@ -137,7 +150,9 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                 " estimated coefficients.")
         # Resolve v_s() inside vglmer's namespace without attaching the package.
         environment(design$formula) <- asNamespace("vglmer")
-        if (is.null(control)) control <- vglmer::vglmer_control()
+        if (is.null(control)) {
+          control <- vglmer::vglmer_control(tolerance_parameters = 1e-3, tolerance_elbo = 1e-5)
+        }
         design$fit <- withCallingHandlers(
           vglmer::vglmer(design$formula, data = design$data, family = "binomial",
                          control = control),
@@ -180,13 +195,15 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                  survey_cells = survey$cells, omitted_rows = survey$omitted,
                  predictors = predictors, area_variable = area_variable,
                  extension_variable = extension_variable, area_covariates = area_covariates,
-                 frame = frame, fit_log = fit_log, log_file = normalizePath(log_file)),
+                 frame = frame, no_interactions = no_interactions,
+                 fit_log = fit_log, log_file = normalizePath(log_file)),
             class = "voteframe_sequential_logit")
 }
 
 # Select the deepest candidate supported by the stage's eligible respondents.
 select_sequential_stage_design <- function(stage, area_variable, depth, splines,
-                                           area_predictors, observations) {
+                                           area_predictors, observations,
+                                           no_interactions = character()) {
   # Start from the requested depth at every stage.
   # Interaction orders beyond the number of predictors give the same formula.
   # Include the requested depth once, then try smaller depth values.
@@ -197,7 +214,7 @@ select_sequential_stage_design <- function(stage, area_variable, depth, splines,
   attempted <- character()
   for (candidate in candidate_depths) {
     design <- sequential_stage_design(stage, area_variable, candidate, splines,
-                                      area_predictors)
+                                      area_predictors, no_interactions)
     attempted <- c(attempted, paste0(candidate, "=", design$parameter_count))
     # Accept equality. One respondent per estimated coefficient is enough.
     if (observations >= design$parameter_count) break

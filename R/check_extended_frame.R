@@ -2,7 +2,7 @@
 check_extended_frame <- function(extended_frame, targets, by, extension_variable,
                                  target_variable = "target", count_variable = "N",
                                  plot_file = NULL, outcome_order = NULL,
-                                 coverage_tolerance = 0, no_vote = NULL) {
+                                 coverage_tolerance = 0, no_vote = NULL, draw_plot = TRUE) {
   keys <- c(by, extension_variable)
   result_names <- c("estimate", "lower_90", "upper_90")
   if (!is.character(by) || !is.character(extension_variable) ||
@@ -134,8 +134,10 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
                           paste0(panel_titles, " (% of population)"),
                           paste0(panel_titles, " (% of votes cast)"))
   }
-  plot_frame_target_panels(panels, plot_labels, metrics, target_variable,
-                           extension_variable, plot_file)
+  if (isTRUE(draw_plot)) {
+    plot_frame_target_panels(panels, plot_labels, metrics, target_variable,
+                             extension_variable, plot_file)
+  }
   names(metrics)[1:2] <- c("bias_pp", "RMSE_pp")
   invisible(list(comparison = comparison, metrics = metrics, plot_file = plot_file))
 }

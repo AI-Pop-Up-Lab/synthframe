@@ -1,6 +1,7 @@
 # Build a candidate formula and count the coefficients it would estimate.
 sequential_stage_design <- function(data, area_variable, depth, splines,
-                                    area_predictors = character()) {
+                                    area_predictors = character(),
+                                    no_interactions = character()) {
   if (anyDuplicated(names(data)) || anyNA(names(data)) || any(!nzchar(names(data)))) {
     stop("Stage predictors must have unique, nonempty names.")
   }
@@ -38,6 +39,7 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
   grouping_columns <- list()
   group_slopes <- list()
   predictors <- c(factors, continuous)
+  interaction_predictors <- setdiff(predictors, unname(predictor_names[no_interactions]))
   # Below depth one, only depth 0.75 adds area covariates, as fixed effects.
   area_group <- unname(predictor_names[area_variable])
   area_columns <- unname(predictor_names[area_predictors])
@@ -49,8 +51,10 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
     if (depth == 0.75) fixed <- intersect(area_columns, predictors)
   }
   # A term uses one unit of depth for each predictor it contains.
-  for (size in seq_len(min(depth, length(predictors)))) {
-    for (terms in utils::combn(predictors, size, simplify = FALSE)) {
+  max_size <- min(depth, length(predictors), max(1L, length(interaction_predictors)))
+  for (size in seq_len(max_size)) {
+    eligible <- if (size == 1L) predictors else interaction_predictors
+    for (terms in utils::combn(eligible, size, simplify = FALSE)) {
       # Area covariates are constant within the area at a given stage.
       if (area_group %in% terms && any(terms %in% area_columns)) next
       # Factors determine the grouping. Numeric predictors determine the slopes.

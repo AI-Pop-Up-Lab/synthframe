@@ -1,5 +1,44 @@
 # US 2026 frame extension handoff
 
+## Resume the November 22 run
+
+The user asked to checkpoint while the revised national vignette was
+running. It was left active. First check
+`/tmp/voteframe-us-relaxed-tolerance.b8jACG/run.log`,
+`results/presidential_fit_log.csv`, `results/house_fit_log.csv` if present,
+and `exit-status` in that run directory. Its memory trace is `memory.csv`.
+The run directory is temporary and can disappear on workspace recycle.
+
+- The vignette uses stock `vglmer` 1.0.8 with joint updates and verbose
+  per-iteration diagnostics. VoteFrame's default stopping thresholds are
+  a maximum parameter change below 10⁻³ or a positive ELBO gain below
+  10⁻⁵. Explicit solver controls take precedence.
+- Both vote extensions fit No Vote first, then Democratic and Republican,
+  and leave Other as the residual. Stage-specific area covariates blank
+  across every district are omitted. District and state retain random
+  intercepts and are excluded from interactions. Eligible non-geographic
+  interactions and splines are enabled with requested depth 2.
+- The presidential No Vote fit used 57,603 respondents and 3,160 estimated
+  coefficients. It converged at iteration 74 with an ELBO gain of about
+  1.6 × 10⁻⁵ and a maximum parameter change of about 8 × 10⁻⁴.
+- At 08:18 UTC, the presidential Democratic fit was active with 52,767
+  respondents and 3,911 estimated coefficients. Iteration 14 reported
+  an ELBO gain of 0.4111 and a maximum parameter change of 2,511.63. The
+  run's sampled peak R memory was 3.41 GiB. Prediction and raking had
+  yet to start.
+- The completed No Vote fit is held in the active R process. This run
+  does not serialize individual stage fits. A process exit or workspace
+  recycle before vignette completion will require refitting the stages.
+  If it completes, the Markdown and plots are under the run directory's
+  `vignettes/` subdirectory and state partitions are under `results/raked/`.
+  Verify all 51 partitions, 30 draws, and 7,960,800 rows before publishing.
+- The temporary stock library was `/tmp/voteframe-profile/lib`, with
+  `vglmer` 1.0.8, `gKRLS` 1.0.5, and `SQUAREM` 2026.1. The repository
+  contains `MasterP()` for the general pipeline. The live US run uses
+  the existing state-partitioned vignette workflow.
+
+## Historical baseline
+
 The completed national baseline uses depth 1 and 30 posterior draws. It
 extends the CD120 population frame with 2024 presidential choice and then
 with 2024 House choice conditional on presidential choice. A full depth-2

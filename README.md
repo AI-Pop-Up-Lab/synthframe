@@ -66,6 +66,77 @@ knitr::knit("vignettes/vignette_us_2026.Rmd", output = "vignettes/vignette_us_20
 
 ## Fitting the extension variable
 
+### Run the full pipeline with `MasterP()`
+
+Source the files in `R/` and pass a named list of extension specifications in
+the order they should be added to the mother frame. Each name becomes a new
+outcome column. An extension can use one auxiliary survey or pool a list of
+surveys by stacking respondents. The selected columns must have harmonized
+names and coding across surveys. Later fits can use previous outcomes as
+predictors when their surveys contain those outcomes.
+
+```r
+result <- MasterP(
+  mother_frame,
+  extensions = list(
+    presidential = list(
+      survey = presidential_survey,
+      fit = list(area_variable = "district_id", depth = 2,
+                 no_interactions = c("district_id", "state_fips"),
+                 area_covariates = presidential_covariates),
+      predict = list(batch_size = 4000L),
+      rake = list(state = list(targets = presidential_state_targets, by = "state_fips")),
+      plots = list(district = list(targets = presidential_district_benchmarks,
+                                   by = "district_id", after_file = "presidential_district.png"))
+    ),
+    house = list(
+      survey = list(house_survey_1, house_survey_2),
+      fit = list(area_variable = "district_id", depth = 2,
+                 no_interactions = c("district_id", "state_fips"),
+                 area_covariates = house_covariates),
+      rake = list(district = list(targets = house_district_targets, by = "district_id"))
+    )
+  ),
+  aggregate_by = list(state_presidential = c("state_fips", "presidential"),
+                      national_joint = c("presidential", "house"),
+                      national_total = character())
+)
+
+result$frame
+result$aggregates$state_presidential
+```
+
+Use `fit` for options such as `predictors`, `outcome_order`, `no_vote`,
+splines, solver control, and stage-specific area covariates. By default,
+predictors are columns shared by the extension's surveys and its input frame.
+Set `register_frame = TRUE` in an extension to register its population
+levels during fitting. Its `predict` list accepts row batching and
+unseen-level options. Predictions stay in memory by default.
+
+Each extension supplies one or more named `rake` margins. Use `by` for
+grouping columns from the mother frame, or `character()` for a national
+margin. Target tables use the extension name for the outcome column and
+`target` for the value column by default. Set `target_variable` or
+`target_scale = "count"` within a margin to override those defaults.
+`MasterP()` balances all margins simultaneously. Count targets must be
+compatible with the corresponding population total in each draw.
+
+Optional `plots` can use independent benchmark shares and grouping
+columns. Each named comparison returns before- and after-rake diagnostics.
+Set `before_file` or `after_file` to write the corresponding plot.
+
+If the mother frame already has numbered population draws such as
+`N_draw_1`, `MasterP()` infers the draw count and matches prediction draw
+`i` with population draw `i`. The rake preserves each incoming cell's
+count separately for `N` and each draw. With a mean-only mother frame,
+`n_draws` defaults to 125 and each draw starts from `N`.
+`result$frame` always contains the full calibrated frame.
+`result$aggregates` sums its mean and draw columns at each requested level.
+Fit details are in `result$fit_info`. Pass `keep_fits = TRUE` to retain
+the model objects as well.
+
+### Fit one extension directly
+
 Load the R functions from the repository root with `vglmer` installed.
 
 ```r
@@ -100,9 +171,9 @@ By default the fitter uses every survey column except the outcome. Supply
 Use factors for other categorical predictors stored as numbers. Frequency
 uses all recorded outcomes, with ties broken by label. Supply
 `outcome_order` to set the sequence explicitly, including the final
-category that receives the remaining probability. The fit records
-`no_vote` as the nonvoter label. Without an explicit order, that label
-moves to the first stage.
+category that receives the remaining probability. For vote extensions,
+supply the nonvoter label as `no_vote`. The fitter always puts that label
+first and preserves the relative order of the other outcomes.
 The fit uses complete survey rows. Missing outcomes or selected predictors, including empty strings,
 trigger a warning with the number of rows removed before aggregation. Each
 stage's failures are the counts for later outcomes in the same cell. To recover a category probability,
@@ -135,6 +206,11 @@ Depth 0 fits an intercept plus an area random intercept. Depth 0.5 adds
 random intercepts for the other categorical survey predictors. Depth 0.75 also adds linear fixed effects for
 the area covariates. Depth 1 gives main effects with splines enabled by
 default. Higher integer depths count distinct predictors in a term.
+Use `no_interactions` to name selected survey or stage covariate predictors
+that should enter only as main effects, including their own splines when
+eligible. The exclusion applies at every candidate depth before counting
+coefficients. The US models keep district and state random intercepts and
+exclude both geographic predictors from interactions.
 Categorical terms use random
 intercepts, and crossed terms use random slopes for the continuous effects
 within the group. Truncated linear splines add global curves and group-level
@@ -154,6 +230,11 @@ effects and their interactions.
 All stages use `vglmer`. It requires a random effect or spline, and an area
 random intercept requires at least two observed areas. A stage that cannot
 meet those engine requirements stops the fit and records the reason in the log.
+By default, VoteFrame accepts convergence when the largest tracked
+variational parameter change is below 10⁻³ or the positive ELBO gain is
+below 10⁻⁵. A caller-supplied `vglmer_control()` takes precedence.
+In `MasterP()`, set it in the extension's `fit$control`. The solver can
+also return at its iteration cap, with a non-convergence message.
 The fitted object retains each stage's formula, data, and model fit for
 inspection. [Supplementary material](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS0003055423000035/resource/name/S0003055423000035sup001.pdf)
 

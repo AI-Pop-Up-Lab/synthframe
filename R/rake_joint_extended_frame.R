@@ -2,28 +2,34 @@
 rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
                                        extension_variables = names(targets),
                                        target_variable = "target", count_variable = "N",
-                                       target_scale = c("share", "count"),
-                                       tolerance = 0.000000000001, max_iterations = 1000L) {
-  target_scale <- match.arg(target_scale)
-  if (!is.character(extension_variables) || length(extension_variables) < 2L ||
+                                       target_scale = "share",
+                                       tolerance = 0.000000000001, max_iterations = 1000L,
+                                       margin_variables = stats::setNames(names(targets), names(targets))) {
+  margin_names <- names(targets)
+  if (!is.character(extension_variables) || !length(extension_variables) ||
       anyNA(extension_variables) || any(!nzchar(extension_variables)) ||
-      anyDuplicated(extension_variables) || !is.list(targets) ||
-      !setequal(names(targets), extension_variables) || anyDuplicated(names(targets))) {
-    stop("Supply target tables named for each of at least two distinct extension variables.")
+      anyDuplicated(extension_variables) || !is.list(targets) || !length(targets) ||
+      length(margin_names) != length(targets) || anyNA(margin_names) ||
+      any(!nzchar(margin_names)) || anyDuplicated(margin_names) ||
+      !is.character(margin_variables) || !setequal(names(margin_variables), margin_names) ||
+      anyDuplicated(names(margin_variables)) || !all(margin_variables %in% extension_variables)) {
+    stop("Supply named target tables and match each margin to an extension variable.")
   }
-  if (is.character(by)) by <- stats::setNames(rep(list(by), length(targets)), names(targets))
-  if (!is.list(by) || !setequal(names(by), extension_variables) || anyDuplicated(names(by))) {
-    stop("Supply shared grouping columns or a named list of grouping columns by extension.")
+  if (is.character(by)) by <- stats::setNames(rep(list(by), length(targets)), margin_names)
+  if (!is.list(by) || !setequal(names(by), margin_names) || anyDuplicated(names(by))) {
+    stop("Supply shared grouping columns or a named list of grouping columns by margin.")
   }
-  if (!is.character(target_variable) || length(target_variable) != 1L ||
-      is.na(target_variable) || !nzchar(target_variable) || !is.numeric(tolerance) ||
+  target_variable <- joint_margin_options(target_variable, margin_names)
+  target_scale <- joint_margin_options(target_scale, margin_names)
+  if (!all(target_scale %in% c("share", "count")) || !is.numeric(tolerance) ||
       length(tolerance) != 1L || !is.finite(tolerance) || tolerance <= 0 || tolerance >= 1 ||
       !is.numeric(max_iterations) || length(max_iterations) != 1L ||
       !is.finite(max_iterations) || max_iterations < 1 || max_iterations != floor(max_iterations) ||
       max_iterations > .Machine$integer.max) {
     stop("Supply a target column, a tolerance between zero and one, and a positive iteration limit.")
   }
-  keys <- setdiff(names(frame), count_variable)
+  population_draws <- prediction_count_draws(frame, count_variable)
+  keys <- setdiff(names(frame), c(count_variable, population_draws))
   validate_prediction_frame(frame, keys, count_variable)
   row_keys <- c(keys, extension_variables)
   if (!is.data.frame(extended_frame) || !nrow(extended_frame) ||
@@ -46,29 +52,51 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
   if (anyNA(cell) || length(unique(cell)) != nrow(frame)) {
     stop("The extended frame must match and cover every original cell.")
   }
-  population <- frame[[count_variable]]
-  total <- sum(population)
-  if (!is.finite(total) || total <= 0) stop("The original frame must have finite positive population.")
-  cell_share <- population / total
-  margins <- lapply(extension_variables, function(extension) {
-    prepare_joint_rake_margin(frame, extended_frame, cell, cell_share,
-                              targets[[extension]], by[[extension]], extension,
-                              population, target_variable, target_scale, tolerance, keys)
-  })
-  names(margins) <- extension_variables
-
   count_columns <- c(count_variable, extended_frame_draw_columns(extended_frame, count_variable))
   if (any(count_columns %in% row_keys) ||
       !all(vapply(extended_frame[count_columns], function(x) {
         is.numeric(x) && all(is.finite(x) & x >= 0)
       }, logical(1)))) stop("Extended count columns must be distinct, finite, and nonnegative.")
+  if (length(population_draws)) {
+    count_columns <- c(count_variable, prediction_count_draws(extended_frame, count_variable))
+    if (length(population_draws) != length(count_columns) - 1L) {
+      stop("Extended and original population draws must match by draw number.")
+    }
+  }
 
   raked <- extended_frame
-  for (column in count_columns) {
-    raked[[column]] <- fit_joint_rake(extended_frame[[column]], cell, cell_share, margins,
-                                      tolerance, max_iterations, column) * total
+  for (i in seq_along(count_columns)) {
+    column <- count_columns[i]
+    if (i == 1L || length(population_draws)) {
+      population <- frame[[c(count_variable, population_draws)[i]]]
+      total <- sum(population)
+      if (!is.finite(total)) stop("Original population totals must be finite.")
+      cell_share <- if (total > 0) population / total else population
+      margins <- lapply(margin_names, function(margin) {
+        prepare_joint_rake_margin(frame, extended_frame, cell, cell_share,
+                                  targets[[margin]], by[[margin]], margin_variables[[margin]],
+                                  population, target_variable[[margin]], target_scale[[margin]],
+                                  tolerance, keys)
+      })
+      names(margins) <- margin_names
+    }
+    raked[[column]] <- if (total == 0) numeric(nrow(raked)) else {
+      fit_joint_rake(extended_frame[[column]], cell, cell_share, margins,
+                     tolerance, max_iterations, column) * total
+    }
   }
   raked
+}
+
+joint_margin_options <- function(value, margins) {
+  if (is.character(value) && length(value) == 1L && is.null(names(value))) {
+    value <- stats::setNames(rep(value, length(margins)), margins)
+  }
+  if (!is.character(value) || anyNA(value) || any(!nzchar(value)) ||
+      !setequal(names(value), margins) || anyDuplicated(names(value))) {
+    stop("Supply a shared target option or one named option per margin.")
+  }
+  value
 }
 
 prepare_joint_rake_margin <- function(frame, extended, cell, cell_share, targets, by,

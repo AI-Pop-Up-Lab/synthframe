@@ -39,6 +39,7 @@ demographics <- c("age_cat", "gender_cat", "race_cat", "hispanic_cat", "educ_cat
 pres <- "vote_pres_2024"
 house <- "vote_house_2024"
 choices <- c("Democratic", "Republican", "Other", "No Vote")
+vote_order <- c("No Vote", "Democratic", "Republican", "Other")
 
 survey <- readRDS(file.path(country, "ces_2024_harmonized.rds"))
 frame <- readRDS(file.path(country, "pums_cd_cells.rds"))
@@ -56,9 +57,9 @@ survey$district_id <- district_id(survey)
 frame$district_id <- district_id(frame)
 election$district_id <- district_id(election)
 
-predictors <- c("district_id", demographics)
+predictors <- c("state_fips", "district_id", demographics)
 # The composite key retains district FIPS. Keep state FIPS for state margins.
-frame <- frame[order(frame$state_fips), c("state_fips", predictors, "N")]
+frame <- frame[order(frame$state_fips), c(predictors, "N")]
 
 stopifnot(
   nrow(election) == 1744L, length(unique(election$district_id)) == 436L,
@@ -82,10 +83,12 @@ predictors as columns. Splitting the CSV by choice directly produces these
 tables. In both fits, each party stage uses that choice's district House
 share and statewide presidential share, the district's categorical
 House lineup, and the choice's ballot presence and incumbency. Preserve
-both shares on their original citizen-adult scale. Set the order to
-Democratic, Republican, Other, then No Vote so all three party groups
-get a fitted stage and No Vote receives the remaining probability.
-Ballot presence and incumbency are undefined for No Vote.
+both shares on their original citizen-adult scale. Both fits start with
+No Vote, using the district House and statewide presidential nonvoting
+shares and the lineup. Democratic and Republican follow among voters.
+Other receives the remaining probability. Covariates that are blank in
+every district for a stage are omitted from that stage. For No Vote,
+this applies to ballot presence and incumbency.
 
 An outcome such as five-category happiness can use the same area predictors
 at every stage. Given an area-by-predictor table with area IDs as row names,
@@ -94,12 +97,12 @@ the appropriate response labels. Replace individual entries when a stage
 needs its own predictors.
 
 ```{r covariates-and-targets}
-party_election <- election[election$vote_choice != "No Vote", ]
-party_rows <- split(party_election, party_election$vote_choice)
-area_covariates <- lapply(party_rows, function(rows) {
-  data.frame(house_share = rows[[house]], pres_share = rows[[pres]],
-             lineup = factor(rows$lineup), on_ballot = rows$on_ballot,
-             incumbent = rows$incumbent, row.names = rows$district_id)
+choice_rows <- split(election, election$vote_choice)
+area_covariates <- lapply(choice_rows, function(rows) {
+  covariates <- data.frame(house_share = rows[[house]], pres_share = rows[[pres]],
+                           lineup = factor(rows$lineup), on_ballot = rows$on_ballot,
+                           incumbent = rows$incumbent, row.names = rows$district_id)
+  covariates[!vapply(covariates, function(x) all(is.na(x)), logical(1))]
 })
 
 pres_targets <- unique(data.frame(state_fips = election$state_fips,
@@ -137,11 +140,17 @@ Its numeric `target` column contains shares on the 0–1 scale. Changing
 
 ## 3. Fit and extend with 2024 presidential vote
 
-The presidential model uses district and the five demographic predictors.
+Both models include a district random intercept and a state random
+intercept. District and state enter as main effects only. Area covariates
+can still interact with one another and with the other eligible predictors
+according to the selected depth. The presidential model also uses the five
+demographic predictors.
 Each fit uses its own complete cases. For a compact national run, this
 vignette uses 30 posterior draws and requests depth 2 with interactions
 and splines. The fitter checks the candidate coefficient counts against
-the eligible respondents in each stage. Increase the draw count
+the eligible respondents in each stage. The solver stops when the largest
+tracked parameter change is below 10⁻³ or the positive ELBO gain is
+below 10⁻⁵. Each iteration reports both diagnostics. Increase the draw count
 for analyses that need more precise posterior intervals. The second extension
 pairs draw indices with the first.
 
@@ -174,12 +183,24 @@ out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 n_draws <- 30L
 requested_depth <- 2L
-control <- vglmer::vglmer_control(quiet = TRUE)
+no_interactions <- c("district_id", "state_fips")
+control <- vglmer::vglmer_control(tolerance_parameters = 1e-3, tolerance_elbo = 1e-5,
+                                  quiet = FALSE, quiet_rho = FALSE, print_prog = 1L)
+# Stream diagnostics to the console while knitr also records them in the vignette.
+fit_us_model <- function(...) {
+  if (!isTRUE(getOption("knitr.in.progress"))) return(fit_sequential_logit(...))
+  withCallingHandlers(
+    fit_sequential_logit(...),
+    message = function(m) cat(conditionMessage(m), file = stderr()),
+    warning = function(w) cat("Warning: ", conditionMessage(w), "\n", sep = "", file = stderr())
+  )
+}
 set.seed(2026)
 
-pres_fit <- fit_sequential_logit(
-  survey, pres, "district_id", area_covariates, no_vote = "No Vote", outcome_order = choices,
+pres_fit <- fit_us_model(
+  survey, pres, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
   predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
+  no_interactions = no_interactions,
   log_file = file.path(out, "presidential_fit_log.csv")
 )
 pres_fit$fit_log[c("outcome", "observations", "fitted_depth", "estimated_parameters")]
@@ -216,9 +237,10 @@ whenever that level appears again.
 
 ```{r house-fit}
 set.seed(2027)
-house_fit <- fit_sequential_logit(
-  survey, house, "district_id", area_covariates, no_vote = "No Vote", outcome_order = choices,
+house_fit <- fit_us_model(
+  survey, house, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
   predictors = c(predictors, pres), depth = requested_depth, splines = TRUE, control = control,
+  no_interactions = no_interactions,
   log_file = file.path(out, "house_fit_log.csv")
 )
 house_fit$fit_log[c("outcome", "observations", "fitted_depth", "estimated_parameters")]
@@ -359,7 +381,7 @@ demographic keys, both vote outcomes, and three draw counts.
 ```{r final-preview}
 alabama <- readRDS(file.path(raked_dir, "state_01.rds"))
 preview_rows <- round(seq(1L, nrow(alabama), length.out = 6L))
-preview_columns <- c("state_fips", predictors, pres, house, "N",
+preview_columns <- c(predictors, pres, house, "N",
                      paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
 knitr::kable(alabama[preview_rows, preview_columns], digits = 3, row.names = FALSE)
 ```
