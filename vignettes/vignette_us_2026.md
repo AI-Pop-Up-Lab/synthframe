@@ -372,14 +372,9 @@ number is its mean number of informative respondents per retained group.*
 
 ## 6. Inspect support and conditioning before fitting
 
-The left panels show how many candidate random-effect levels have at most
-the given number of survey respondents. Each level is counted once per
-random term, including crossed factor levels. The right panels show the
-full fixed-design condition-index spectrum by stage, after the support
-screen and again after collinearity and hierarchy pruning. The horizontal
-line marks 30. The spectra are sorted from their largest index, so the
-first point gives the maximum. Open triangles mark indices above 200 at
-the plot cap. The tables show their full values.
+The tables report the condition indices before and after pruning and show
+which coefficients are involved. The figures below show how far pruning
+moves each stage away from the cutoff of 30.
 
 
 |Model        |Stage      |Before pruning         |After pruning |Fixed columns before → after |Fixed columns rejected                                                                                                                           |
@@ -461,10 +456,33 @@ nearly constant. VoteFrame always keeps the intercept. In the first row,
 the screen keeps both vote-share main effects and removes their
 interaction, as shown in Table 7.
 
+### How to read the figures
+
+Start with the top-right panel of Figure 1, for presidential No Vote.
+We want to know whether the survey can tell the intercept, the two vote
+shares, and their interaction apart. A high condition index means there
+is a way to change several coefficients together while barely changing
+the predictions. That makes it hard to tell how much of the prediction
+belongs to each coefficient.
+
+The orange dots list those indices before pruning. The largest goes at
+position 1, the second-largest at position 2, and so on. The first orange
+dot is **110.40**, well above the dashed line at 30. After dropping the
+interaction between the two vote shares, we calculate a fresh list and
+sort it again. The first green dot is **18.46**. Since even the largest
+green value is below 30, all the other green values are below 30 too.
+The horizontal positions are places in a sorted list. They do not track
+a particular predictor or show the order in which we removed terms.
+
 
 ![Presidential model support and condition indices](assets/us-2026/prefit-presidential.png)
 
+*Figure 1. Pre-fit checks for the presidential model.* Each row shows one vote choice being modeled. **Left.** Pick a respondent count on the horizontal axis. The curve tells you what fraction of the groups has that many respondents or fewer. A group might be a district or a district–age pair. Groups with fewer than 10 respondents are screened. **Right.** Orange shows the indices before pruning, and green shows them after pruning. Each color puts its largest value first. Read the first green dot in each row to check that the retained design clears the cutoff. Open triangles mark values above 200. Table 8 gives those values in full. The largest green value in each row ranges from 18.46 to 26.92.
+
+
 ![House model support and condition indices](assets/us-2026/prefit-house.png)
+
+*Figure 2. Pre-fit checks for the house model.* Each row shows one vote choice being modeled. **Left.** Pick a respondent count on the horizontal axis. The curve tells you what fraction of the groups has that many respondents or fewer. A group might be a district or a district–age pair. Groups with fewer than 10 respondents are screened. **Right.** Orange shows the indices before pruning, and green shows them after pruning. Each color puts its largest value first. Read the first green dot in each row to check that the retained design clears the cutoff. Open triangles mark values above 200. Table 8 gives those values in full. The largest green value in each row ranges from 18.47 to 28.03.
 
 ## 7. Stop before fitting
 
