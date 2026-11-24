@@ -1,12 +1,53 @@
 # US 2026 frame extension handoff
 
-## Resume here: converged presidential screening benchmark
+## Resume the current national fit
 
-Both 10,000-person pilot fits finished. There is no active national fit to
-resume. The [rendered vignette](vignettes/vignette_us_2026.md) audits the
-screened national designs and stops before fitting. The candidate design
-includes `on_ballot` in both party stages so the pre-fit rules determine
-what survives. The metrics below are from the earlier scalar-screening pilot.
+Start with [US_2026_RESUME.md](US_2026_RESUME.md). It shows which models
+have saved checkpoints and gives the commands to resume fitting and run
+the 125-draw pre-rake comparisons. The [run log](data/output/us-2026-national-b0bb47d/run.log)
+and fit checkpoints are in `data/output/us-2026-national-b0bb47d/`
+on this Codespace's workspace disk. The fit started from commit
+`b0bb47d` using joint updates and a parameter-change tolerance of 0.01.
+
+All three presidential stages converged. No Vote used 27 iterations
+(maximum parameter change 0.00694), Democratic 47 (0.00691), and
+Republican 80 (0.00461). The complete model is saved as
+`data/output/us-2026-national-b0bb47d/pres_fit.rds`. House No Vote then
+started at depth 2 with 55,413 respondents and 14,943 estimated retained
+coefficients. At 15:56 UTC on November 24, 2026, House No Vote had
+completed two iterations and had no saved House stage yet. The largest
+parameter change at iteration 2 was 353.30, with an ELBO increase of
+1,172.86. The process was left running until the user stops the
+Codespace. Check the saved log for any later progress. Presidential
+scoring is pending. The presidential log
+contains a solver warning that it corrected a negative determinant in a
+parameter-expansion matrix at iteration 1. All three saved stages still
+met the tolerance. Use the live checkpoint table and log for subsequent
+progress.
+
+1. Reopen the same Codespace and check the log before starting a process.
+   If the fit is still advancing, keep monitoring it. The user requested
+   an update after every completed iteration.
+2. If the fit stopped, follow the restart command in
+   [US_2026_RESUME.md](US_2026_RESUME.md). Once a full model is marked
+   **Ready**, the script loads that model and skips its fit. It restarts
+   an incomplete model from its first stage.
+3. Once both full models are present, run the 125-draw pre-rake
+   comparison from the same note. Verify that all 51 state and DC
+   partitions are represented and that the stage logs meet the 0.01
+   parameter-change tolerance before reporting convergence. Raking is
+   disabled in this run.
+
+The sections below preserve older experiments and results. Their run
+paths, draw counts, and solver settings are historical.
+
+## Earlier presidential screening benchmark
+
+Both 10,000-person pilot fits finished. The [rendered vignette](vignettes/vignette_us_2026.md)
+audits the screened national designs and stops before fitting by default.
+The candidate design includes `on_ballot` in both party stages so the
+pre-fit rules determine what survives. The metrics below are from the
+earlier scalar-screening pilot.
 
 The pilot sampled 10,000 of the 57,603 complete CES presidential
 respondents using seed `20261124`. The remaining 47,603 were used for
@@ -170,81 +211,26 @@ their metrics as CSVs. Set `VOTEFRAME_US_RAKE=true` for the optional
 raked partitions and post-rake checks. A benchmark-only three-state pilot
 using this source is in `/tmp/voteframe-pre-rake-pilot.XE6L4R`.
 
-## Resume the November 22 run
+## November 22 run (historical)
 
-The user asked to checkpoint while the revised national vignette was
-running. It was left active. First check
-`/tmp/voteframe-us-relaxed-tolerance.b8jACG/run.log`,
-`results/presidential_fit_log.csv`, `results/house_fit_log.csv` if present,
-and `exit-status` in that run directory. Its memory trace is `memory.csv`.
-The run directory is temporary and can disappear on workspace recycle.
-The code checkpoint is commit `bfb3aff` on the local `package` branch.
-If the run is still active, continue monitoring it. If it finished, use
-its outputs and verify them before publishing. If the run directory is
-gone or the fit exited without completing, restart with the code from
-the checkpoint and the current vignette source.
-
-- The vignette uses stock `vglmer` 1.0.8 with joint updates and verbose
-  per-iteration diagnostics. VoteFrame's default stopping thresholds are
-  a maximum parameter change below 10⁻³ or a positive ELBO gain below
-  10⁻⁵. Explicit solver controls take precedence.
-- Both vote extensions fit No Vote first, then Democratic and Republican,
-  and leave Other as the residual. Stage-specific area covariates blank
-  across every district are omitted. District and state retain random
-  intercepts and are excluded from interactions. Eligible non-geographic
-  interactions and splines are enabled with requested depth 2.
-- The presidential No Vote fit used 57,603 respondents and 3,160 estimated
-  coefficients. It converged at iteration 74 with an ELBO gain of about
-  1.6 × 10⁻⁵ and a maximum parameter change of about 8 × 10⁻⁴.
-- At 08:18 UTC, the presidential Democratic fit was active with 52,767
-  respondents and 3,911 estimated coefficients. Iteration 14 reported
-  an ELBO gain of 0.4111 and a maximum parameter change of 2,511.63. The
-  run's sampled peak R memory was 3.41 GiB. Prediction and raking had
-  yet to start.
-- The completed No Vote fit is held in the active R process. This run
-  does not serialize individual stage fits. A process exit or workspace
-  recycle before vignette completion will require refitting the stages.
-  If it completes, the Markdown and plots are under the run directory's
-  `vignettes/` subdirectory and state partitions are under `results/raked/`.
-  Verify all 51 partitions, 30 draws, and 7,960,800 rows before publishing.
-- The temporary stock library was `/tmp/voteframe-profile/lib`, with
-  `vglmer` 1.0.8, `gKRLS` 1.0.5, and `SQUAREM` 2026.1. The repository
-  contains `MasterP()` for the general pipeline. The live US run uses
-  the existing state-partitioned vignette workflow.
-
-To restart after a workspace recycle, restore the stock R dependencies
-if needed. From the repository root, create a scratch copy of the
-vignette so the existing published Markdown and figures are preserved
-until the new results are verified:
-
-```sh
-repo_dir="$PWD"
-run_dir=$(mktemp -d /tmp/voteframe-us-resume.XXXXXX)
-mkdir -p "$run_dir/vignettes"
-ln -s "$repo_dir/R" "$run_dir/R"
-ln -s "$repo_dir/data" "$run_dir/data"
-cp vignettes/vignette_us_2026.Rmd "$run_dir/vignettes/"
-cd "$run_dir"
-VOTEFRAME_US_OUTPUT_DIR="$run_dir/results" Rscript -e '
-knitr::opts_knit$set(root.dir = getwd())
-knitr::opts_chunk$set(error = FALSE)
-knitr::knit("vignettes/vignette_us_2026.Rmd", output = "vignettes/vignette_us_2026.md")
-' > run.log 2>&1
-```
-
-Set `R_LIBS` for the restart if the dependencies are only in a temporary
-library. The prior run used one BLAS thread and `R_GC_MEM_GROW=0`.
+This earlier depth-2 experiment was launched from `bfb3aff`. Its
+temporary directory was `/tmp/voteframe-us-relaxed-tolerance.b8jACG`.
+Presidential No Vote converged at iteration 74 with 3,160 estimated
+coefficients. Presidential Democratic was still running when that
+checkpoint was written. The experiment did not save completed stages
+separately, so its in-process results cannot be resumed from checkpoint
+files. The current run above uses a different screened design and saves
+each completed stage and model.
 
 ## Historical baseline
 
 The completed national baseline uses depth 1 and 30 posterior draws. It
 extends the CD120 population frame with 2024 presidential choice and then
 with 2024 House choice conditional on presidential choice. A full depth-2
-rerun with splines stopped during the first presidential fit after the
-fixed-effects rank fix. Resume with that fit before running prediction or
-raking again.
+retry with splines stopped during the first presidential fit after the
+fixed-effects rank fix.
 
-## Repository and result status
+## Repository snapshot for the earlier depth-1 baseline
 
 - The branch is `package`. Commit `4db4070` is on `origin/package`. It includes
   the US inputs, the eight-draw vignette and plots, the Denmark vignette
@@ -260,7 +246,7 @@ raking again.
   depth-2 rerun. Its expected output therefore differs from the captured
   baseline until the new run succeeds.
 
-## Inputs and model specification
+## Inputs and model specification for the earlier baseline
 
 The three original files in [the US input directory](data/input/us%202026/README.md)
 come from upstream commit `b302fb476c710896f53f7583ac5528bf31ce2524`. The
@@ -360,7 +346,7 @@ interaction products, partially aliased factor contrasts, and retention
 of spline terms. Prediction batching was checked on reused fitted and
 frame-only effects. The national depth-2 run never reached prediction.
 
-## Files and environment for resuming
+## Files and environment for the earlier depth-2 retries
 
 | Path | Contents |
 | --- | --- |
@@ -376,32 +362,3 @@ The files under `/tmp` are specific to this workspace and may disappear
 when it is recycled. The run used R 4.3.3, `vglmer` 1.0.8, `gKRLS` 1.0.5,
 `SQUAREM` 2026.1, and `knitr` 1.52. The temporary R package library is
 `/tmp/voteframe-r-lib`. The machine reported about 7.8 GiB of RAM and no swap.
-
-## Where to resume
-
-Start by choosing a larger-memory machine for the full specification or
-profiling the first presidential Democratic fit to identify the largest
-allocation. Profile the fitting stage before investing in the national
-prediction and rake. The rank issue and the termination are distinct
-findings. The broad question is whether sparse or lower-memory construction
-can preserve the exact hierarchical design and spline bases.
-
-Once the full first stage fits, run the vignette from the repository root
-and direct its generated RDS partitions to a fresh output directory.
-Render the Markdown to a temporary destination until it finishes. The
-figure chunk writes its plots under `vignettes/assets/us-2026/`.
-
-```sh
-VOTEFRAME_US_OUTPUT_DIR=/path/to/us-2026-depth2-results Rscript -e '
-knitr::opts_knit$set(root.dir = getwd())
-knitr::opts_chunk$set(error = FALSE)
-knitr::knit("vignettes/vignette_us_2026.Rmd", output = "/tmp/us-2026-depth2.md")
-'
-```
-
-Check the selected stages and logged omissions, then confirm that all 51
-partitions contain 30 draws and sum to 7,960,800 rows. Compare depth 2 with
-the depth-1 baseline using the **pre-rake** turnout-conditional diagnostics
-and, if evaluating predictive performance, held-out CES respondents.
-The post-rake plots verify calibration to the supplied benchmarks. Publish
-the refreshed Markdown and figures together after these checks.
