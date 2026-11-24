@@ -14,8 +14,9 @@ carries both historical outcomes forward for a later 2026 model.
 | After adding the four presidential choices | 1,990,200 |
 | After adding the four House choices within each presidential choice | 7,960,800 |
 
-Raking keeps the joint row count, including combinations whose calibrated
-counts are zero.
+*Table 1. Expected frame size at each step. Each extension creates one row
+per choice for each incoming cell. Raking adjusts counts, so rows with
+zero calibrated counts are still included.*
 
 All three inputs use the 2026 district map (CD120), including DC. The
 [US input guide](../data/input/us%202026/README.md) records the upstream
@@ -84,14 +85,16 @@ stopifnot(
   all(vapply(survey[c(pres, house)], function(x) identical(levels(x), choices), logical(1))),
   all(is.na(election$incumbent[election$vote_choice == "No Vote"]))
 )
-data.frame(election_rows = nrow(election), population_cells = nrow(frame),
-           survey_respondents = nrow(survey), citizen_adults = round(sum(frame$N)))
 ```
 
-```
-##   election_rows population_cells survey_respondents citizen_adults
-## 1          1744           497550              58627      240960972
-```
+
+| District × choice records| Population cells| Survey respondents| Citizen adults represented|
+|-------------------------:|----------------:|------------------:|--------------------------:|
+|                     1,744|          497,550|             58,627|                240,960,972|
+
+*Table 2. Input sizes before screening. A population cell is one district
+and demographic combination. The citizen-adult total sums the population
+counts across those cells.*
 
 ## 2. Specify stage predictors and election benchmarks
 
@@ -153,8 +156,8 @@ stopifnot(
   !anyDuplicated(pres_targets[c("state_fips", pres)]),
   all(is.finite(pres_targets$target) & pres_targets$target >= 0 & pres_targets$target <= 1),
   all(is.finite(house_targets$target) & house_targets$target >= 0 & house_targets$target <= 1),
-  all(abs(rowsum(pres_targets$target, pres_targets$state_fips) - 1) < 1e-8),
-  all(abs(rowsum(house_targets$target, house_targets$district_id) - 1) < 1e-8)
+  all(abs(rowsum(pres_targets$target, pres_targets$state_fips) - 1) < 0.00000001),
+  all(abs(rowsum(house_targets$target, house_targets$district_id) - 1) < 0.00000001)
 )
 ```
 
@@ -170,6 +173,10 @@ would match.
 |:-----------------|:-----------------------|-----------:|---------------------:|----------------:|
 |2024 presidential |States and DC           |          51|                     4|              204|
 |2024 House        |Congressional districts |         436|                     4|            1,744|
+
+*Table 3. Benchmark shares available for later calibration. Each count is
+the number of geographies multiplied by the four choices, including
+No Vote.*
 
 ## 3. Build the survey designs
 
@@ -228,10 +235,11 @@ preflight <- lapply(model_specs, prepare_model)
 
 ## 4. Screen support, conditioning, and hierarchy
 
-1. **Build the requested design.** Omit constant predictors and
-   district-level predictor interactions with district ID, since those
-   predictors are constant within district. The starting counts below
-   are for the design after those formula rules.
+1. **Build the requested design.** Set aside predictors with only one
+   observed value in the stage. A one-level factor has no contrast to
+   construct, and a constant numeric predictor supplies no main-effect
+   variation beyond the intercept. Build all eligible interactions at
+   the requested depth. The starting counts below describe this design.
 2. **Screen support.** Fixed columns need at least 10 respondents with
    nonzero entries. A random group level needs at least 10 respondents
    for the whole intercept-and-slopes vector to enter the likelihood.
@@ -241,16 +249,23 @@ preflight <- lapply(model_specs, prepare_model)
 3. **Screen the fixed design for collinearity.** Weight each row by the
    square root of its trial count and scale each column to unit length.
    The condition indices are `largest singular value / each singular
-   value`. Their maximum must stay below 30. Try the intercept first,
-   then main effects, then interactions of increasing order. Within
-   each order prefer the column that adds the most independent
-   variation. Belsley, Kuh, and Welsch use 30 as an inspection flag in
+   value`. Start with the full supported fixed design and prune until its
+   maximum is below 30. At each step find the weakest singular direction.
+   Among the columns involved, consider the highest-order interactions
+   first and keep the intercept. Choose the deletion that yields the
+   lowest condition number after enforcing hierarchy. Belsley, Kuh,
+   and Welsch use 30 as an inspection flag in
    linear regression, alongside variance-decomposition proportions.
    VoteFrame uses it as an automatic cutoff for its pre-fit logistic
    design. The plots below show condition indices. [SAS guide to the
    Belsley diagnostic](https://support.sas.com/documentation/cdl/en/sgug/59902/HTML/default/fit_sect29.htm)
-4. **Enforce hierarchy.** Drop descendants of removed main effects or
-   interactions. Fit a grouped spline deviation only where the
+4. **Enforce hierarchy and check grouping redundancy.** Drop descendants
+   whenever a main effect or interaction is removed. Drop a crossed
+   random intercept if it gives the same grouping of survey rows as one
+   of its parents. For example, district by state duplicates district
+   because each district belongs to one state. The general slope rule
+   handles numeric predictors that are constant within district.
+   Fit a grouped spline deviation only where the
    corresponding linear random block survives. Survey rows from screened
    groups still inform the overall curve and other retained effects.
 5. **Check depth after screening.** Compare the estimated retained
@@ -264,60 +279,74 @@ preflight <- lapply(model_specs, prepare_model)
 The presidential model excluded 1,024
 incomplete survey records. The House model excluded
 3,214.
-The starting counts are design columns and include the nominal kernel
-sketch width. The final solver may use a smaller kernel basis after
-its rank checks. Each row reconciles as **start minus removed plus restored equals retained**. A restored column belongs to a standalone global curve that
-the starting formula had supplied through a grouped spline.
+The counts below are estimates of **model coefficients**, one per fixed
+effect column, random intercept or slope column, and spline basis column.
+They exclude variance and covariance parameters. The solver may use a
+smaller kernel spline basis after its rank checks.
 
 
-|Model        |Stage      | Respondents|  Cells| Depth|  Start| Removed| Restored| Retained|
-|:------------|:----------|-----------:|------:|-----:|------:|-------:|--------:|--------:|
-|Presidential |No Vote    |      57,603| 42,019|     2| 20,013|   6,088|        0|   13,925|
-|Presidential |Democratic |      52,767| 39,007|     2| 20,816|   7,103|        0|   13,713|
-|Presidential |Republican |      23,922| 19,496|     2| 19,818|   9,932|        0|    9,886|
-|House        |No Vote    |      55,413| 46,863|     2| 22,317|   6,938|        0|   15,379|
-|House        |Democratic |      48,330| 40,477|     2| 22,852|   8,230|        0|   14,622|
-|House        |Republican |      21,552| 18,045|     2| 21,177|  10,626|        0|   10,551|
+|Model        |Stage      | Respondents| Survey cells| Depth| Candidate coefficients| Dropped coefficients| Spline coefficients added back†| Coefficients to fit|
+|:------------|:----------|-----------:|------------:|-----:|----------------------:|--------------------:|-------------------------------:|-------------------:|
+|Presidential |No Vote    |      57,603|       42,019|     2|                 41,860|               28,371|                               0|              13,489|
+|Presidential |Democratic |      52,767|       39,007|     2|                 43,535|               30,258|                               0|              13,277|
+|Presidential |Republican |      23,922|       19,496|     2|                 42,537|               33,087|                               0|               9,450|
+|House        |No Vote    |      55,413|       46,863|     2|                 44,164|               29,221|                               0|              14,943|
+|House        |Democratic |      48,330|       40,477|     2|                 45,571|               31,385|                               0|              14,186|
+|House        |Republican |      21,552|       18,045|     2|                 43,896|               33,905|                               0|               9,991|
 
-Here is the coefficient accounting summed across the three fitted stages of
-each model. The residual outcome, Other, has no separate stage.
+*Table 4. One row per model and stage. The coefficients to fit equal the
+candidate columns minus the dropped columns plus any spline columns added
+back. Survey cells counts distinct eligible predictor rows after
+aggregation. Respondents counts the people represented by those rows.*
 
-
-|Model        |  Start| Removed| Restored| Retained|
-|:------------|------:|-------:|--------:|--------:|
-|House        | 66,346|  25,794|        0|   40,552|
-|Presidential | 60,647|  23,123|        0|   37,524|
+† *Spline coefficients added back.* After all fixed and random terms have
+been screened for a candidate depth, VoteFrame checks which eligible
+overall curves are still supplied by a grouped spline. If no retained
+grouped spline supplies an eligible overall curve, it fits that curve on
+its own. This check runs once per candidate depth, after pruning. No
+spline columns were added back in this audit.
 
 Random level support counts columns removed with a low-support intercept.
 Slope support and linear hierarchy count additional removals among levels
 that clear the intercept cutoff. Whole smooths and spline levels report
 the associated estimated basis columns. These rows count each removal once.
-The substantive pattern is the same in both models. Most removals are
-low-support random levels. The slope screen also removes
-`pres_share:state_fips` because presidential share is constant within
-each state. The conditioning table below identifies the rejected fixed
+Whole smooths account for the largest estimated reduction in both
+models. The full candidate includes district-specific curves for the
+district-level vote shares, and their linear slopes have zero
+within-district support. The general rule removes those slopes and
+their grouped smooths. Low-support random levels account for the next
+largest reduction. The slope screen also removes `pres_share:state_fips`
+because presidential share is constant within each state. The conditioning table below identifies the rejected fixed
 columns in each stage. The term table shows the corresponding smooth
 removals.
 
 
-|Model        |Stage      | Fixed support| Random level support| Within-group slope support| Fixed collinearity| Linear hierarchy| Whole smooths| Spline level support|
-|:------------|:----------|-------------:|--------------------:|--------------------------:|------------------:|----------------:|-------------:|--------------------:|
-|Presidential |No Vote    |             0|                5,237|                         51|                  1|                0|           799|                    0|
-|Presidential |Democratic |             0|                5,737|                         57|                  5|                0|         1,304|                    0|
-|Presidential |Republican |             0|                8,519|                        108|                  6|                0|         1,299|                    0|
-|House        |No Vote    |             0|                6,077|                         51|                  1|                0|           809|                    0|
-|House        |Democratic |             0|                6,844|                         57|                  5|                0|         1,324|                    0|
-|House        |Republican |             0|                9,315|                         51|                  3|               93|         1,164|                    0|
+|Model        |Stage      | Fixed support| Random level support| Within-group slope support| Fixed collinearity| Redundant group intercepts| Linear hierarchy| Whole smooths| Spline level support|
+|:------------|:----------|-------------:|--------------------:|--------------------------:|------------------:|--------------------------:|----------------:|-------------:|--------------------:|
+|Presidential |No Vote    |             0|                5,237|                        923|                  1|                        872|                0|        21,338|                    0|
+|Presidential |Democratic |             0|                5,737|                      1,801|                  5|                        872|                0|        21,843|                    0|
+|Presidential |Republican |             0|                8,519|                      1,852|                  6|                        872|                0|        21,838|                    0|
+|House        |No Vote    |             0|                6,077|                        923|                  1|                        872|                0|        21,348|                    0|
+|House        |Democratic |             0|                6,844|                      1,801|                  5|                        872|                0|        21,863|                    0|
+|House        |Republican |             0|                9,375|                      1,323|                  7|                        848|              514|        21,838|                    0|
+
+*Table 5. Number of candidate coefficient columns dropped for each
+reason in each stage. The row sum is the dropped-coefficient count in
+Table 4. Counts for the smooths use estimated basis widths.*
 
 
-|Model        |Stage      |Fixed interactions removed by hierarchy                          |Sparse slopes (mean respondents)                                             |Whole smooths removed                                                                                                                                                                                                                                            |
-|:------------|:----------|:----------------------------------------------------------------|:----------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|Presidential |No Vote    |—                                                                |pres_share:state_fips (0)                                                    |v_s(pres_share, by = state_fips), v_s(house_share, pres_share, type = "gKRLS")                                                                                                                                                                                   |
-|Presidential |Democratic |—                                                                |pres_share:state_fips (0), lineup:on_ballot (0)                              |v_s(pres_share, by = state_fips), v_s(house_share, pres_share, type = "gKRLS"), v_s(house_share, on_ballot, type = "gKRLS"), v_s(pres_share, incumbent, type = "gKRLS"), v_s(pres_share, on_ballot, type = "gKRLS")                                              |
-|Presidential |Republican |—                                                                |pres_share:state_fips (0), on_ballot:state_fips (8.47), lineup:on_ballot (0) |v_s(pres_share, by = state_fips), v_s(house_share, pres_share, type = "gKRLS"), v_s(house_share, incumbent, type = "gKRLS"), v_s(house_share, on_ballot, type = "gKRLS"), v_s(pres_share, incumbent, type = "gKRLS"), v_s(pres_share, on_ballot, type = "gKRLS") |
-|House        |No Vote    |—                                                                |pres_share:state_fips (0)                                                    |v_s(pres_share, by = state_fips), v_s(house_share, pres_share, type = "gKRLS")                                                                                                                                                                                   |
-|House        |Democratic |—                                                                |pres_share:state_fips (0), lineup:on_ballot (0)                              |v_s(pres_share, by = state_fips), v_s(house_share, pres_share, type = "gKRLS"), v_s(house_share, on_ballot, type = "gKRLS"), v_s(pres_share, incumbent, type = "gKRLS"), v_s(pres_share, on_ballot, type = "gKRLS")                                              |
-|House        |Republican |pres_share:on_ballot, house_share:on_ballot, incumbent:on_ballot |pres_share:state_fips (0)                                                    |v_s(pres_share, by = state_fips), v_s(house_share, pres_share, type = "gKRLS"), v_s(house_share, on_ballot, type = "gKRLS"), v_s(pres_share, incumbent, type = "gKRLS"), v_s(pres_share, on_ballot, type = "gKRLS")                                              |
+|Model        |Stage      |Redundant crossed groups                   |Fixed interactions removed by hierarchy |Sparse slopes (mean respondents)                                                                                                                                                            |Whole smooths removed                                                                                                                                                                                                                                                                                                                   |
+|:------------|:----------|:------------------------------------------|:---------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|Presidential |No Vote    |district_id:state_fips, district_id:lineup |—                                       |pres_share:state_fips (0), district_id:house_share (0), district_id:pres_share (0)                                                                                                          |v_s(pres_share, by = state_fips), v_s(house_share, by = district_id), v_s(pres_share, by = district_id), v_s(house_share, pres_share, type = "gKRLS")                                                                                                                                                                                   |
+|Presidential |Democratic |district_id:state_fips, district_id:lineup |—                                       |pres_share:state_fips (0), district_id:house_share (0), district_id:pres_share (0), district_id:incumbent (0), district_id:on_ballot (0), lineup:on_ballot (0)                              |v_s(pres_share, by = state_fips), v_s(house_share, by = district_id), v_s(pres_share, by = district_id), v_s(house_share, pres_share, type = "gKRLS"), v_s(house_share, on_ballot, type = "gKRLS"), v_s(pres_share, incumbent, type = "gKRLS"), v_s(pres_share, on_ballot, type = "gKRLS")                                              |
+|Presidential |Republican |district_id:state_fips, district_id:lineup |—                                       |pres_share:state_fips (0), on_ballot:state_fips (8.47), district_id:house_share (0), district_id:pres_share (0), district_id:incumbent (0), district_id:on_ballot (0), lineup:on_ballot (0) |v_s(pres_share, by = state_fips), v_s(house_share, by = district_id), v_s(pres_share, by = district_id), v_s(house_share, pres_share, type = "gKRLS"), v_s(house_share, incumbent, type = "gKRLS"), v_s(house_share, on_ballot, type = "gKRLS"), v_s(pres_share, incumbent, type = "gKRLS"), v_s(pres_share, on_ballot, type = "gKRLS") |
+|House        |No Vote    |district_id:state_fips, district_id:lineup |—                                       |pres_share:state_fips (0), district_id:house_share (0), district_id:pres_share (0)                                                                                                          |v_s(pres_share, by = state_fips), v_s(house_share, by = district_id), v_s(pres_share, by = district_id), v_s(house_share, pres_share, type = "gKRLS")                                                                                                                                                                                   |
+|House        |Democratic |district_id:state_fips, district_id:lineup |—                                       |pres_share:state_fips (0), district_id:house_share (0), district_id:pres_share (0), district_id:incumbent (0), district_id:on_ballot (0), lineup:on_ballot (0)                              |v_s(pres_share, by = state_fips), v_s(house_share, by = district_id), v_s(pres_share, by = district_id), v_s(house_share, pres_share, type = "gKRLS"), v_s(house_share, on_ballot, type = "gKRLS"), v_s(pres_share, incumbent, type = "gKRLS"), v_s(pres_share, on_ballot, type = "gKRLS")                                              |
+|House        |Republican |district_id:state_fips, district_id:lineup |—                                       |pres_share:state_fips (0), district_id:house_share (0), district_id:pres_share (0), district_id:incumbent (0)                                                                               |v_s(pres_share, by = state_fips), v_s(house_share, by = district_id), v_s(pres_share, by = district_id), v_s(house_share, pres_share, type = "gKRLS"), v_s(house_share, incumbent, type = "gKRLS"), v_s(house_share, on_ballot, type = "gKRLS"), v_s(pres_share, incumbent, type = "gKRLS"), v_s(pres_share, on_ballot, type = "gKRLS") |
+
+*Table 6. Names of the affected terms. One term can account for many
+coefficient columns in Table 5. For a sparse slope, the parenthesized
+number is its mean number of informative respondents per retained group.*
 
 ## 6. Inspect support and conditioning before fitting
 
@@ -327,18 +356,22 @@ random term, including crossed factor levels. The right panels show the
 full fixed-design condition-index spectrum by stage, after the support
 screen and again after collinearity and hierarchy pruning. The horizontal
 line marks 30. The spectra are sorted from their largest index, so the
-first point gives the maximum. Indices above 200 are labeled at the top
-of the plot so the region near the cutoff remains legible.
+first point gives the maximum. Open triangles mark indices above 200 at
+the plot cap. The tables show their full values.
 
 
-|Model        |Stage      | Before pruning| After pruning|Fixed columns before → after |Fixed columns rejected                                                                                                                |
-|:------------|:----------|--------------:|-------------:|:----------------------------|:-------------------------------------------------------------------------------------------------------------------------------------|
-|Presidential |No Vote    |   1.104000e+02|         18.46|4 → 3                        |house_share:pres_share                                                                                                                |
-|Presidential |Democratic |   1.408689e+14|         26.92|11 → 6                       |house_share:pres_share, house_share:on_ballot, pres_share:incumbent, pres_share:on_ballot, incumbent:on_ballot                        |
-|Presidential |Republican |   1.144379e+15|         24.64|11 → 5                       |house_share:pres_share, house_share:incumbent, house_share:on_ballot, pres_share:incumbent, pres_share:on_ballot, incumbent:on_ballot |
-|House        |No Vote    |   1.101400e+02|         18.47|4 → 3                        |house_share:pres_share                                                                                                                |
-|House        |Democratic |   1.781587e+16|         28.03|11 → 6                       |house_share:pres_share, house_share:on_ballot, pres_share:incumbent, pres_share:on_ballot, incumbent:on_ballot                        |
-|House        |Republican |   8.938414e+14|         25.41|11 → 5                       |on_ballot, house_share:pres_share, pres_share:incumbent                                                                               |
+|Model        |Stage      |Before pruning         |After pruning |Fixed columns before → after |Fixed columns rejected                                                                                                                           |
+|:------------|:----------|:----------------------|:-------------|:----------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|
+|Presidential |No Vote    |110.40                 |18.46         |4 → 3                        |house_share:pres_share                                                                                                                           |
+|Presidential |Democratic |140,868,925,592,265    |26.92         |11 → 6                       |incumbent:on_ballot, house_share:on_ballot, pres_share:on_ballot, house_share:pres_share, pres_share:incumbent                                   |
+|Presidential |Republican |1,144,378,722,009,732  |24.64         |11 → 5                       |house_share:on_ballot, incumbent:on_ballot, pres_share:on_ballot, house_share:pres_share, pres_share:incumbent, house_share:incumbent            |
+|House        |No Vote    |110.14                 |18.47         |4 → 3                        |house_share:pres_share                                                                                                                           |
+|House        |Democratic |17,815,865,119,032,030 |28.03         |11 → 6                       |incumbent:on_ballot, house_share:on_ballot, pres_share:on_ballot, house_share:pres_share, pres_share:incumbent                                   |
+|House        |Republican |893,841,368,873,835    |19.13         |11 → 4                       |incumbent:on_ballot, house_share:on_ballot, pres_share:on_ballot, house_share:pres_share, pres_share:incumbent, house_share:incumbent, on_ballot |
+
+*Table 7. Maximum condition index for each stage’s weighted fixed design
+before and after backward pruning. The column counts describe that fixed
+design alone. Random effects and spline bases are outside this check.*
 
 For each pre-pruning component at or above 30, the next table names the
 fixed columns with at least half of their variance proportion on that
@@ -347,33 +380,39 @@ vectors. They diagnose shared weak directions in the design. They are
 separate from posterior coefficient variances and do not drive pruning.
 
 
-|Model        |Stage      | Condition index|Columns with at least 50% on this component                                          |
-|:------------|:----------|---------------:|:------------------------------------------------------------------------------------|
-|Presidential |No Vote    |    1.104000e+02|(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%) |
-|Presidential |Democratic |    3.607000e+01|—                                                                                    |
-|Presidential |Democratic |    9.418000e+01|house_share:pres_share (73%)                                                         |
-|Presidential |Democratic |    1.552500e+02|(Intercept) (60%), pres_share (63%), on_ballot (87%), pres_share:on_ballot (89%)     |
-|Presidential |Democratic |    2.045343e+07|house_share (100%), house_share:on_ballot (100%)                                     |
-|Presidential |Democratic |    1.408689e+14|incumbent (100%), incumbent:on_ballot (100%)                                         |
-|Presidential |Republican |    3.378000e+01|house_share:incumbent (89%)                                                          |
-|Presidential |Republican |    4.743000e+01|pres_share:incumbent (50%)                                                           |
-|Presidential |Republican |    1.325400e+02|house_share:pres_share (83%)                                                         |
-|Presidential |Republican |    2.390900e+02|(Intercept) (81%), pres_share (82%), on_ballot (95%), pres_share:on_ballot (98%)     |
-|Presidential |Republican |    3.870729e+14|incumbent (100%), incumbent:on_ballot (100%)                                         |
-|Presidential |Republican |    1.144379e+15|house_share (100%), house_share:on_ballot (100%)                                     |
-|House        |No Vote    |    1.101400e+02|(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%) |
-|House        |Democratic |    3.619000e+01|—                                                                                    |
-|House        |Democratic |    9.705000e+01|house_share:pres_share (80%)                                                         |
-|House        |Democratic |    1.691000e+02|(Intercept) (68%), pres_share (71%), on_ballot (87%), pres_share:on_ballot (89%)     |
-|House        |Democratic |    2.524383e+07|house_share (100%), house_share:on_ballot (100%)                                     |
-|House        |Democratic |    1.781587e+16|incumbent (100%), incumbent:on_ballot (100%)                                         |
-|House        |Republican |    3.041000e+01|—                                                                                    |
-|House        |Republican |    3.662000e+01|house_share:incumbent (62%)                                                          |
-|House        |Republican |    4.963000e+01|pres_share:incumbent (50%)                                                           |
-|House        |Republican |    1.390300e+02|house_share:pres_share (92%)                                                         |
-|House        |Republican |    3.031900e+02|(Intercept) (89%), pres_share (91%), on_ballot (95%), pres_share:on_ballot (97%)     |
-|House        |Republican |    5.588506e+14|house_share (100%), house_share:on_ballot (100%)                                     |
-|House        |Republican |    8.938414e+14|incumbent (100%), incumbent:on_ballot (100%)                                         |
+|Model        |Stage      |Condition index        |Columns with at least 50% on this component                                          |
+|:------------|:----------|:----------------------|:------------------------------------------------------------------------------------|
+|Presidential |No Vote    |110.40                 |(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%) |
+|Presidential |Democratic |36.07                  |—                                                                                    |
+|Presidential |Democratic |94.18                  |house_share:pres_share (73%)                                                         |
+|Presidential |Democratic |155.25                 |(Intercept) (60%), pres_share (63%), on_ballot (87%), pres_share:on_ballot (89%)     |
+|Presidential |Democratic |20,453,431             |house_share (100%), house_share:on_ballot (100%)                                     |
+|Presidential |Democratic |140,868,925,592,265    |incumbent (100%), incumbent:on_ballot (100%)                                         |
+|Presidential |Republican |33.78                  |house_share:incumbent (89%)                                                          |
+|Presidential |Republican |47.43                  |pres_share:incumbent (50%)                                                           |
+|Presidential |Republican |132.54                 |house_share:pres_share (83%)                                                         |
+|Presidential |Republican |239.09                 |(Intercept) (81%), pres_share (82%), on_ballot (95%), pres_share:on_ballot (98%)     |
+|Presidential |Republican |387,072,888,929,741    |incumbent (100%), incumbent:on_ballot (100%)                                         |
+|Presidential |Republican |1,144,378,722,009,732  |house_share (100%), house_share:on_ballot (100%)                                     |
+|House        |No Vote    |110.14                 |(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%) |
+|House        |Democratic |36.19                  |—                                                                                    |
+|House        |Democratic |97.05                  |house_share:pres_share (80%)                                                         |
+|House        |Democratic |169.10                 |(Intercept) (68%), pres_share (71%), on_ballot (87%), pres_share:on_ballot (89%)     |
+|House        |Democratic |25,243,827             |house_share (100%), house_share:on_ballot (100%)                                     |
+|House        |Democratic |17,815,865,119,032,030 |incumbent (100%), incumbent:on_ballot (100%)                                         |
+|House        |Republican |30.41                  |—                                                                                    |
+|House        |Republican |36.62                  |house_share:incumbent (62%)                                                          |
+|House        |Republican |49.63                  |pres_share:incumbent (50%)                                                           |
+|House        |Republican |139.03                 |house_share:pres_share (92%)                                                         |
+|House        |Republican |303.19                 |(Intercept) (89%), pres_share (91%), on_ballot (95%), pres_share:on_ballot (97%)     |
+|House        |Republican |558,850,570,096,225    |house_share (100%), house_share:on_ballot (100%)                                     |
+|House        |Republican |893,841,368,873,835    |incumbent (100%), incumbent:on_ballot (100%)                                         |
+
+*Table 8. One row per pre-pruning singular direction with a condition
+index at or above 30. A percentage is the share of a fixed column’s
+variance-decomposition total associated with that direction. Several
+large shares on the same row indicate that those columns share a weak
+direction.*
 
 
 ![Presidential model support and condition indices](assets/us-2026/prefit-presidential.png)

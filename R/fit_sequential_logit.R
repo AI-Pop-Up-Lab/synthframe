@@ -152,6 +152,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
       dropped_constant_predictors = paste(design$constant_predictors, collapse = "; "),
       dropped_fixed_columns = paste(design$aliased_fixed, collapse = "; "),
       hierarchy_dropped_fixed_columns = paste(design$orphaned_fixed, collapse = "; "),
+      redundant_random_groups = paste(prepared$redundant_random_groups, collapse = "; "),
       hierarchy_dropped_random_terms = paste(prepared$orphaned_random_terms, collapse = "; "),
       unsupported_random_main_effects = paste(prepared$unsupported_random_main_effects, collapse = "; "),
       unsupported_random_interactions = paste(prepared$unsupported_random_interactions, collapse = "; "),

@@ -279,12 +279,14 @@ adopts 30 as a pre-fit pruning cutoff for the weighted fixed design. This
 is a modeling choice for this logistic fit. It does not compute Belsley's
 variance-decomposition diagnostic. [SAS/STAT guide to Belsley's diagnostics](https://support.sas.com/documentation/cdl/en/sgug/59902/HTML/default/fit_sect29.htm)
 
-The screen starts with the intercept, then considers main effects and
-interactions of increasing order. Within each order it tries the column
-with the largest normalized residual after projection onto the retained
-columns. Adding a column must keep the condition number below 30. Ties
-within a term favor the larger unscaled residual norm, with column order
-as the final tiebreaker. This rule uses predictor variation alone.
+The screen starts with the full supported fixed design. While its
+condition number is at or above 30, it finds the weakest singular
+direction. Columns with absolute loadings at least 1% of that
+direction's largest absolute loading are candidates for removal. The
+intercept is protected. Among candidates of the highest interaction
+order, VoteFrame removes the column whose deletion and hierarchy cascade
+produce the lowest condition number. Ties remove the later formula
+column. This rule uses predictor variation alone.
 
 Every interaction requires all its immediate lower-order terms, which
 recursively requires its main effects. For example, a three-way
@@ -298,11 +300,14 @@ the fixed-design pruning. All selection runs before the solver is called.
 The fitted object retains each stage's formula, data, and model fit for
 inspection. [Supplementary material](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS0003055423000035/resource/name/S0003055423000035sup001.pdf)
 
-An area-level predictor has one value per area within a stage. The formula
-builder excludes terms that combine an area-level predictor with a grouping
-that contains the area itself. Within such a group, the predictor is constant,
-so its varying slope or smooth is confounded with the group intercept. This
-rule applies before counting coefficients. For every other grouping,
+VoteFrame leaves constant predictors out when constructing each stage
+design. A one-level factor has no estimable contrast, and a constant
+numeric predictor supplies no main-effect variation. A crossed random
+intercept is removed if its observed grouping is identical to one of its
+immediate parents. For example, if district already determines state,
+district by state gives the same grouping as district. The fit log lists
+these removals under `redundant_random_groups`.
+
 VoteFrame checks the actual slope column, including products for interaction
 slopes. For each retained group level it counts eligible respondents whose
 slope value differs from the most frequent value in that level, using the

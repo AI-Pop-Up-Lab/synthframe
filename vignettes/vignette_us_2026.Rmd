@@ -14,8 +14,9 @@ carries both historical outcomes forward for a later 2026 model.
 | After adding the four presidential choices | 1,990,200 |
 | After adding the four House choices within each presidential choice | 7,960,800 |
 
-Raking keeps the joint row count, including combinations whose calibrated
-counts are zero.
+*Table 1. Expected frame size at each step. Each extension creates one row
+per choice for each incoming cell. Raking adjusts counts, so rows with
+zero calibrated counts are still included.*
 
 All three inputs use the 2026 district map (CD120), including DC. The
 [US input guide](../data/input/us%202026/README.md) records the upstream
@@ -83,9 +84,21 @@ stopifnot(
   all(vapply(survey[c(pres, house)], function(x) identical(levels(x), choices), logical(1))),
   all(is.na(election$incumbent[election$vote_choice == "No Vote"]))
 )
-data.frame(election_rows = nrow(election), population_cells = nrow(frame),
-           survey_respondents = nrow(survey), citizen_adults = round(sum(frame$N)))
 ```
+
+```{r input-counts, echo=FALSE}
+knitr::kable(data.frame(
+  `District × choice records` = nrow(election),
+  `Population cells` = nrow(frame),
+  `Survey respondents` = nrow(survey),
+  `Citizen adults represented` = round(sum(frame$N)),
+  check.names = FALSE
+), format = "pipe", row.names = FALSE, format.args = list(big.mark = ",", scientific = FALSE))
+```
+
+*Table 2. Input sizes before screening. A population cell is one district
+and demographic combination. The citizen-adult total sums the population
+counts across those cells.*
 
 ## 2. Specify stage predictors and election benchmarks
 
@@ -146,8 +159,8 @@ stopifnot(
   !anyDuplicated(pres_targets[c("state_fips", pres)]),
   all(is.finite(pres_targets$target) & pres_targets$target >= 0 & pres_targets$target <= 1),
   all(is.finite(house_targets$target) & house_targets$target >= 0 & house_targets$target <= 1),
-  all(abs(rowsum(pres_targets$target, pres_targets$state_fips) - 1) < 1e-8),
-  all(abs(rowsum(house_targets$target, house_targets$district_id) - 1) < 1e-8)
+  all(abs(rowsum(pres_targets$target, pres_targets$state_fips) - 1) < 0.00000001),
+  all(abs(rowsum(house_targets$target, house_targets$district_id) - 1) < 0.00000001)
 )
 ```
 
@@ -167,8 +180,12 @@ knitr::kable(data.frame(
   `Choices per geography` = length(choices),
   `Benchmark shares` = c(nrow(pres_targets), nrow(house_targets)),
   check.names = FALSE
-), format = "pipe", row.names = FALSE, format.args = list(big.mark = ","))
+), format = "pipe", row.names = FALSE, format.args = list(big.mark = ",", scientific = FALSE))
 ```
+
+*Table 3. Benchmark shares available for later calibration. Each count is
+the number of geographies multiplied by the four choices, including
+No Vote.*
 
 ## 3. Build the survey designs
 
@@ -226,10 +243,11 @@ preflight <- lapply(model_specs, prepare_model)
 
 ## 4. Screen support, conditioning, and hierarchy
 
-1. **Build the requested design.** Omit constant predictors and
-   district-level predictor interactions with district ID, since those
-   predictors are constant within district. The starting counts below
-   are for the design after those formula rules.
+1. **Build the requested design.** Set aside predictors with only one
+   observed value in the stage. A one-level factor has no contrast to
+   construct, and a constant numeric predictor supplies no main-effect
+   variation beyond the intercept. Build all eligible interactions at
+   the requested depth. The starting counts below describe this design.
 2. **Screen support.** Fixed columns need at least 10 respondents with
    nonzero entries. A random group level needs at least 10 respondents
    for the whole intercept-and-slopes vector to enter the likelihood.
@@ -239,16 +257,23 @@ preflight <- lapply(model_specs, prepare_model)
 3. **Screen the fixed design for collinearity.** Weight each row by the
    square root of its trial count and scale each column to unit length.
    The condition indices are `largest singular value / each singular
-   value`. Their maximum must stay below 30. Try the intercept first,
-   then main effects, then interactions of increasing order. Within
-   each order prefer the column that adds the most independent
-   variation. Belsley, Kuh, and Welsch use 30 as an inspection flag in
+   value`. Start with the full supported fixed design and prune until its
+   maximum is below 30. At each step find the weakest singular direction.
+   Among the columns involved, consider the highest-order interactions
+   first and keep the intercept. Choose the deletion that yields the
+   lowest condition number after enforcing hierarchy. Belsley, Kuh,
+   and Welsch use 30 as an inspection flag in
    linear regression, alongside variance-decomposition proportions.
    VoteFrame uses it as an automatic cutoff for its pre-fit logistic
    design. The plots below show condition indices. [SAS guide to the
    Belsley diagnostic](https://support.sas.com/documentation/cdl/en/sgug/59902/HTML/default/fit_sect29.htm)
-4. **Enforce hierarchy.** Drop descendants of removed main effects or
-   interactions. Fit a grouped spline deviation only where the
+4. **Enforce hierarchy and check grouping redundancy.** Drop descendants
+   whenever a main effect or interaction is removed. Drop a crossed
+   random intercept if it gives the same grouping of survey rows as one
+   of its parents. For example, district by state duplicates district
+   because each district belongs to one state. The general slope rule
+   handles numeric predictors that are constant within district.
+   Fit a grouped spline deviation only where the
    corresponding linear random block survives. Survey rows from screened
    groups still inform the overall curve and other retained effects.
 5. **Check depth after screening.** Compare the estimated retained
@@ -257,6 +282,12 @@ preflight <- lapply(model_specs, prepare_model)
 
 ```{r prefit-audit, include=FALSE}
 collapse_terms <- function(x) if (length(x)) paste(x, collapse = ", ") else "—"
+show_index <- function(x) {
+  vapply(x, function(value) {
+    if (!is.finite(value)) return("Infinite")
+    formatC(value, format = "f", digits = if (value >= 10000) 0L else 2L, big.mark = ",")
+  }, character(1))
+}
 
 stage_audit <- function(selected, model, stage) {
   d <- selected$design
@@ -281,7 +312,8 @@ stage_audit <- function(selected, model, stage) {
   }
   sparse <- retained_group_columns(names(p$sparse_random_slopes))
   hierarchy <- retained_group_columns(p$orphaned_random_terms)
-  stopifnot(sum(group_loss) + sparse + hierarchy ==
+  redundant <- retained_group_columns(p$redundant_random_groups)
+  stopifnot(sum(group_loss) + sparse + hierarchy + redundant ==
               sum(p$dropped[c("scalar_random", "correlated_random")]))
   unscaled <- function(terms) stats::model.matrix(stats::reformulate(c("1", terms)), d$data)
   raw <- unscaled(d$candidate_fixed_terms)
@@ -311,6 +343,7 @@ stage_audit <- function(selected, model, stage) {
                "Random level support" = sum(group_loss),
                "Within-group slope support" = sparse,
                "Fixed collinearity" = length(d$aliased_fixed),
+               "Redundant group intercepts" = redundant,
                "Linear hierarchy" = length(d$orphaned_fixed) + hierarchy,
                "Whole smooths" = unname(p$dropped["smooth"]) - p$dropped_smooth_level_columns,
                "Spline level support" = p$dropped_smooth_level_columns)
@@ -322,19 +355,22 @@ stage_audit <- function(selected, model, stage) {
   }), use.names = FALSE)
   list(
     totals = data.frame(Model = model, Stage = stage, Respondents = sum(trials),
-                        Cells = nrow(d$data), Depth = d$depth, Start = start,
-                        Removed = sum(reasons), Restored = restored,
-                        Retained = p$estimated_parameters, check.names = FALSE),
+                        `Survey cells` = nrow(d$data), Depth = d$depth,
+                        `Candidate coefficients` = start,
+                        `Dropped coefficients` = sum(reasons),
+                        `Spline coefficients added back†` = restored,
+                        `Coefficients to fit` = p$estimated_parameters, check.names = FALSE),
     excluded = selected$excluded_respondents,
     reasons = data.frame(Model = model, Stage = stage, as.list(reasons), check.names = FALSE),
     diagnostic = data.frame(Model = model, Stage = stage,
-                            `Before pruning` = round(max(before_index), 2),
-                            `After pruning` = round(max(after_index), 2),
+                            `Before pruning` = show_index(max(before_index)),
+                            `After pruning` = show_index(max(after_index)),
                             `Fixed columns before → after` =
                               paste(ncol(before), ncol(unscaled(d$fixed_terms)), sep = " → "),
                             `Fixed columns rejected` = collapse_terms(d$aliased_fixed),
                             check.names = FALSE),
     terms = data.frame(Model = model, Stage = stage,
+                       `Redundant crossed groups` = collapse_terms(p$redundant_random_groups),
                        `Fixed interactions removed by hierarchy` = collapse_terms(d$orphaned_fixed),
                        `Sparse slopes (mean respondents)` = collapse_terms(
                          if (length(p$sparse_random_slopes)) {
@@ -344,7 +380,7 @@ stage_audit <- function(selected, model, stage) {
                        `Whole smooths removed` = collapse_terms(p$dropped_smooth_terms),
                        check.names = FALSE),
     components = data.frame(Model = rep(model, length(flagged)), Stage = rep(stage, length(flagged)),
-                            `Condition index` = round(before_index[flagged], 2),
+                            `Condition index` = show_index(before_index[flagged]),
                             `Columns with at least 50% on this component` = component_terms,
                             check.names = FALSE),
     indices = list(Before = before_index, After = after_index),
@@ -361,7 +397,7 @@ audit_table <- function(field) {
 totals <- audit_table("totals")
 reasons <- audit_table("reasons")
 table <- function(x) knitr::kable(x, format = "pipe", row.names = FALSE,
-                                  format.args = list(big.mark = ","))
+                                  format.args = list(big.mark = ",", scientific = FALSE))
 ```
 
 ## 5. Account for every removed coefficient
@@ -369,31 +405,38 @@ table <- function(x) knitr::kable(x, format = "pipe", row.names = FALSE,
 The presidential model excluded `r format(audit$Presidential[[1]]$excluded, big.mark = ",")`
 incomplete survey records. The House model excluded
 `r format(audit$House[[1]]$excluded, big.mark = ",")`.
-The starting counts are design columns and include the nominal kernel
-sketch width. The final solver may use a smaller kernel basis after
-its rank checks. Each row reconciles as **start minus removed plus restored equals retained**. A restored column belongs to a standalone global curve that
-the starting formula had supplied through a grouped spline.
+The counts below are estimates of **model coefficients**, one per fixed
+effect column, random intercept or slope column, and spline basis column.
+They exclude variance and covariance parameters. The solver may use a
+smaller kernel spline basis after its rank checks.
 
 ```{r prefit-totals, echo=FALSE}
 table(totals)
 ```
 
-Here is the coefficient accounting summed across the three fitted stages of
-each model. The residual outcome, Other, has no separate stage.
+*Table 4. One row per model and stage. The coefficients to fit equal the
+candidate columns minus the dropped columns plus any spline columns added
+back. Survey cells counts distinct eligible predictor rows after
+aggregation. Respondents counts the people represented by those rows.*
 
-```{r prefit-model-attrition, echo=FALSE}
-table(aggregate(totals[c("Start", "Removed", "Restored", "Retained")],
-                list(Model = totals$Model), sum))
-```
+† *Spline coefficients added back.* After all fixed and random terms have
+been screened for a candidate depth, VoteFrame checks which eligible
+overall curves are still supplied by a grouped spline. If no retained
+grouped spline supplies an eligible overall curve, it fits that curve on
+its own. This check runs once per candidate depth, after pruning. No
+spline columns were added back in this audit.
 
 Random level support counts columns removed with a low-support intercept.
 Slope support and linear hierarchy count additional removals among levels
 that clear the intercept cutoff. Whole smooths and spline levels report
 the associated estimated basis columns. These rows count each removal once.
-The substantive pattern is the same in both models. Most removals are
-low-support random levels. The slope screen also removes
-`pres_share:state_fips` because presidential share is constant within
-each state. The conditioning table below identifies the rejected fixed
+Whole smooths account for the largest estimated reduction in both
+models. The full candidate includes district-specific curves for the
+district-level vote shares, and their linear slopes have zero
+within-district support. The general rule removes those slopes and
+their grouped smooths. Low-support random levels account for the next
+largest reduction. The slope screen also removes `pres_share:state_fips`
+because presidential share is constant within each state. The conditioning table below identifies the rejected fixed
 columns in each stage. The term table shows the corresponding smooth
 removals.
 
@@ -401,9 +444,17 @@ removals.
 table(reasons)
 ```
 
+*Table 5. Number of candidate coefficient columns dropped for each
+reason in each stage. The row sum is the dropped-coefficient count in
+Table 4. Counts for the smooths use estimated basis widths.*
+
 ```{r prefit-terms, echo=FALSE}
 table(audit_table("terms"))
 ```
+
+*Table 6. Names of the affected terms. One term can account for many
+coefficient columns in Table 5. For a sparse slope, the parenthesized
+number is its mean number of informative respondents per retained group.*
 
 ## 6. Inspect support and conditioning before fitting
 
@@ -413,12 +464,16 @@ random term, including crossed factor levels. The right panels show the
 full fixed-design condition-index spectrum by stage, after the support
 screen and again after collinearity and hierarchy pruning. The horizontal
 line marks 30. The spectra are sorted from their largest index, so the
-first point gives the maximum. Indices above 200 are labeled at the top
-of the plot so the region near the cutoff remains legible.
+first point gives the maximum. Open triangles mark indices above 200 at
+the plot cap. The tables show their full values.
 
 ```{r prefit-conditioning, echo=FALSE}
 table(audit_table("diagnostic"))
 ```
+
+*Table 7. Maximum condition index for each stage’s weighted fixed design
+before and after backward pruning. The column counts describe that fixed
+design alone. Random effects and spline bases are outside this check.*
 
 For each pre-pruning component at or above 30, the next table names the
 fixed columns with at least half of their variance proportion on that
@@ -429,6 +484,12 @@ separate from posterior coefficient variances and do not drive pruning.
 ```{r prefit-condition-components, echo=FALSE}
 table(audit_table("components"))
 ```
+
+*Table 8. One row per pre-pruning singular direction with a condition
+index at or above 30. A percentage is the share of a fixed column’s
+variance-decomposition total associated with that direction. Several
+large shares on the same row indicate that those columns share a weak
+direction.*
 
 ```{r prefit-figures, echo=FALSE, results='asis'}
 asset_dir <- file.path("vignettes", "assets", "us-2026")
@@ -459,9 +520,8 @@ plot_model_audit <- function(model, stages, path) {
                    xlab = "Condition index rank", ylab = "Condition index")
     extremes <- which(before > index_cap)
     if (length(extremes)) {
-      graphics::text(extremes, rep(index_cap, length(extremes)), pos = 3,
-                     labels = formatC(before[extremes], digits = 2, format = "e"),
-                     offset = 0.3, cex = 0.78, col = before_colour, xpd = TRUE)
+      graphics::points(extremes, rep(index_cap, length(extremes)), pch = 24,
+                       cex = 1.2, lwd = 1.7, col = before_colour, bg = "white")
     }
     graphics::axis(1, at = seq_along(before))
     graphics::abline(h = 30, lty = 2, col = "grey45")
@@ -636,7 +696,7 @@ count_table <- data.frame(
   rbind(counts[rows, , drop = FALSE], totals), check.names = FALSE
 )
 knitr::kable(count_table, format = "pipe", row.names = FALSE,
-             format.args = list(big.mark = ","))
+             format.args = list(big.mark = ",", scientific = FALSE))
 ```
 
 ```{r house-extension}
@@ -658,7 +718,7 @@ presidential and district House targets and save the joint frame. Prediction
 and optional calibration run one state at a time to limit memory use.
 
 ```{r joint-rake}
-rake_tolerance <- 1e-8
+rake_tolerance <- 0.00000001
 run_rake <- identical(Sys.getenv("VOTEFRAME_US_RAKE"), "true")
 raked_dir <- file.path(out, "raked")
 if (run_rake) dir.create(raked_dir, showWarnings = FALSE)

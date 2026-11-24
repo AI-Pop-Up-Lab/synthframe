@@ -11,6 +11,12 @@ prepare_sequential_fit <- function(design) {
   group_predictors <- lapply(groups, function(group) {
     if (is.null(design$grouping_columns[[group]])) group else design$grouping_columns[[group]]
   })
+  group_keys <- vapply(group_predictors, sequential_term_key, character(1))
+  level_counts <- vapply(groups, function(group) nlevels(data[[group]]), integer(1))
+  redundant_groups <- vapply(seq_along(groups), function(i) {
+    parents <- match(sequential_term_parents(group_predictors[[i]]), group_keys)
+    any(level_counts[parents[!is.na(parents)]] == level_counts[i])
+  }, logical(1))
   support <- design$supported_random_levels
   trials <- data$.success + data$.failure
   supported_rows <- lapply(seq_along(groups), function(i) {
@@ -24,6 +30,7 @@ prepare_sequential_fit <- function(design) {
   unsupported_interactions <- character()
   unsupported_main <- character()
   sparse_slopes <- numeric()
+  redundant_intercepts <- character()
   candidates <- do.call(rbind, lapply(seq_along(groups), function(i) {
     slopes <- design$group_slopes[[groups[i]]]
     predictors <- lapply(strsplit(slopes, ":", fixed = TRUE),
@@ -47,6 +54,10 @@ prepare_sequential_fit <- function(design) {
       next
     }
     slope <- candidates$slope[row]
+    if (slope == "1" && redundant_groups[i]) {
+      redundant_intercepts <- c(redundant_intercepts, key)
+      next
+    }
     if (slope != "1") {
       columns <- strsplit(slope, ":", fixed = TRUE)[[1L]]
       group_rows <- supported_rows[[i]]
@@ -155,7 +166,7 @@ prepare_sequential_fit <- function(design) {
        estimated_parameters = design$retained_fixed_coefficients + design$random_coefficients -
          sum(dropped[c("scalar_random", "correlated_random")]) +
          sum(design$candidate_smooth_width[keep_smooth]) - removed_smooth_columns,
-       orphaned_random_terms = orphaned,
+       orphaned_random_terms = orphaned, redundant_random_groups = redundant_intercepts,
        unsupported_random_interactions = unsupported_interactions,
        unsupported_random_main_effects = unsupported_main, sparse_random_slopes = sparse_slopes,
        dropped = dropped, dropped_smooth_terms = design$candidate_smooth_terms[removed_smooth])

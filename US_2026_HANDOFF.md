@@ -62,11 +62,11 @@ When loading a saved joint-spline fit in a fresh R process, load the
 ## Fixed-effect near-collinearity
 
 The pre-fit screen uses respondent-weighted, unit-norm fixed columns and a
-condition-number cutoff of 30. It prioritizes the intercept and
-main effects, then interactions by degree. Within each degree it prefers
-the largest fraction of independent variation after projecting out the
-retained design. The stage log records affected columns, related retained
-columns, and conditioning before and after selection.
+condition-number cutoff of 30. It starts from the full supported fixed
+design and removes columns from the weakest singular direction, preferring
+to remove higher-order interactions. Each deletion also prunes dependent
+terms. The stage log records affected columns, other columns in the same weak
+direction, and conditioning before and after selection.
 
 In the 10,000-person CES presidential pilot, `house_share` and
 `house_share:on_ballot` formed the nearly dependent pair. Keep

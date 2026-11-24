@@ -57,8 +57,6 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
   for (size in seq_len(max_size)) {
     eligible <- if (size == 1L) predictors else interaction_predictors
     for (terms in utils::combn(eligible, size, simplify = FALSE)) {
-      # Area covariates are constant within the area at a given stage.
-      if (area_group %in% terms && any(terms %in% area_columns)) next
       # Factors determine the grouping. Numeric predictors determine the slopes.
       groups <- intersect(terms, factors)
       numeric <- intersect(terms, continuous)
@@ -201,49 +199,45 @@ independent_sequential_fixed_effects <- function(fixed, data, trials = rep(1, nr
     max(values) / min(values)
   }
   maximum_condition <- 30
-  tolerance <- 1e-6
   before <- condition(scaled[, eligible, drop = FALSE])
-  keep <- eligible
-  removed <- list()
-  orphaned <- integer()
-  keys <- c("", vapply(strsplit(term_labels, ":", fixed = TRUE),
-                       sequential_term_key, character(1)))[assignment + 1L]
-  parents <- lapply(strsplit(term_labels, ":", fixed = TRUE), sequential_term_parents)
-  if (before >= maximum_condition || any(lengths(parents) > 0L)) {
-    degree <- c(0L, attr(terms, "order"))[assignment + 1L]
-    residual <- scaled
-    keep <- integer()
-    remaining <- eligible
-    while (length(remaining)) {
-      candidates <- remaining[degree[remaining] == min(degree[remaining])]
-      independent <- sqrt(colSums(residual[, candidates, drop = FALSE]^2))
-      # Tied fractions of independent variation use unscaled residual
-      # variation within the same term, then the original column order.
-      tied <- which(independent >= max(independent) - 1e-12)
-      best <- tied[1L]
-      same_term <- tied[assignment[candidates[tied]] == assignment[candidates[best]]]
-      best <- same_term[which.max(independent[same_term] * norms[candidates[same_term]])]
-      column <- candidates[best]
-      remaining <- setdiff(remaining, column)
-      if (assignment[column] > 0L && !all(parents[[assignment[column]]] %in% keys[keep])) {
-        orphaned <- c(orphaned, column)
-        next
-      }
-      if (before >= maximum_condition && (independent[best] <= tolerance ||
-          condition(scaled[, c(keep, column), drop = FALSE]) >= maximum_condition)) {
-        basis <- scaled[, keep, drop = FALSE]
-        relation <- qr.coef(qr(basis), scaled[, column])
-        related <- abs(relation) >= max(abs(relation)) * 0.01 & relation != 0
-        removed[[colnames(columns)[column]]] <- colnames(columns)[keep[related]]
-        next
-      }
-      keep <- c(keep, column)
-      direction <- residual[, column] / independent[best]
-      residual <- residual - tcrossprod(direction, as.vector(crossprod(direction, residual)))
+  term_predictors <- strsplit(term_labels, ":", fixed = TRUE)
+  term_keys <- vapply(term_predictors, sequential_term_key, character(1))
+  keys <- c("", term_keys)[assignment + 1L]
+  parents <- lapply(term_predictors, sequential_term_parents)
+  degree <- c(0L, attr(terms, "order"))[assignment + 1L]
+  prune_hierarchy <- function(columns) {
+    present <- unique(keys[columns])
+    for (i in order(lengths(term_predictors))) {
+      if (!all(parents[[i]] %in% present)) present <- setdiff(present, term_keys[i])
     }
-    keep <- sort(keep)
+    columns[keys[columns] %in% present]
   }
-  aliases <- colnames(columns)[setdiff(eligible, c(keep, orphaned))]
+  keep <- prune_hierarchy(eligible)
+  orphaned <- setdiff(eligible, keep)
+  removed <- list()
+  while (condition(scaled[, keep, drop = FALSE]) >= maximum_condition) {
+    x <- scaled[, keep, drop = FALSE]
+    weakest <- svd(x, nu = 0L, nv = ncol(x))
+    direction <- abs(weakest$v[, ncol(x)])
+    involved <- keep[direction >= 0.01 * max(direction)]
+    candidates <- involved[assignment[involved] != 0L]
+    if (!length(candidates)) candidates <- keep[assignment[keep] != 0L]
+    # Prefer removing a higher-order term in the weak direction. Within an
+    # order, choose the deletion that gives the best-conditioned design.
+    candidates <- candidates[degree[candidates] == max(degree[candidates])]
+    alternatives <- lapply(candidates, function(column) prune_hierarchy(setdiff(keep, column)))
+    scores <- vapply(alternatives, function(columns) condition(scaled[, columns, drop = FALSE]),
+                     numeric(1))
+    # On a tie, remove the later formula column and retain the earlier one.
+    best_score <- min(scores)
+    tied <- if (is.finite(best_score)) scores <= best_score * (1 + 1e-12) else scores == best_score
+    best <- tail(which(tied), 1L)
+    column <- candidates[best]
+    removed[[colnames(columns)[column]]] <- colnames(columns)[setdiff(involved, column)]
+    orphaned <- c(orphaned, setdiff(keep, c(alternatives[[best]], column)))
+    keep <- alternatives[[best]]
+  }
+  aliases <- as.character(names(removed))
   retained <- character()
   contrasts <- list()
   for (i in seq_along(term_labels)) {
