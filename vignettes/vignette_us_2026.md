@@ -306,19 +306,18 @@ grouped spline supplies an eligible overall curve, it fits that curve on
 its own. This check runs once per candidate depth, after pruning. No
 spline columns were added back in this audit.
 
-Random level support counts columns removed with a low-support intercept.
-Slope support and linear hierarchy count additional removals among levels
-that clear the intercept cutoff. Whole smooths and spline levels report
-the associated estimated basis columns. These rows count each removal once.
-Whole smooths account for the largest estimated reduction in both
-models. The full candidate includes district-specific curves for the
-district-level vote shares, and their linear slopes have zero
-within-district support. The general rule removes those slopes and
-their grouped smooths. Low-support random levels account for the next
-largest reduction. The slope screen also removes `pres_share:state_fips`
-because presidential share is constant within each state. The conditioning table below identifies the rejected fixed
-columns in each stage. The term table shows the corresponding smooth
-removals.
+The biggest cut came from dropping district-specific curves for vote
+shares. Everyone in a district is assigned the same district vote share,
+so the survey offers no way to estimate how that district's curve changes
+as the share changes. We can still estimate an overall curve by comparing
+districts. The same logic rules out a separate slope for presidential
+vote share within each state.
+
+The next biggest cut came from groups with fewer than 10 respondents.
+For example, a district and age category can each have plenty of survey
+respondents, while the particular district–age pair has too few to
+estimate its own effect. The table counts the coefficients we dropped
+for each reason. One dropped curve can account for many coefficients.
 
 
 |Model        |Stage      | Fixed support| Random level support| Within-group slope support| Fixed collinearity| Redundant group intercepts| Linear hierarchy| Whole smooths| Spline level support|
