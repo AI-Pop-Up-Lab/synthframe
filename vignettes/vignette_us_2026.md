@@ -395,14 +395,30 @@ the plot cap. The tables show their full values.
 before and after backward pruning. The column counts describe that fixed
 design alone. Random effects and spline bases are outside this check.*
 
-For each pre-pruning component at or above 30, the next table names the
-fixed columns with at least half of their variance proportion on that
-component. These proportions come from the weighted design's singular
-vectors. They diagnose shared weak directions in the design. They are
-separate from posterior coefficient variances and do not drive pruning.
+Table 8 shows why some coefficients would be hard to estimate separately.
+Imagine keeping the survey predictors exactly as observed and fitting a
+linear regression over and over, each time with fresh random noise in
+the outcome. The coefficient estimates would change from run to run.
+Their variation in that thought experiment is what we mean here by
+**design-based estimation variance**. We can calculate it from the
+predictor matrix alone, before using any votes as outcomes or fitting a
+Bayesian model.
+
+When several predictors carry nearly the same information, their
+coefficients can trade off. One can rise and another fall while the
+predictions barely change. Each row below describes one such trade-off
+in the original design. A larger condition index means the predictions
+change less along that trade-off, relative to the strongest direction in
+the design.
+
+A stage has one condition index for each direction in its fixed design,
+and several directions can be weak. Table 7 reports only the largest
+index per stage. Table 8 gives each direction with an index of at least
+30 its own row. So the same model and stage can appear several times,
+with one index per row.
 
 
-|Model        |Stage      |Condition index        |Columns with at least 50% on this component                                          |
+|Model        |Stage      |Condition index        |Affected coefficients and their individual variance shares                           |
 |:------------|:----------|:----------------------|:------------------------------------------------------------------------------------|
 |Presidential |No Vote    |110.40                 |(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%) |
 |Presidential |Democratic |36.07                  |—                                                                                    |
@@ -430,11 +446,20 @@ separate from posterior coefficient variances and do not drive pruning.
 |House        |Republican |558,850,570,096,225    |house_share (100%), house_share:on_ballot (100%)                                     |
 |House        |Republican |893,841,368,873,835    |incumbent (100%), incumbent:on_ballot (100%)                                         |
 
-*Table 8. One row per pre-pruning singular direction with a condition
-index at or above 30. A percentage is the share of a fixed column’s
-variance-decomposition total associated with that direction. Several
-large shares on the same row indicate that those columns share a weak
-direction.*
+*Table 8. How much of each coefficient's design-based estimation variance
+comes from a particular trade-off. The first row says that the same
+trade-off accounts for 98% of the intercept's variance and 94% of the
+House-share coefficient's variance. Each percentage has its own
+denominator. For a single coefficient, the percentages across all
+directions sum to 100%, including directions omitted from this table.
+The table shows only directions with a condition index of 30 or higher
+and lists only coefficients for which that direction accounts for at
+least 50% of their variance. A dash means none reached 50%.*
+
+The intercept appears because it can trade off with predictors that are
+nearly constant. VoteFrame always keeps the intercept. In the first row,
+the screen keeps both vote-share main effects and removes their
+interaction, as shown in Table 7.
 
 
 ![Presidential model support and condition indices](assets/us-2026/prefit-presidential.png)
