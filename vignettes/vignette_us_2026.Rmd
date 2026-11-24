@@ -34,6 +34,7 @@ individual districts. Some House shares on the 2026 map come from upstream
 modeled scenarios. Agreement with these benchmarks is a calibration check.
 
 ```{r inputs}
+# Load VoteFrame from this checkout so the audit uses the same functions as the fit.
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
 
 country <- file.path("data", "input", "us 2026")
@@ -41,9 +42,13 @@ fips <- c("state_fips", "district_fips")
 demographics <- c("age_cat", "gender_cat", "race_cat", "hispanic_cat", "educ_cat")
 pres <- "vote_pres_2024"
 house <- "vote_house_2024"
+# The files use choices as their category order. The model uses vote_order
+# to define its three regressions. The final choice receives the remainder.
 choices <- c("Democratic", "Republican", "Other", "No Vote")
 vote_order <- c("No Vote", "Democratic", "Republican", "Other")
 
+# The survey supplies observed choices. The population frame supplies cell
+# sizes. Read FIPS IDs as text to preserve their leading zeros in joins.
 survey <- readRDS(file.path(country, "ces_2024_harmonized.rds"))
 frame <- readRDS(file.path(country, "pums_cd_cells.rds"))
 election <- read.csv(file.path(country, "district_election_inputs_cd120.csv"),
@@ -53,6 +58,7 @@ election <- read.csv(file.path(country, "district_election_inputs_cd120.csv"),
 # VoteFrame uses one area ID. A district number alone can repeat across states.
 district_id <- function(data) {
   id <- paste(data$state_fips, data$district_fips, sep = "-")
+  # Preserve missing geography so the survey complete-case check can catch it.
   id[!complete.cases(data[fips])] <- NA_character_
   id
 }
@@ -61,9 +67,12 @@ frame$district_id <- district_id(frame)
 election$district_id <- district_id(election)
 
 predictors <- c("state_fips", "district_id", demographics)
-# The composite key retains district FIPS. Keep state FIPS for state margins.
+# Keep the demographic keys and population count N for each cell. State FIPS
+# also lets us partition prediction and match statewide totals later.
 frame <- frame[order(frame$state_fips), c(predictors, "N")]
 
+# Check that the inputs use the same map and outcome labels. Require one
+# election row per district and choice, including the DC district.
 stopifnot(
   nrow(election) == 1744L, length(unique(election$district_id)) == 436L,
   !anyNA(election$district_id), !anyDuplicated(election[c("district_id", "vote_choice")]),
@@ -78,50 +87,60 @@ data.frame(election_rows = nrow(election), population_cells = nrow(frame),
            survey_respondents = nrow(survey), citizen_adults = round(sum(frame$N)))
 ```
 
-## 2. Specify stage predictors and targets
+## 2. Specify stage predictors and election benchmarks
 
 Each entry in a fit's area-covariate list corresponds to a choice. Each
 entry is a matrix or data frame with district IDs as row names and
 predictors as columns. Splitting the CSV by choice directly produces these
 tables. In both fits, each party stage uses that choice's district House
 share and statewide presidential share, the district's categorical
-House lineup, and the choice's incumbency. Preserve
+House lineup, the choice's incumbency, and its ballot indicator. Preserve
 both shares on their original citizen-adult scale. Both fits start with
 No Vote, using the district House and statewide presidential nonvoting
 shares and the lineup. Democratic and Republican follow among voters.
 Other receives the remaining probability. Covariates that are blank in
 every district for a stage are omitted from that stage. For No Vote,
-this applies to incumbency.
+this applies to incumbency and ballot presence.
 
-The vignette omits `on_ballot`. An earlier design check found that its
-interaction with district House share nearly duplicated the House-share
-main effect. The audit below checks the fixed design that will actually
-be passed to the solver.
+Include `on_ballot` in the party-stage candidate designs so the support,
+collinearity, and hierarchy rules decide whether its main effect and
+interactions enter each fitted stage.
 
 ```{r covariates-and-targets}
+# Each stage looks up district predictors for the outcome it models.
+# District IDs become row names so the survey joins can use them as keys.
 choice_rows <- split(election, election$vote_choice)
 area_covariates <- lapply(choice_rows, function(rows) {
   covariates <- data.frame(house_share = rows[[house]], pres_share = rows[[pres]],
                            lineup = factor(rows$lineup),
-                           incumbent = rows$incumbent, row.names = rows$district_id)
+                           incumbent = rows$incumbent, on_ballot = rows$on_ballot,
+                           row.names = rows$district_id)
+  # No Vote has no candidate, so its incumbency and ballot fields are blank.
+  # Omit fields blank across an entire stage.
   covariates[!vapply(covariates, function(x) all(is.na(x)), logical(1))]
 })
 
+# Statewide presidential shares repeat on every district row in a state.
+# Collapse those copies to one share per state and choice for later raking.
 pres_targets <- unique(data.frame(state_fips = election$state_fips,
                                  vote_pres_2024 = election$vote_choice,
                                  target = election[[pres]]))
+# House shares are district-specific. Keep one share per district and choice.
 house_targets <- data.frame(district_id = election$district_id,
                             vote_house_2024 = election$vote_choice,
                             target = election[[house]])
 rake_targets <- setNames(list(pres_targets, house_targets), c(pres, house))
 rake_by <- setNames(list("state_fips", "district_id"), c(pres, house))
 
-# Each outcome can use a different comparison table and grouping for plots.
+# Start later comparison plots with the same benchmarks as raking. The
+# separate list lets a plot use another comparison table without changing the rake.
 plot_targets <- setNames(list(
   list(data = pres_targets, by = "state_fips"),
   list(data = house_targets, by = "district_id")
 ), c(pres, house))
 
+# Check one presidential share per state and choice. All four shares must
+# be between zero and one and sum to one within each state or district.
 stopifnot(
   nrow(pres_targets) == 51L * length(choices),
   !anyDuplicated(pres_targets[c("state_fips", pres)]),
@@ -130,13 +149,26 @@ stopifnot(
   all(abs(rowsum(pres_targets$target, pres_targets$state_fips) - 1) < 1e-8),
   all(abs(rowsum(house_targets$target, house_targets$district_id) - 1) < 1e-8)
 )
-data.frame(outcome = names(rake_targets),
-           target_rows = vapply(rake_targets, nrow, integer(1)))
 ```
 
-The statewide presidential and district House benchmarks also define the
-targets for a later calibration run. This pre-fit audit uses them only to
-construct the predictors and check the input tables.
+Each benchmark is a **vote share for one choice in one geography**. For
+example, California's Democratic presidential share is one benchmark, and
+its presidential No Vote share is another. There are four shares per
+geography, including No Vote, because the denominator is the full
+citizen-adult population. These are the shares a later calibration run
+would match.
+
+```{r benchmark-counts, echo=FALSE}
+knitr::kable(data.frame(
+  Election = c("2024 presidential", "2024 House"),
+  Geography = c("States and DC", "Congressional districts"),
+  Geographies = c(length(unique(pres_targets$state_fips)),
+                  length(unique(house_targets$district_id))),
+  `Choices per geography` = length(choices),
+  `Benchmark shares` = c(nrow(pres_targets), nrow(house_targets)),
+  check.names = FALSE
+), format = "pipe", row.names = FALSE, format.args = list(big.mark = ","))
+```
 
 ## 3. Build the survey designs
 
@@ -149,25 +181,36 @@ At each stage, respondents who chose an earlier outcome leave the risk set.
 The counts below refer to eligible respondents at that stage.
 
 ```{r prefit-design}
+# Try two-way interactions. Count support in respondents, not aggregated cells.
 requested_depth <- 2L
 minimum_support <- 10L
+# Draw count for the later prediction run. The pre-fit audit draws nothing.
 n_draws <- 125L
+# The House model additionally conditions on each respondent’s presidential choice.
 model_specs <- list(
   Presidential = list(outcome = pres, predictors = predictors),
   House = list(outcome = house, predictors = c(predictors, pres))
 )
 
 prepare_model <- function(spec) {
+  # Combine identical predictor rows and count respondents by vote choice.
+  # The audit reports incomplete cases separately for each model below.
   aggregated <- suppressWarnings(aggregate_extension_survey(
     survey, spec$outcome, spec$predictors, "No Vote", outcome_order = vote_order
   ))
+  # Other receives the probability left over from the three fitted stages.
   stages <- head(vote_order, -1L)
   setNames(lapply(seq_along(stages), function(i) {
+    # At this stage, the current choice is a success. Current and later
+    # choices form the trial count because earlier choices already exited.
     success <- aggregated$counts[, i]
     trials <- rowSums(aggregated$counts[, i:length(vote_order), drop = FALSE])
     eligible <- trials > 0
+    # Join only eligible cells to the district covariates for this choice.
     stage <- join_stage_covariates(aggregated$cells[eligible, , drop = FALSE],
                                   "district_id", area_covariates[[stages[i]]])
+    # Use the same design selector as fitting. It screens the candidate and
+    # checks the retained coefficient budget without running the solver.
     selected <- select_sequential_stage_design(
       stage, "district_id", requested_depth, splines = TRUE,
       area_predictors = setdiff(names(stage), spec$predictors),
@@ -292,6 +335,7 @@ stage_audit <- function(selected, model, stage) {
                             `Fixed columns rejected` = collapse_terms(d$aliased_fixed),
                             check.names = FALSE),
     terms = data.frame(Model = model, Stage = stage,
+                       `Fixed interactions removed by hierarchy` = collapse_terms(d$orphaned_fixed),
                        `Sparse slopes (mean respondents)` = collapse_terms(
                          if (length(p$sparse_random_slopes)) {
                            paste0(names(p$sparse_random_slopes), " (",
@@ -349,9 +393,9 @@ the associated estimated basis columns. These rows count each removal once.
 The substantive pattern is the same in both models. Most removals are
 low-support random levels. The slope screen also removes
 `pres_share:state_fips` because presidential share is constant within
-each state. The condition screen removes `house_share:pres_share` in all
-stages and `pres_share:incumbent` in both Republican stages. Their
-corresponding smooths are removed as well.
+each state. The conditioning table below identifies the rejected fixed
+columns in each stage. The term table shows the corresponding smooth
+removals.
 
 ```{r prefit-causes, echo=FALSE}
 table(reasons)
@@ -369,7 +413,8 @@ random term, including crossed factor levels. The right panels show the
 full fixed-design condition-index spectrum by stage, after the support
 screen and again after collinearity and hierarchy pruning. The horizontal
 line marks 30. The spectra are sorted from their largest index, so the
-first point gives the reported maximum.
+first point gives the maximum. Indices above 200 are labeled at the top
+of the plot so the region near the cutoff remains legible.
 
 ```{r prefit-conditioning, echo=FALSE}
 table(audit_table("diagnostic"))
@@ -397,7 +442,7 @@ plot_model_audit <- function(model, stages, path) {
   before_colour <- "#AE4526"
   after_colour <- "#087A75"
   x_max <- max(vapply(stages, function(x) max(x$group_support), numeric(1)))
-  y_max <- max(vapply(stages, function(x) max(x$indices$Before), numeric(1)))
+  index_cap <- 200
   for (stage in names(stages)) {
     report <- stages[[stage]]
     counts <- sort(report$group_support)
@@ -408,10 +453,16 @@ plot_model_audit <- function(model, stages, path) {
     graphics::abline(v = minimum_support, lty = 2, col = "grey45")
     before <- sort(report$indices$Before, decreasing = TRUE)
     after <- sort(report$indices$After, decreasing = TRUE)
-    graphics::plot(seq_along(before), before, type = "o", log = "y", pch = 16, lwd = 2,
-                   ylim = c(1, y_max * 1.2), xlim = c(1, length(before)),
+    graphics::plot(seq_along(before), pmin(before, index_cap), type = "o", log = "y", pch = 16, lwd = 2,
+                   ylim = c(1, index_cap * 1.7), xlim = c(1, length(before)),
                    col = before_colour, xaxt = "n", main = paste(stage, "· Fixed-design conditioning"),
                    xlab = "Condition index rank", ylab = "Condition index")
+    extremes <- which(before > index_cap)
+    if (length(extremes)) {
+      graphics::text(extremes, rep(index_cap, length(extremes)), pos = 3,
+                     labels = formatC(before[extremes], digits = 2, format = "e"),
+                     offset = 0.3, cex = 0.78, col = before_colour, xpd = TRUE)
+    }
     graphics::axis(1, at = seq_along(before))
     graphics::abline(h = 30, lty = 2, col = "grey45")
     graphics::lines(seq_along(after), after, type = "o", pch = 17, lwd = 2, col = after_colour)

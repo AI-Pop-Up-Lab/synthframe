@@ -3,10 +3,10 @@
 ## Resume here: converged presidential screening benchmark
 
 Both 10,000-person pilot fits finished. There is no active national fit to
-resume. The vignette source omits `on_ballot` and defaults to pre-rake
-scoring. Its rendered Markdown still shows the earlier national baseline.
-The vignette now prepares screened formulas and columns before calling stock
-`vglmer`. The metrics below are from the earlier scalar-screening pilot.
+resume. The [rendered vignette](vignettes/vignette_us_2026.md) audits the
+screened national designs and stops before fitting. The candidate design
+includes `on_ballot` in both party stages so the pre-fit rules determine
+what survives. The metrics below are from the earlier scalar-screening pilot.
 
 The pilot sampled 10,000 of the 57,603 complete CES presidential
 respondents using seed `20261124`. The remaining 47,603 were used for
@@ -70,9 +70,10 @@ columns, and conditioning before and after selection.
 
 In the 10,000-person CES presidential pilot, `house_share` and
 `house_share:on_ballot` formed the nearly dependent pair. Keep
-`house_share` in this case. The vignette now excludes the `on_ballot`
-predictor and its interactions. The scaled Democratic fixed-design
-condition number fell from 21.4 million to 81.7 on that sample.
+`house_share` in this case. An early pilot omitted `on_ballot` and its
+interactions, bringing the scaled Democratic condition number from 21.4
+million to 81.7 on that sample. The current national vignette includes
+`on_ballot` and relies on automatic pruning.
 
 The earlier national design preflight with a cutoff of one million selected depth 2 for all six stages and
 screened 41,729 random coefficient columns at minimum support 10. The
@@ -84,8 +85,8 @@ design check reduced the condition number from about 1.41 × 10¹⁴ to
 The main effect `house_share` was retained. This preflight constructed
 the screened inputs without starting a national solver run.
 
-With the cutoff at 30 and strong hierarchy enabled, a fresh preflight
-again selected depth 2 for all six stages. The retained fixed-design
+With the cutoff at 30, strong hierarchy enabled, and `on_ballot` still
+omitted, an earlier preflight selected depth 2 for all six stages. The retained fixed-design
 condition numbers ranged from 18.46 to 28.97. Each stage dropped
 `house_share:pres_share` and its joint spline. Both Republican stages
 also dropped `pres_share:incumbent` and its joint spline. The depth rule
