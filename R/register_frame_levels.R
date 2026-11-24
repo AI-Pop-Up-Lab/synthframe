@@ -2,12 +2,14 @@
 register_frame_levels <- function(fit, frame_data) {
   # Build the frame design using the fitted contrasts, slopes, and spline bases.
   fixed <- build_prediction_fixed_matrix(fit, frame_data, allow_missing_levels = TRUE)
-  blocks <- build_prediction_random_blocks(fit, frame_data)
+  blocks <- build_prediction_random_blocks(fit, restore_screened_random(fit, frame_data))
   fitted_random <- rownames(fit$alpha$mean)
 
   # Keep coefficients within their term. Separate splines can reuse column labels.
   random <- lapply(seq_along(blocks), function(i) {
-    fitted <- fitted_random[fit$internal_parameters$cyclical_pos[[i]]]
+    fitted <- if (is.null(fit$prior_random[[names(blocks)[i]]])) {
+      fitted_random[fit$internal_parameters$cyclical_pos[[i]]]
+    }
     # These columns come from combinations present in the frame.
     available <- colnames(blocks[[i]])
     # A frame-only coefficient has a prediction column but no survey estimate.

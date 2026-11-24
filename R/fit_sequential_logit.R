@@ -5,7 +5,10 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                                  control = NULL, log_file = tempfile(
                                    "voteframe-fit-", tmpdir = ".", fileext = ".csv"),
                                  frame = NULL, outcome_order = NULL,
-                                 no_interactions = character()) {
+                                 no_interactions = character(),
+                                 tolerance_parameters = NULL, tolerance_elbo = NULL,
+                                 max_iterations = NULL, interaction_support_log = NULL,
+                                 depth_support_dir = NULL, minimum_support = -1L) {
   # The outcome and area ID are separate survey columns.
   if (!is.character(extension_variable) || length(extension_variable) != 1L ||
       !is.character(area_variable) || length(area_variable) != 1L ||
@@ -21,10 +24,32 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
   if (!is.logical(splines) || length(splines) != 1L || is.na(splines)) {
     stop("splines must be TRUE or FALSE.")
   }
+  if (is.null(minimum_support)) minimum_support <- -1L
+  if (!is.numeric(minimum_support) || length(minimum_support) != 1L ||
+      !is.finite(minimum_support) || minimum_support < -1 ||
+      minimum_support != floor(minimum_support)) {
+    stop("minimum_support must be -1 or a nonnegative integer.")
+  }
   if (!is.character(no_interactions) || anyNA(no_interactions) ||
       any(!nzchar(no_interactions))) {
     stop("Supply no_interactions as a character vector of predictor names.")
   }
+  tolerances <- list(tolerance_parameters = tolerance_parameters, tolerance_elbo = tolerance_elbo)
+  for (name in names(tolerances)) {
+    value <- tolerances[[name]]
+    if (!is.null(value) &&
+        (!is.numeric(value) || length(value) != 1L || !is.finite(value) || value < 0)) {
+      stop(name, " must be a finite nonnegative number.")
+    }
+  }
+  if (!is.null(max_iterations) &&
+      (!is.numeric(max_iterations) || length(max_iterations) != 1L ||
+       !is.finite(max_iterations) || max_iterations < 1 ||
+       max_iterations > .Machine$integer.max || max_iterations != floor(max_iterations))) {
+    stop("max_iterations must be a positive integer.")
+  }
+  solver_overrides <- Filter(Negate(is.null), tolerances)
+  if (!is.null(max_iterations)) solver_overrides$iterations <- as.integer(max_iterations)
   # Use all survey predictors by default. The area ID is always needed.
   if (is.null(predictors)) predictors <- setdiff(names(auxiliary_survey), extension_variable)
   predictors <- unique(c(area_variable, predictors))
@@ -64,6 +89,22 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
   if (!is.character(log_file) || length(log_file) != 1L ||
       is.na(log_file) || !nzchar(log_file)) stop("Supply a path for the fit log.")
 
+  if (!is.null(interaction_support_log) &&
+      (!is.character(interaction_support_log) || length(interaction_support_log) != 1L ||
+       is.na(interaction_support_log) || !nzchar(interaction_support_log))) {
+    stop("Supply a path for the interaction support log.")
+  }
+  if (!is.null(depth_support_dir)) {
+    if (!is.character(depth_support_dir) || length(depth_support_dir) != 1L ||
+        is.na(depth_support_dir) || !nzchar(depth_support_dir)) {
+      stop("Supply a directory for the depth support plots.")
+    }
+    if (!dir.exists(depth_support_dir) &&
+        !dir.create(depth_support_dir, recursive = TRUE, showWarnings = FALSE)) {
+      stop("Cannot create depth support directory: ", depth_support_dir)
+    }
+  }
+
   # Reuse the prediction encoder so the frame uses exactly the fitted term labels.
   prediction_inputs <- list(predictors = predictors, area_variable = area_variable,
                             area_covariates = area_covariates)
@@ -71,6 +112,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
   frame_predictors <- if (!is.null(frame)) unique(frame[, predictors, drop = FALSE])
   fits <- stats::setNames(vector("list", length(stages)), stages)
   fit_log <- data.frame()
+  support_log <- data.frame()
   for (i in seq_along(stages)) {
     outcome <- stages[i]
     stage_label <- paste0("Stage ", i, "/", length(stages), " ", sQuote(outcome))
@@ -89,9 +131,11 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     # Count respondents, including those who share a cell.
     observations <- sum(successes + failures)
     selection <- select_sequential_stage_design(
-      stage, area_variable, depth, splines, area_predictors, observations, no_interactions
+      stage, area_variable, depth, splines, area_predictors, observations, no_interactions,
+      successes[at_risk] + failures[at_risk], minimum_support, successes[at_risk]
     )
     design <- selection$design
+    prepared <- selection$prepared
     candidate <- design$depth
     fit_log <- rbind(fit_log, data.frame(
       stage = i, outcome = outcome, observations = observations,
@@ -99,14 +143,35 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
       fitted_depth = candidate, downgraded = candidate < depth,
       estimated_parameters = design$parameter_count,
       fixed_coefficients = design$fixed_coefficients,
+      retained_fixed_coefficients = design$retained_fixed_coefficients,
+      estimated_retained_parameters = prepared$estimated_parameters,
       random_coefficients = design$random_coefficients,
       spline_coefficients = design$spline_coefficients,
-      observations_per_parameter = observations / design$parameter_count,
+      observations_per_parameter = observations / prepared$estimated_parameters,
       candidate_depths_and_counts = paste(selection$attempted, collapse = "; "),
       dropped_constant_predictors = paste(design$constant_predictors, collapse = "; "),
       dropped_fixed_columns = paste(design$aliased_fixed, collapse = "; "),
+      hierarchy_dropped_fixed_columns = paste(design$orphaned_fixed, collapse = "; "),
+      hierarchy_dropped_random_terms = paste(prepared$orphaned_random_terms, collapse = "; "),
+      unsupported_random_main_effects = paste(prepared$unsupported_random_main_effects, collapse = "; "),
+      unsupported_random_interactions = paste(prepared$unsupported_random_interactions, collapse = "; "),
+      sparse_random_slopes = paste(names(prepared$sparse_random_slopes), collapse = "; "),
+      sparse_random_slope_mean_support = paste(
+        as.character(prepared$sparse_random_slopes), collapse = "; "),
+      unsupported_fixed_columns = paste(design$unsupported_fixed, collapse = "; "),
+      fixed_condition_before = design$fixed_screen$condition_before,
+      fixed_condition_after = design$fixed_screen$condition_after,
+      fixed_dependency_columns = paste(vapply(names(design$fixed_screen$related_columns),
+        function(column) paste0(column, " -> ", paste(design$fixed_screen$related_columns[[column]],
+                                                     collapse = ", ")), character(1)), collapse = "; "),
       frame_only_random_coefficients = NA_integer_,
       frame_only_fixed_coefficients = NA_integer_,
+      minimum_support = minimum_support,
+      dropped_fixed = NA_integer_, dropped_scalar_random = NA_integer_,
+      dropped_correlated_random = NA_integer_, dropped_smooth = NA_integer_,
+      dropped_smooth_terms = "", dropped_smooth_level_columns = NA_real_,
+      max_iterations = if (!is.null(max_iterations)) max_iterations else NA_integer_,
+      iterations_used = NA_integer_, max_parameter_change = NA_real_,
       engine = "vglmer", status = "started", error = ""
     ))
     # Save the depth decision before calling the fitting engine.
@@ -115,19 +180,32 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     # Both count vectors follow the same row order as the filtered stage data.
     design$data$.success <- successes[at_risk]
     design$data$.failure <- failures[at_risk]
+    if (!is.null(interaction_support_log)) {
+      support_log <- rbind(support_log, sequential_interaction_support(design, outcome))
+      utils::write.csv(support_log, interaction_support_log, row.names = FALSE)
+    }
     design <- tryCatch(
       {
+        if (!is.null(depth_support_dir)) {
+          plot_path <- file.path(depth_support_dir, paste0(
+            utils::URLencode(extension_variable, reserved = TRUE, repeated = TRUE),
+            "-stage-", i, ".png"))
+          plot_sequential_depth_support(
+            stage, area_variable, depth, splines, area_predictors, no_interactions,
+            successes[at_risk] + failures[at_risk], design, outcome, plot_path
+          )
+        }
         if (length(design$constant_predictors)) {
           warning(stage_label, " omitted constant predictors: ",
                   paste(design$constant_predictors, collapse = ", "), call. = FALSE)
         }
         if (length(design$aliased_fixed)) {
-          warning(stage_label, " omitted linearly dependent fixed columns: ",
+          warning(stage_label, " omitted exactly or nearly dependent fixed columns: ",
                   paste(design$aliased_fixed, collapse = ", "), call. = FALSE)
         }
-        if (observations < design$parameter_count) {
+        if (observations < prepared$estimated_parameters) {
           warning("Outcome ", sQuote(outcome), " exceeds the coefficient limit at depth 0 (",
-                  design$parameter_count, " estimated coefficients for ", observations,
+                  prepared$estimated_parameters, " estimated coefficients for ", observations,
                   " eligible respondents). Attempting the depth 0 fit.",
                   call. = FALSE, immediate. = TRUE)
         }
@@ -136,7 +214,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                "intercept requires at least two observed areas.")
         }
         if (!requireNamespace("vglmer", quietly = TRUE)) stop("Install vglmer to fit the model.")
-        if (design$joint_smooth && !requireNamespace("gKRLS", quietly = TRUE)) {
+        if (prepared$joint_smooth && !requireNamespace("gKRLS", quietly = TRUE)) {
           stop("Install gKRLS to fit joint smooths of multiple continuous predictors.")
         }
         if (!is.null(frame_predictors)) {
@@ -146,18 +224,30 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
         }
         message(stage_label, " — fitting at depth ", candidate,
                 if (candidate < depth) paste0(" (requested ", depth, ")"),
-                " with ", observations, " eligible respondents and ", design$parameter_count,
+                " with ", observations, " eligible respondents and ", prepared$estimated_parameters,
                 " estimated coefficients.")
         # Resolve v_s() inside vglmer's namespace without attaching the package.
         environment(design$formula) <- asNamespace("vglmer")
         if (is.null(control)) {
-          control <- vglmer::vglmer_control(tolerance_parameters = 1e-3, tolerance_elbo = 1e-5)
+          control <- vglmer::vglmer_control(tolerance_parameters = 0.01, tolerance_elbo = 1e-5)
         }
-        design$fit <- withCallingHandlers(
-          vglmer::vglmer(design$formula, data = design$data, family = "binomial",
-                         control = control),
-          warning = function(w) message(stage_label, " — warning from vglmer.")
-        )
+        for (name in names(solver_overrides)) control[[name]] <- solver_overrides[[name]]
+        fit_log[i, paste0("dropped_", names(prepared$dropped))] <- as.list(prepared$dropped)
+        fit_log$dropped_smooth_terms[i] <- paste(prepared$dropped_smooth_terms, collapse = "; ")
+        fit_log$dropped_smooth_level_columns[i] <- prepared$dropped_smooth_level_columns
+        if (!prepared$hierarchical) fit_log$engine[i] <- "glm"
+        utils::write.csv(fit_log, log_file, row.names = FALSE)
+        design$fit <- if (prepared$hierarchical) {
+          vglmer::vglmer(prepared$formula, data = prepared$data, family = "binomial",
+                         control = control)
+        } else {
+          fit_sequential_fixed_only(prepared$formula, prepared$data, control$iterations)
+        }
+        design$fit$screened_random <- prepared$random_prediction
+        design$fit$screened_smooth_groups <- prepared$screened_smooth_groups
+        for (contrast in design$fixed_contrasts) {
+          design$fit$reduced_fixed_levels[[contrast$predictor]] <- names(contrast$values)
+        }
         if (!is.null(frame_predictors)) {
           message(stage_label, " — registering frame levels.")
           # With zero survey trials, frame-only effects have no likelihood contribution.
@@ -182,6 +272,12 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
       fit_log$frame_only_fixed_coefficients[i] <- length(design$frame_levels$fixed$frame_only)
     }
     # A returned model may still carry convergence diagnostics from vglmer.
+    diagnostics <- design$fit$internal_parameters
+    if (!is.null(diagnostics$it_max)) fit_log$max_iterations[i] <- diagnostics$it_max
+    if (!is.null(diagnostics$it_used)) fit_log$iterations_used[i] <- diagnostics$it_used
+    if (length(diagnostics$parameter.change)) {
+      fit_log$max_parameter_change[i] <- max(unlist(diagnostics$parameter.change))
+    }
     fit_log$status[i] <- "returned"
     utils::write.csv(fit_log, log_file, row.names = FALSE)
     fits[[outcome]] <- design
@@ -203,7 +299,9 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
 # Select the deepest candidate supported by the stage's eligible respondents.
 select_sequential_stage_design <- function(stage, area_variable, depth, splines,
                                            area_predictors, observations,
-                                           no_interactions = character()) {
+                                           no_interactions = character(),
+                                           trials = rep(1, nrow(stage)), minimum_support = -1L,
+                                           successes = numeric(length(trials))) {
   # Start from the requested depth at every stage.
   # Interaction orders beyond the number of predictors give the same formula.
   # Include the requested depth once, then try smaller depth values.
@@ -214,11 +312,59 @@ select_sequential_stage_design <- function(stage, area_variable, depth, splines,
   attempted <- character()
   for (candidate in candidate_depths) {
     design <- sequential_stage_design(stage, area_variable, candidate, splines,
-                                      area_predictors, no_interactions)
-    attempted <- c(attempted, paste0(candidate, "=", design$parameter_count))
-    # Accept equality. One respondent per estimated coefficient is enough.
-    if (observations >= design$parameter_count) break
+                                      area_predictors, no_interactions, trials, minimum_support)
+    design$data$.success <- successes
+    design$data$.failure <- trials - successes
+    prepared <- prepare_sequential_fit(design)
+    attempted <- c(attempted, paste0(candidate, "=", design$parameter_count, " -> ",
+                                     prepared$estimated_parameters))
+    # Accept equality. Count only coefficients that can enter the fit.
+    if (observations >= prepared$estimated_parameters) break
   }
   design$depth <- candidate
-  list(design = design, attempted = attempted)
+  list(design = design, prepared = prepared, attempted = attempted)
+}
+
+# Count respondents rather than collapsed survey rows. Conditional variation
+# is measured within each grouping level for varying slopes.
+sequential_interaction_support <- function(design, outcome) {
+  data <- design$data
+  counts <- cbind(successes = data$.success, failures = data$.failure)
+  trials <- rowSums(counts)
+  labels <- stats::setNames(names(design$predictor_names), unname(design$predictor_names))
+  rows <- list()
+  for (group in names(design$group_slopes)) {
+    group_predictors <- design$grouping_columns[[group]]
+    if (is.null(group_predictors)) group_predictors <- group
+    group_rows <- split(seq_len(nrow(data)), data[[group]], drop = TRUE)
+    respondents <- rowsum(trials, data[[group]], reorder = FALSE)
+    for (term in design$group_slopes[[group]]) {
+      predictors <- if (term == "1") character() else strsplit(term, ":", fixed = TRUE)[[1L]]
+      if (length(group_predictors) + length(predictors) < 2L) next
+      values <- if (length(predictors)) Reduce(`*`, data[predictors]) else rep(1, nrow(data))
+      support <- rowsum(counts * (values != 0), data[[group]], reorder = FALSE)
+      support <- support[names(group_rows), , drop = FALSE]
+      distinct <- nonmodal <- rep(NA_integer_, length(group_rows))
+      if (length(predictors)) {
+        frequencies <- lapply(group_rows, function(index) {
+          rowsum(trials[index], values[index], reorder = FALSE)
+        })
+        distinct <- lengths(frequencies)
+        nonmodal <- vapply(frequencies, function(x) sum(x) - max(x), numeric(1))
+      }
+      rows[[length(rows) + 1L]] <- data.frame(
+        outcome = outcome,
+        interaction = paste(labels[c(group_predictors, predictors)], collapse = " × "),
+        level = names(group_rows),
+        successes = support[, "successes"],
+        failures = support[, "failures"],
+        group_respondents = respondents[names(group_rows), 1L],
+        nonzero_respondents = rowSums(support),
+        distinct_slope_values = distinct,
+        respondents_outside_modal_slope_value = nonmodal,
+        row.names = NULL
+      )
+    }
+  }
+  do.call(rbind, rows)
 }

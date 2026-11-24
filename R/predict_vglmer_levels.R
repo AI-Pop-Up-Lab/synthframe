@@ -3,7 +3,7 @@
 predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
                                   allow_missing_levels = TRUE, new_fixed_sd = NULL,
                                   draw_state = NULL) {
-  if (!inherits(fit, "vglmer")) stop("Supply a vglmer fit.")
+  if (!inherits(fit, c("vglmer", "voteframe_fixed_logit"))) stop("Supply a fitted stage.")
   if (!is.numeric(n_draws) || length(n_draws) != 1L || !is.finite(n_draws) ||
       n_draws < 0 || n_draws != floor(n_draws) || n_draws > .Machine$integer.max) {
     stop("n_draws must be a nonnegative integer.")
@@ -16,7 +16,7 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
     stop("new_fixed_sd must be a positive log-odds standard deviation.")
   }
 
-  newdata <- as.data.frame(newdata)
+  newdata <- restore_screened_random(fit, as.data.frame(newdata))
   missing <- setdiff(fit$formula$interpret_gam$pred.names, names(newdata))
   if (length(missing)) stop("Prediction data is missing: ", paste(missing, collapse = ", "), ".")
   if (!nrow(newdata) || anyNA(newdata[fit$formula$interpret_gam$pred.names])) {
@@ -31,6 +31,10 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
     draw_state$coefficients
   } else if (n_draws == 0) {
     t(as.matrix(rbind(fit$beta$mean, fit$alpha$mean)))
+  } else if (inherits(fit, "voteframe_fixed_logit")) {
+    draws <- mvtnorm::rmvnorm(n_draws, as.vector(fit$beta$mean), fit$beta$covariance)
+    colnames(draws) <- fixed_names
+    draws
   } else {
     vglmer::posterior_samples.vglmer(fit, samples = n_draws)
   }
@@ -49,8 +53,15 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
   if (length(new_fixed) && n_draws > 0) {
     # Fixed effects have no shared variance in this fit. Their new terms need an explicit prior.
     if (is.null(new_fixed_sd)) {
-      stop("Unseen fixed-effect contrasts require an explicit new_fixed_sd: ",
-           paste(colnames(fixed)[new_fixed], collapse = ", "), ".")
+      fixed_levels <- c(fit$formula$fe_Xlevels, fit$reduced_fixed_levels)
+      unseen <- unlist(lapply(names(fixed_levels), function(predictor) {
+        values <- setdiff(unique(as.character(newdata[[predictor]])), fixed_levels[[predictor]])
+        if (length(values)) paste0(sQuote(predictor), " = ", dQuote(values))
+      }), use.names = FALSE)
+      if (!length(unseen)) unseen <- colnames(fixed)[new_fixed]
+      stop("Fixed-effect values in the frame are absent from the fitted survey stage: ",
+           paste(unseen, collapse = ", "), ". Supply a positive new_fixed_sd or harmonise ",
+           "the frame and survey categories.", call. = FALSE)
     }
     # Draw each new contrast once per simulation. All matching rows reuse it.
     prior <- if (is.null(draw_state)) {
@@ -70,36 +81,51 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
   for (i in seq_along(blocks)) {
     block <- blocks[[i]]
     # Separate spline blocks can reuse a column name. Match only within this block.
-    fitted <- fit$internal_parameters$cyclical_pos[[i]]
+    term <- names(blocks)[i]
+    prior_only <- !is.null(fit$prior_random[[term]])
+    fitted <- if (!prior_only) fit$internal_parameters$cyclical_pos[[i]]
     index <- match(colnames(block), random_names[fitted])
     known <- !is.na(index)
+    if (!all(known)) {
+      # A level must match a whole coefficient vector or none of it.
+      width <- if (prior_only) length(fit$prior_random[[term]]) else fit$internal_parameters$d_j[[i]]
+      if (ncol(block) %% width != 0) {
+        stop("Incomplete random-effect prediction design for ", sQuote(term), ".", call. = FALSE)
+      }
+      level_columns <- matrix(seq_len(ncol(block)), nrow = width)
+      missing_per_level <- colSums(matrix(!known, nrow = width))
+      partial <- which(missing_per_level > 0L & missing_per_level < width)
+      if (length(partial)) {
+        columns <- level_columns[, partial[1L]]
+        group <- fit$screened_random[[term]]$group
+        if (is.null(group)) group <- term
+        stop("Partial random-effect match for grouping term ", sQuote(group), ". Matched: ",
+             paste(sQuote(colnames(block)[columns[known[columns]]]), collapse = ", "),
+             ". No fitted match for: ",
+             paste(sQuote(colnames(block)[columns[!known[columns]]]), collapse = ", "),
+             ". Each group level must match all or none of its coefficients. ",
+             "Check that the saved fit and prediction design use the same coefficient labels.",
+             call. = FALSE)
+      }
+    }
     if (any(known)) {
       logits <- logits + as.matrix(block[, known, drop = FALSE] %*%
         t(random[, fitted[index[known]], drop = FALSE]))
     }
     if (all(known)) next
-    term <- names(blocks)[i]
     if (!allow_missing_levels) stop("New levels in ", sQuote(term), " are disabled.")
     # At the point estimate, only the fitted coefficients contribute.
     if (n_draws == 0) next
 
-    # Columns for a level are adjacent. Keep intercepts and slopes together.
-    width <- fit$internal_parameters$d_j[[i]]
-    if (ncol(block) %% width != 0) stop("Incomplete prediction design for ", sQuote(term), ".")
-    level_columns <- matrix(seq_len(ncol(block)), nrow = width)
-    # A new level needs a whole coefficient vector. A partial match signals a design error.
-    missing_per_level <- colSums(matrix(!known, nrow = width))
-    if (any(!missing_per_level %in% c(0, width))) {
-      stop("Partially matched coefficient block for ", sQuote(term), ".")
-    }
     new_levels <- level_columns[, missing_per_level == width, drop = FALSE]
     new_coefficients <- if (is.null(draw_state)) {
-      draw_new_vglmer_effects(fit, i, ncol(new_levels), n_draws)
+      roots <- prediction_variance_roots(fit, i, term, width, n_draws)
+      sample_new_prediction_effects(roots, width, ncol(new_levels), n_draws)
     } else {
       if (is.null(draw_state$random[[term]])) {
         draw_state$random[[term]] <- list(
           effects = new.env(parent = emptyenv()),
-          roots = draw_vglmer_variance_roots(fit, i, n_draws)
+          roots = prediction_variance_roots(fit, i, term, width, n_draws)
         )
       }
       cached <- draw_state$random[[term]]
@@ -182,7 +208,19 @@ build_prediction_fixed_matrix <- function(fit, data, allow_missing_levels) {
     contrasts[[column]] <- extended
   }
   frame <- stats::model.frame(terms, data = data, xlev = levels, na.action = stats::na.fail)
-  stats::model.matrix(terms, frame, contrasts.arg = contrasts)
+  matrix <- stats::model.matrix(terms, frame, contrasts.arg = contrasts)
+  matrix <- matrix[, !colnames(matrix) %in% fit$screened_fixed_columns, drop = FALSE]
+  for (column in names(fit$reduced_fixed_levels)) {
+    values <- as.character(data[[column]])
+    unseen <- setdiff(unique(values), fit$reduced_fixed_levels[[column]])
+    if (!length(unseen)) next
+    if (!allow_missing_levels) stop("New fixed-effect levels in ", sQuote(column), " are disabled.")
+    indicators <- outer(values, unseen, "==") * 1
+    colnames(indicators) <- tail(make.unique(c(colnames(matrix), paste0(column, ".new_", unseen))),
+                                 length(unseen))
+    matrix <- cbind(matrix, indicators)
+  }
+  matrix
 }
 
 # Recreate the sparse design in the same block order used by vglmer.
@@ -218,6 +256,10 @@ build_prediction_random_blocks <- function(fit, newdata) {
   if (length(smooths)) {
     # The fitted basis builder lives inside vglmer's namespace.
     build_spline <- utils::getFromNamespace("vglmer_build_spline", "vglmer")
+    if (any(vapply(fit$internal_parameters$spline$attr,
+                   function(x) inherits(x$knots, "voteframe_tpf"), logical(1)))) {
+      register_sequential_spline_basis()
+    }
     for (i in seq_along(smooths)) {
       spec <- smooths[[i]]
       fitted <- fit$internal_parameters$spline$attr[[i]]
@@ -238,15 +280,43 @@ build_prediction_random_blocks <- function(fit, newdata) {
       }
     }
   }
-  if (!identical(names(blocks), names(fitted_terms))) {
+  if (!identical(as.character(names(blocks)), as.character(names(fitted_terms)))) {
     stop("The prediction blocks do not match the fitted vglmer design.")
+  }
+  for (group in names(fit$prior_random)) {
+    basis <- stats::model.matrix(stats::reformulate(fit$prior_random[[group]]), newdata)
+    labels <- factor(newdata[[group]])
+    width <- ncol(basis)
+    columns <- outer(width * (as.integer(labels) - 1L), seq_len(width), "+")
+    names <- as.vector(outer(colnames(basis), levels(labels),
+                            function(coefficient, level) paste(group, coefficient, level, sep = " @ ")))
+    blocks[[group]] <- Matrix::sparseMatrix(i = rep(seq_len(nrow(basis)), width),
+                                          j = as.vector(columns), x = as.vector(basis),
+                                          dims = c(nrow(basis), length(names)),
+                                          dimnames = list(NULL, names))
   }
   blocks
 }
 
-# Draw one covariance per term and draw. All new levels share it in that draw.
-draw_new_vglmer_effects <- function(fit, block, n_levels, n_draws) {
-  width <- fit$internal_parameters$d_j[[block]]
-  draws <- matrix(stats::rnorm(width * n_levels * n_draws), width * n_levels, n_draws)
-  apply_prediction_variance_roots(draws, draw_vglmer_variance_roots(fit, block, n_draws), width)
+# With zero supported levels, use a proper inverse-Wishart prior with
+# mean identity on the original intercept/slope coefficient scale.
+prediction_variance_roots <- function(fit, block, term, width, n_draws) {
+  if (is.null(fit$prior_random[[term]])) {
+    return(draw_vglmer_variance_roots(fit, block, n_draws))
+  }
+  if (width == 1L) return(1 / sqrt(stats::rchisq(n_draws, 3L)))
+  covariance <- CholWishart::rInvWishart(n_draws, width + 2L, diag(width))
+  lapply(seq_len(n_draws), function(i) t(chol(covariance[, , i])))
+}
+
+restore_screened_random <- function(fit, data) {
+  for (name in names(fit$screened_smooth_groups)) {
+    data[[name]] <- factor(data[[fit$screened_smooth_groups[[name]]]])
+  }
+  for (fit_group in names(fit$screened_random)) {
+    term <- fit$screened_random[[fit_group]]
+    data[[fit_group]] <- factor(data[[term$group]])
+    data[term$columns] <- as.data.frame(stats::model.matrix(stats::reformulate(term$slopes), data))
+  }
+  data
 }

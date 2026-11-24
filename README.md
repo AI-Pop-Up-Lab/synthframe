@@ -209,11 +209,8 @@ default. Higher integer depths count distinct predictors in a term.
 Use `no_interactions` to name selected survey or stage covariate predictors
 that should enter only as main effects, including their own splines when
 eligible. The exclusion applies at every candidate depth before counting
-coefficients. The US models keep district and state random intercepts and
-exclude both geographic predictors from interactions.
-Categorical terms use random
-intercepts, and crossed terms use random slopes for the continuous effects
-within the group. Truncated linear splines add global curves and group-level
+coefficients. Categorical terms use random intercepts, and crossed terms
+use random slopes for the continuous effects within the group. Truncated linear splines add global curves and group-level
 deviations as specified in Goplerud's Appendix A.4. Each `vglmer`
 factor-by-curve term includes its own global spline. Joint smooths of multiple
 continuous predictors use `gKRLS`, which must be installed for those models.
@@ -231,10 +228,73 @@ All stages use `vglmer`. It requires a random effect or spline, and an area
 random intercept requires at least two observed areas. A stage that cannot
 meet those engine requirements stops the fit and records the reason in the log.
 By default, VoteFrame accepts convergence when the largest tracked
-variational parameter change is below 10⁻³ or the positive ELBO gain is
-below 10⁻⁵. A caller-supplied `vglmer_control()` takes precedence.
-In `MasterP()`, set it in the extension's `fit$control`. The solver can
-also return at its iteration cap, with a non-convergence message.
+variational parameter change is below 0.01 or the positive ELBO gain is
+below 10⁻⁵. A supplied `vglmer_control()` provides its own defaults. Use
+`tolerance_parameters` and `tolerance_elbo` to override either threshold,
+with zero disabling the corresponding stopping criterion. Set these options
+in the extension's `fit` list when using `MasterP()`. The solver can
+also return at its iteration cap, with a non-convergence message. Set
+`max_iterations` to override the cap for each stage. To inspect support for
+categorical interactions and varying slopes, set `interaction_support_log`
+to a CSV path. The audit counts stage respondents with nonzero entries by
+outcome and measures within-group slope variation, including how many
+respondents have a slope value other than the group’s most common value.
+Set `depth_support_dir` to write a PNG for each stage before fitting. The
+two panels use linear and logarithmic axes to show the cumulative share of
+coefficient columns by their number of nonzero observations. Solid lines
+count aggregated survey rows and dashed lines count individual respondents.
+The lower panels break down the respondent curve into scalar random effects,
+correlated random effects, smooths, and fixed effects. Each shaded area uses
+all coefficients at that depth as its denominator.
+For an integer depth request, the plots compare depths 1–3 as well as the
+requested and selected depths if different. Rejected candidates can be
+expensive to inspect, especially with splines. With `MasterP()`, set
+`depth_support_dir` in the extension's `fit` list.
+Set `minimum_support = 10L` to screen fixed columns and random-effect levels
+with fewer than 10 eligible respondents. The default `-1L` and a cutoff of
+zero disable the support screen. With `MasterP()`, set the cutoff in the
+extension's `fit` list. VoteFrame counts respondents using each aggregated
+row's binomial trial count. The fixed intercept stays in the model.
+Screened fixed columns contribute zero in prediction. Intercept support
+determines which group levels enter each random-effect block. A separate
+within-group support check below determines which slopes enter the block.
+Screened levels use the fitted term covariance for prediction. If every level of a random term is screened, VoteFrame drops the term from
+fitting and prediction. If screening leaves only fixed effects in the
+likelihood, VoteFrame uses a binomial GLM and draws fixed coefficients from
+its normal approximation. Eligible survey rows and penalized spline bases
+are preserved throughout, except that a grouped spline is dropped when
+all levels of its companion random term are screened. VoteFrame also drops
+any spline that uses a predictor whose fixed main effect is screened. The log names each
+dropped smooth and records its estimated coefficient count.
+
+For each candidate depth, VoteFrame screens low support first, then
+checks the supported unpenalized fixed design for collinearity. It weights
+each row by the square root of its binomial trial count and scales each
+column to unit Euclidean length. For each singular value, the condition
+index is the largest singular value divided by that singular value. The
+largest index is the condition number. Belsley, Kuh, and Welsch use about
+30 as a flag to inspect collinearity in linear regression, along with the
+variance-decomposition proportions for the same component. VoteFrame
+adopts 30 as a pre-fit pruning cutoff for the weighted fixed design. This
+is a modeling choice for this logistic fit. It does not compute Belsley's
+variance-decomposition diagnostic. [SAS/STAT guide to Belsley's diagnostics](https://support.sas.com/documentation/cdl/en/sgug/59902/HTML/default/fit_sect29.htm)
+
+The screen starts with the intercept, then considers main effects and
+interactions of increasing order. Within each order it tries the column
+with the largest normalized residual after projection onto the retained
+columns. Adding a column must keep the condition number below 30. Ties
+within a term favor the larger unscaled residual norm, with column order
+as the final tiebreaker. This rule uses predictor variation alone.
+
+Every interaction requires all its immediate lower-order terms, which
+recursively requires its main effects. For example, a three-way
+interaction requires all three two-way interactions. This applies to fixed
+products, crossed random intercepts, varying slopes, and the spline for
+each term. An interaction whose parent term is fully screened is removed. If a dropped grouped spline had supplied an
+otherwise eligible global spline, the global spline is fitted on its own.
+The log records which fixed columns failed support or collinearity, which
+terms were removed by hierarchy, and the condition number before and after
+the fixed-design pruning. All selection runs before the solver is called.
 The fitted object retains each stage's formula, data, and model fit for
 inspection. [Supplementary material](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS0003055423000035/resource/name/S0003055423000035sup001.pdf)
 
@@ -242,7 +302,24 @@ An area-level predictor has one value per area within a stage. The formula
 builder excludes terms that combine an area-level predictor with a grouping
 that contains the area itself. Within such a group, the predictor is constant,
 so its varying slope or smooth is confounded with the group intercept. This
-rule applies before counting coefficients. The area random intercept and its
+rule applies before counting coefficients. For every other grouping,
+VoteFrame checks the actual slope column, including products for interaction
+slopes. For each retained group level it counts eligible respondents whose
+slope value differs from the most frequent value in that level, using the
+aggregated binomial trial counts. A constant level contributes zero.
+VoteFrame averages those counts equally across all retained levels. It
+drops the slope and its associated grouped smooth when the average is
+below 10. An average of exactly 10 qualifies. This checks the number of
+respondents providing within-group comparisons and uses exact values to
+count distinct slope values. The fit log records dropped terms under
+`sparse_random_slopes` and the corresponding averages under
+`sparse_random_slope_mean_support`. The hierarchy rule removes any
+dependent higher-order terms. Within a surviving grouped spline, only
+levels whose linear random block survived get fitted spline deviations.
+Screened respondents still inform the global curve and other applicable
+terms. At prediction, each screened or unseen level gets a deviation
+curve drawn from the fitted spline term's variance, shared by all its
+cells within a draw. The area random intercept and its
 interactions with demographic factors are eligible, as are each area
 predictor's overall effect and its varying slopes and smooths by demographic
 groups, subject to depth and spline settings. See [Goplerud, supplement
@@ -251,7 +328,7 @@ factor-by-curve specification.
 
 Each stage starts from the requested depth and selects the highest allowed
 depth at which the number of eligible respondents is at least the
-estimated number of parameters. If every candidate exceeds that limit,
+estimated number of retained coefficients after screening. If every candidate exceeds that limit,
 the fitter warns and attempts depth 0 anyway. Each respondent contributes one trial,
 including respondents who share an aggregated cell. A later stage may
 select a higher depth than an earlier stage if its design has shrunk enough.
@@ -262,13 +339,13 @@ one coefficient per spline basis column. Truncated linear splines use
 `floor(min(distinct values / 4, 35))` basis columns. Joint kernel smooths
 use the default sketch width, capped at the number of aggregated cells.
 Each by-smooth counts its global basis and one basis per observed group.
-This is a pre-fit coefficient count after fixed-effect rank reduction. It
+This is a pre-fit coefficient count after support, collinearity, and hierarchy screening. It
 gives no discount for shrinkage and excludes variance and covariance
 hyperparameters.
 
 The fitter warns with the selected depth for each stage. It writes a CSV
 in the working directory by default. Supply `log_file` to choose its path.
-The CSV records each candidate depth and count, the selected depth,
+The CSV records nominal and retained estimates for each attempted depth, the selected depth,
 respondent and cell totals, and fit status. The returned object exposes the
 log as `fit$fit_log` and its path as `fit$log_file`.
 
@@ -309,7 +386,9 @@ splines. Spline predictions reuse the fitted basis. New numeric values
 evaluate the same fitted effects and basis functions.
 
 Unseen fixed categorical contrasts have no fitted population variance.
-To simulate those contrasts, supply `new_fixed_sd` for an explicit
+Without `new_fixed_sd`, prediction stops and lists the exact predictor names
+and values that are missing from the fitted survey stage. Harmonise the frame
+and survey categories or supply `new_fixed_sd` for an explicit
 zero-centered normal prior on the log-odds scale. The new contrast is
 relative to the fitted reference level, or the first fitted level for
 coding with no reference level. Pass `allow_missing_levels = FALSE` to

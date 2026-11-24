@@ -161,9 +161,10 @@ prepare_prediction_stage <- function(fit, stage, outcome, frame) {
   for (column in names(stage$fixed_contrasts)) {
     contrast <- stage$fixed_contrasts[[column]]
     values <- unname(contrast$values[as.character(newdata[[contrast$predictor]])])
-    if (anyNA(values)) {
+    if (anyNA(values) && is.null(contrast$baseline)) {
       stop("A rank-reduced fixed factor has unseen levels in ", sQuote(contrast$predictor), ".")
     }
+    if (anyNA(values)) values[is.na(values)] <- contrast$baseline
     newdata[[column]] <- values
   }
   newdata

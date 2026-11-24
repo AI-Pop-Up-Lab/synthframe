@@ -1,5 +1,174 @@
 # US 2026 frame extension handoff
 
+## Resume here: converged presidential screening benchmark
+
+Both 10,000-person pilot fits finished. There is no active national fit to
+resume. The vignette source omits `on_ballot` and defaults to pre-rake
+scoring. Its rendered Markdown still shows the earlier national baseline.
+The vignette now prepares screened formulas and columns before calling stock
+`vglmer`. The metrics below are from the earlier scalar-screening pilot.
+
+The pilot sampled 10,000 of the 57,603 complete CES presidential
+respondents using seed `20261124`. The remaining 47,603 were used for
+held-out multiclass log-loss. Both variants fit the same training rows
+with stock `vglmer` 1.0.8, cyclical updates, parameter-change tolerance
+0.01, and ELBO stopping disabled. Pilot depths were 2, 2, and 1 for No Vote,
+Democratic, and Republican. Depth 2 was forced for the first two stages to
+exercise the interactions on this sample. All six fits reached tolerance.
+The pre-rake comparison used 30 draws and the full frame of 50 states plus
+DC. Fit timings are wall-clock seconds from separate single-threaded R
+processes running concurrently.
+
+| Stage | Ordinary iterations / seconds | Screened iterations / seconds | Columns removed |
+| --- | ---: | ---: | ---: |
+| No Vote | 34 / 312.490 | 29 / 272.474 | 9,104 |
+| Democratic | 54 / 539.568 | 46 / 429.319 | 9,047 |
+| Republican | 10 / 3.229 | 14 / 4.277 | 242 |
+| Total | 98 / 855.287 | 89 / 706.070 | 18,393 |
+
+Screening saved 149.217 seconds (17.4%) in this run. Held-out log-loss was
+0.947866 ordinary and 0.951027 screened. Each entry below gives ordinary
+then screened. Bias and RMSE are in percentage points. Coverage is for
+the 90% intervals. The election benchmarks also inform area predictors.
+
+| Outcome | Bias | RMSE | Spearman | Coverage |
+| --- | ---: | ---: | ---: | ---: |
+| Overall party shares | 0.00 / 0.00 | 7.81 / 7.64 | 0.844 / 0.837 | 24.2% / 30.7% |
+| No Vote | −25.26 / −24.52 | 25.62 / 24.89 | 0.900 / 0.896 | 0.0% / 0.0% |
+| Democratic | 7.30 / 6.50 | 8.71 / 8.44 | 0.921 / 0.917 | 35.3% / 49.0% |
+| Republican | −9.09 / −8.55 | 10.15 / 9.92 | 0.932 / 0.922 | 17.6% / 29.4% |
+| Other | 1.79 / 2.05 | 2.06 / 2.34 | 0.275 / 0.237 | 19.6% / 13.7% |
+
+The prototype counts support in VoteFrame and encodes a screened scalar
+term as `(0 + keep | fit_group)`. Screened rows keep their survey outcomes,
+receive a placeholder retained group label, and have `keep = 0`.
+Stock `vglmer` therefore builds only the retained columns. The synthetic
+coefficient name has no fixed-effect counterpart for mean recentering.
+For prediction, rebuild the original group labels and set `keep = 1`.
+Screened levels then use the existing new-level variance draws. The
+benchmark only screened scalar random levels. It did not exercise fully
+screened terms, omitted fixed columns, or screened correlated levels
+shared with a grouped smooth in the formula-based implementation.
+
+The benchmark scripts, stage and iteration logs, predictions, plots, and
+full metrics are in `/tmp/voteframe-10k-no-ballot.uhcwul`. This path can
+disappear on workspace recycle. An Alabama profile with 30 draws spent
+55% of prediction time building random-effect and spline design blocks
+and about 9% in matrix multiplication. Investigate reusing basis values
+for repeated area covariates and reducing design rebuilds across batches.
+When loading a saved joint-spline fit in a fresh R process, load the
+`gKRLS` namespace so its `Predict.matrix` method is registered.
+
+## Fixed-effect near-collinearity
+
+The pre-fit screen uses respondent-weighted, unit-norm fixed columns and a
+condition-number cutoff of 30. It prioritizes the intercept and
+main effects, then interactions by degree. Within each degree it prefers
+the largest fraction of independent variation after projecting out the
+retained design. The stage log records affected columns, related retained
+columns, and conditioning before and after selection.
+
+In the 10,000-person CES presidential pilot, `house_share` and
+`house_share:on_ballot` formed the nearly dependent pair. Keep
+`house_share` in this case. The vignette now excludes the `on_ballot`
+predictor and its interactions. The scaled Democratic fixed-design
+condition number fell from 21.4 million to 81.7 on that sample.
+
+The earlier national design preflight with a cutoff of one million selected depth 2 for all six stages and
+screened 41,729 random coefficient columns at minimum support 10. The
+vignette specification screened zero fixed columns and zero smooths, with
+scaled fixed-design condition numbers from 80.6 to 121.2. Restoring
+`on_ballot` to the full presidential Democratic stage for a separate
+design check reduced the condition number from about 1.41 × 10¹⁴ to
+142.5 by dropping `house_share:on_ballot` and `incumbent:on_ballot`.
+The main effect `house_share` was retained. This preflight constructed
+the screened inputs without starting a national solver run.
+
+With the cutoff at 30 and strong hierarchy enabled, a fresh preflight
+again selected depth 2 for all six stages. The retained fixed-design
+condition numbers ranged from 18.46 to 28.97. Each stage dropped
+`house_share:pres_share` and its joint spline. Both Republican stages
+also dropped `pres_share:incumbent` and its joint spline. The depth rule
+now uses the estimated retained coefficient count. All main effects
+were retained. The subsequent within-group slope screen uses an average
+of 10 informative respondents per retained level. All six national
+designs dropped `pres_share:state_fips` and its grouped spline, with
+average within-state support of zero. No other slope fell below 10 in
+these designs.
+
+## Minimum support for fitted coefficients
+
+Measure support on the actual stage design, using aggregated binomial trial
+counts to count eligible respondents with nonzero entries. The cutoff for
+screening is fewer than 10 respondents, subject to the rules below. A column
+with exactly 10 respondents meets the cutoff. Keep every survey row in the
+likelihood. The US vignette passes `minimum_support = 10L` to both fits.
+VoteFrame encodes screened terms in the formula and input columns before
+calling stock `vglmer`. The stage fit logs record dropped columns by effect
+type before the solver starts.
+
+- A scalar random effect can use the existing frame-only draw from its
+  term's fitted variance. For a correlated random intercept and slopes,
+  use the intercept's support to decide whether to retain the whole level.
+  If the intercept has at least 10 respondents, retain its slopes even
+  when their own support falls below 10. If the intercept has fewer than
+  10, omit the whole level and use the existing joint frame-only draw.
+  A wholly unsupported random term is omitted from fitting and prediction. The diagnostic's columnwise support counts still show
+  sparse slopes and do not imply those slopes will be removed.
+- Omit a fixed-effect column below the cutoff from both fitting and
+  prediction. Its contribution is zero and it requires no prediction
+  prior. Apply this to individual design columns for terms with multiple
+  contrasts. Ensure the engine does not implicitly add a screened column
+  back when constructing a formula's fixed design.
+- Drop a grouped spline if every level of its companion random term is
+  screened. Also drop any spline using a predictor whose fixed main effect
+  is screened. Otherwise keep all spline basis columns produced by the existing
+  basis construction and rank handling, including columns below the cutoff. This
+  preserves the original spline basis and smoothing penalty. Keep fitted
+  knots, transforms, and any kernel sketch for population prediction.
+  Continue reporting spline support in the diagnostic. Within a retained
+  grouped smooth, fit deviations only for the levels whose linear random
+  block survived. Restore screened group labels for prediction so they
+  receive deviation draws from the fitted smooth variance.
+- Apply the screen before solver updates. Keep the original identities of
+  screened random levels and cache their prediction draws by stage, term,
+  level, and draw across batches and state partitions.
+- Preserve original grouping labels and spline encodings for prediction.
+  Fully screened random terms contribute zero. All six national stage designs retain at least one level per
+  random term at the vignette cutoff.
+- Report eligible rows and respondents, the screened counts by term, and
+  retained versus total column counts for each candidate depth. The
+  depth rule uses the retained coefficient estimates, and the log also
+  reports the nominal counts. Check runtime, convergence, held-out
+  predictions, and pre-rake uncertainty. Thresholding creates a hard
+  cutoff and can discard real local signal. The screen also depends on the
+  chosen contrasts and spline basis, and a nonzero count alone does not
+  measure variation or diagnose separation.
+
+### November 24 screened run
+
+The joint and cyclical national runs were interrupted after 5 and 59
+iterations of presidential No Vote, respectively. Both used the older
+matrix-interception screen. Its recentering step can shift a fixed
+intercept without a compensating random-effect shift for respondents in
+screened levels. This was the reason to stop the cyclical run and test
+formula-based screening. The logs and diagnostics are in
+`/tmp/voteframe-screened.s21DCE` and
+`/tmp/voteframe-screened-cyclical.Y7ZKFV`.
+The installed R dependencies are under `/tmp/voteframe-profile/lib`.
+The national No Vote fit log confirms that screening removed 5,237 scalar
+random-effect columns and kept the fixed, correlated, and spline columns.
+The three-state execution check is in
+`/tmp/voteframe-screened-pilot.Th1cqh`. It uses two iterations and three
+draws to exercise the workflow on Alabama, California, and Minnesota.
+Pre-rake party-share RMSE was 5.59 percentage points for president and
+10.80 for House. No Vote RMSE was 25.51 and 24.67 points, respectively.
+These are pilot scores from fits run to a two-iteration cap.
+The vignette now defaults to pre-rake benchmark comparisons and saves
+their metrics as CSVs. Set `VOTEFRAME_US_RAKE=true` for the optional
+raked partitions and post-rake checks. A benchmark-only three-state pilot
+using this source is in `/tmp/voteframe-pre-rake-pilot.XE6L4R`.
+
 ## Resume the November 22 run
 
 The user asked to checkpoint while the revised national vignette was

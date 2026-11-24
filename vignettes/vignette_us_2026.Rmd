@@ -1,6 +1,7 @@
 # Extending the US 2026 congressional district frame
 
-The goal is a population frame for predicting the 2026 House vote. We first
+This run prepares and audits two models before fitting. The goal is a
+population frame for predicting the 2026 House vote. We first
 estimate 2024 presidential vote in each demographic cell, then estimate
 2024 House vote conditional on that presidential choice. Presidential vote
 may help explain House voting among people with the same demographics.
@@ -19,7 +20,9 @@ counts are zero.
 All three inputs use the 2026 district map (CD120), including DC. The
 [US input guide](../data/input/us%202026/README.md) records the upstream
 commit, checksums, and the rules for observed and modeled House returns.
-Run the chunks from the repository root with `vglmer`, `gKRLS`, and `SQUAREM` installed.
+Run the chunks from the repository root with `vglmer` 1.0.8, `gKRLS`, and
+`SQUAREM` installed. VoteFrame screens fixed columns and random-effect levels before
+calling `vglmer`.
 
 ## 1. Read the survey, district data, and population frame
 
@@ -69,7 +72,7 @@ stopifnot(
   setequal(frame$district_id, election$district_id),
   all(survey$district_id[!is.na(survey$district_id)] %in% election$district_id),
   all(vapply(survey[c(pres, house)], function(x) identical(levels(x), choices), logical(1))),
-  all(is.na(election[election$vote_choice == "No Vote", c("on_ballot", "incumbent")]))
+  all(is.na(election$incumbent[election$vote_choice == "No Vote"]))
 )
 data.frame(election_rows = nrow(election), population_cells = nrow(frame),
            survey_respondents = nrow(survey), citizen_adults = round(sum(frame$N)))
@@ -82,25 +85,24 @@ entry is a matrix or data frame with district IDs as row names and
 predictors as columns. Splitting the CSV by choice directly produces these
 tables. In both fits, each party stage uses that choice's district House
 share and statewide presidential share, the district's categorical
-House lineup, and the choice's ballot presence and incumbency. Preserve
+House lineup, and the choice's incumbency. Preserve
 both shares on their original citizen-adult scale. Both fits start with
 No Vote, using the district House and statewide presidential nonvoting
 shares and the lineup. Democratic and Republican follow among voters.
 Other receives the remaining probability. Covariates that are blank in
 every district for a stage are omitted from that stage. For No Vote,
-this applies to ballot presence and incumbency.
+this applies to incumbency.
 
-An outcome such as five-category happiness can use the same area predictors
-at every stage. Given an area-by-predictor table with area IDs as row names,
-use `setNames(rep(list(area_predictors), length(choices)), choices)` with
-the appropriate response labels. Replace individual entries when a stage
-needs its own predictors.
+The vignette omits `on_ballot`. An earlier design check found that its
+interaction with district House share nearly duplicated the House-share
+main effect. The audit below checks the fixed design that will actually
+be passed to the solver.
 
 ```{r covariates-and-targets}
 choice_rows <- split(election, election$vote_choice)
 area_covariates <- lapply(choice_rows, function(rows) {
   covariates <- data.frame(house_share = rows[[house]], pres_share = rows[[pres]],
-                           lineup = factor(rows$lineup), on_ballot = rows$on_ballot,
+                           lineup = factor(rows$lineup),
                            incumbent = rows$incumbent, row.names = rows$district_id)
   covariates[!vapply(covariates, function(x) all(is.na(x)), logical(1))]
 })
@@ -132,27 +134,316 @@ data.frame(outcome = names(rake_targets),
            target_rows = vapply(rake_targets, nrow, integer(1)))
 ```
 
-The default plots use the same benchmarks as the rake. To compare either
-outcome against a different benchmark, replace its entry in `plot_targets`
-with a table keyed by the selected grouping columns and that outcome column.
-Its numeric `target` column contains shares on the 0–1 scale. Changing
-`plot_targets` leaves the calibration inputs in `rake_targets` independent.
+The statewide presidential and district House benchmarks also define the
+targets for a later calibration run. This pre-fit audit uses them only to
+construct the predictors and check the input tables.
 
-## 3. Fit and extend with 2024 presidential vote
+## 3. Build the survey designs
 
-Both models include a district random intercept and a state random
-intercept. District and state enter as main effects only. Area covariates
-can still interact with one another and with the other eligible predictors
-according to the selected depth. The presidential model also uses the five
-demographic predictors.
-Each fit uses its own complete cases. For a compact national run, this
-vignette uses 30 posterior draws and requests depth 2 with interactions
-and splines. The fitter checks the candidate coefficient counts against
-the eligible respondents in each stage. The solver stops when the largest
-tracked parameter change is below 10⁻³ or the positive ELBO gain is
-below 10⁻⁵. Each iteration reports both diagnostics. Increase the draw count
-for analyses that need more precise posterior intervals. The second extension
-pairs draw indices with the first.
+Both models start at requested depth 2, with interactions and splines.
+The presidential model uses state, district, five demographics, and the
+area predictors above. The House model adds each CES respondent's
+presidential choice. Each model uses its own complete survey cases.
+Identical predictor rows are grouped into binomial successes and failures.
+At each stage, respondents who chose an earlier outcome leave the risk set.
+The counts below refer to eligible respondents at that stage.
+
+```{r prefit-design}
+requested_depth <- 2L
+minimum_support <- 10L
+n_draws <- 125L
+model_specs <- list(
+  Presidential = list(outcome = pres, predictors = predictors),
+  House = list(outcome = house, predictors = c(predictors, pres))
+)
+
+prepare_model <- function(spec) {
+  aggregated <- suppressWarnings(aggregate_extension_survey(
+    survey, spec$outcome, spec$predictors, "No Vote", outcome_order = vote_order
+  ))
+  stages <- head(vote_order, -1L)
+  setNames(lapply(seq_along(stages), function(i) {
+    success <- aggregated$counts[, i]
+    trials <- rowSums(aggregated$counts[, i:length(vote_order), drop = FALSE])
+    eligible <- trials > 0
+    stage <- join_stage_covariates(aggregated$cells[eligible, , drop = FALSE],
+                                  "district_id", area_covariates[[stages[i]]])
+    selected <- select_sequential_stage_design(
+      stage, "district_id", requested_depth, splines = TRUE,
+      area_predictors = setdiff(names(stage), spec$predictors),
+      observations = sum(trials), trials = trials[eligible],
+      minimum_support = minimum_support, successes = success[eligible]
+    )
+    selected$excluded_respondents <- aggregated$omitted
+    selected
+  }), stages)
+}
+preflight <- lapply(model_specs, prepare_model)
+```
+
+## 4. Screen support, conditioning, and hierarchy
+
+1. **Build the requested design.** Omit constant predictors and
+   district-level predictor interactions with district ID, since those
+   predictors are constant within district. The starting counts below
+   are for the design after those formula rules.
+2. **Screen support.** Fixed columns need at least 10 respondents with
+   nonzero entries. A random group level needs at least 10 respondents
+   for the whole intercept-and-slopes vector to enter the likelihood.
+   A varying slope also needs, on average, at least 10 informative
+   respondents per retained group. Within a group, this counts respondents
+   whose slope value differs from its most common value.
+3. **Screen the fixed design for collinearity.** Weight each row by the
+   square root of its trial count and scale each column to unit length.
+   The condition indices are `largest singular value / each singular
+   value`. Their maximum must stay below 30. Try the intercept first,
+   then main effects, then interactions of increasing order. Within
+   each order prefer the column that adds the most independent
+   variation. Belsley, Kuh, and Welsch use 30 as an inspection flag in
+   linear regression, alongside variance-decomposition proportions.
+   VoteFrame uses it as an automatic cutoff for its pre-fit logistic
+   design. The plots below show condition indices. [SAS guide to the
+   Belsley diagnostic](https://support.sas.com/documentation/cdl/en/sgug/59902/HTML/default/fit_sect29.htm)
+4. **Enforce hierarchy.** Drop descendants of removed main effects or
+   interactions. Fit a grouped spline deviation only where the
+   corresponding linear random block survives. Survey rows from screened
+   groups still inform the overall curve and other retained effects.
+5. **Check depth after screening.** Compare the estimated retained
+   coefficients with eligible respondents. Reduce depth only if the
+   screened candidate still exceeds that budget.
+
+```{r prefit-audit, include=FALSE}
+collapse_terms <- function(x) if (length(x)) paste(x, collapse = ", ") else "—"
+
+stage_audit <- function(selected, model, stage) {
+  d <- selected$design
+  p <- selected$prepared
+  trials <- d$data$.success + d$data$.failure
+  groups <- names(d$group_slopes)
+  group_loss <- vapply(seq_along(groups), function(i) {
+    group <- groups[i]
+    (nlevels(d$data[[group]]) - length(d$supported_random_levels[[i]])) *
+      length(d$group_slopes[[group]])
+  }, numeric(1))
+  retained_group_columns <- function(terms) {
+    sum(vapply(seq_along(groups), function(i) {
+      group <- groups[i]
+      factors <- d$grouping_columns[[group]]
+      if (is.null(factors)) factors <- group
+      keys <- vapply(strsplit(d$group_slopes[[group]], ":", fixed = TRUE),
+                     function(slope) sequential_term_key(c(factors, setdiff(slope, "1"))),
+                     character(1))
+      sum(keys %in% terms) * length(d$supported_random_levels[[i]])
+    }, numeric(1)))
+  }
+  sparse <- retained_group_columns(names(p$sparse_random_slopes))
+  hierarchy <- retained_group_columns(p$orphaned_random_terms)
+  stopifnot(sum(group_loss) + sparse + hierarchy ==
+              sum(p$dropped[c("scalar_random", "correlated_random")]))
+  unscaled <- function(terms) stats::model.matrix(stats::reformulate(c("1", terms)), d$data)
+  raw <- unscaled(d$candidate_fixed_terms)
+  before <- raw[, !colnames(raw) %in% d$unsupported_fixed, drop = FALSE]
+  decompose <- function(x) {
+    weighted <- x * sqrt(trials)
+    scaled <- sweep(weighted, 2L, sqrt(colSums(weighted^2)), "/")
+    svd(scaled, nu = 0L)
+  }
+  before_svd <- decompose(before)
+  after_svd <- decompose(unscaled(d$fixed_terms))
+  before_index <- max(before_svd$d) / before_svd$d
+  after_index <- max(after_svd$d) / after_svd$d
+  variance_components <- sweep(before_svd$v^2, 2L, before_svd$d^2, "/")
+  variance_proportions <- sweep(variance_components, 1L, rowSums(variance_components), "/")
+  flagged <- which(before_index >= 30)
+  component_terms <- vapply(flagged, function(j) {
+    share <- variance_proportions[, j]
+    large <- share >= 0.5
+    if (!any(large)) return("—")
+    paste0(colnames(before)[large], " (", round(100 * share[large]), "%)", collapse = ", ")
+  }, character(1))
+  stopifnot(isTRUE(all.equal(c(max(before_index), max(after_index)),
+                           c(d$fixed_screen$condition_before, d$fixed_screen$condition_after))),
+            max(after_index) < 30)
+  reasons <- c("Fixed support" = length(d$unsupported_fixed),
+               "Random level support" = sum(group_loss),
+               "Within-group slope support" = sparse,
+               "Fixed collinearity" = length(d$aliased_fixed),
+               "Linear hierarchy" = length(d$orphaned_fixed) + hierarchy,
+               "Whole smooths" = unname(p$dropped["smooth"]) - p$dropped_smooth_level_columns,
+               "Spline level support" = p$dropped_smooth_level_columns)
+  start <- ncol(raw) + d$random_coefficients + d$spline_coefficients
+  restored <- p$estimated_parameters - start + sum(reasons)
+  stopifnot(restored >= 0)
+  n_by_group <- unlist(lapply(groups, function(group) {
+    as.vector(rowsum(trials, d$data[[group]]))
+  }), use.names = FALSE)
+  list(
+    totals = data.frame(Model = model, Stage = stage, Respondents = sum(trials),
+                        Cells = nrow(d$data), Depth = d$depth, Start = start,
+                        Removed = sum(reasons), Restored = restored,
+                        Retained = p$estimated_parameters, check.names = FALSE),
+    excluded = selected$excluded_respondents,
+    reasons = data.frame(Model = model, Stage = stage, as.list(reasons), check.names = FALSE),
+    diagnostic = data.frame(Model = model, Stage = stage,
+                            `Before pruning` = round(max(before_index), 2),
+                            `After pruning` = round(max(after_index), 2),
+                            `Fixed columns before → after` =
+                              paste(ncol(before), ncol(unscaled(d$fixed_terms)), sep = " → "),
+                            `Fixed columns rejected` = collapse_terms(d$aliased_fixed),
+                            check.names = FALSE),
+    terms = data.frame(Model = model, Stage = stage,
+                       `Sparse slopes (mean respondents)` = collapse_terms(
+                         if (length(p$sparse_random_slopes)) {
+                           paste0(names(p$sparse_random_slopes), " (",
+                                  round(p$sparse_random_slopes, 2), ")")
+                         }),
+                       `Whole smooths removed` = collapse_terms(p$dropped_smooth_terms),
+                       check.names = FALSE),
+    components = data.frame(Model = rep(model, length(flagged)), Stage = rep(stage, length(flagged)),
+                            `Condition index` = round(before_index[flagged], 2),
+                            `Columns with at least 50% on this component` = component_terms,
+                            check.names = FALSE),
+    indices = list(Before = before_index, After = after_index),
+    group_support = n_by_group
+  )
+}
+
+audit <- Map(function(stages, model) {
+  Map(function(selected, stage) stage_audit(selected, model, stage), stages, names(stages))
+}, preflight, names(preflight))
+audit_table <- function(field) {
+  do.call(rbind, lapply(unlist(audit, recursive = FALSE), "[[", field))
+}
+totals <- audit_table("totals")
+reasons <- audit_table("reasons")
+table <- function(x) knitr::kable(x, format = "pipe", row.names = FALSE,
+                                  format.args = list(big.mark = ","))
+```
+
+## 5. Account for every removed coefficient
+
+The presidential model excluded `r format(audit$Presidential[[1]]$excluded, big.mark = ",")`
+incomplete survey records. The House model excluded
+`r format(audit$House[[1]]$excluded, big.mark = ",")`.
+The starting counts are design columns and include the nominal kernel
+sketch width. The final solver may use a smaller kernel basis after
+its rank checks. Each row reconciles as **start minus removed plus restored equals retained**. A restored column belongs to a standalone global curve that
+the starting formula had supplied through a grouped spline.
+
+```{r prefit-totals, echo=FALSE}
+table(totals)
+```
+
+Here is the coefficient accounting summed across the three fitted stages of
+each model. The residual outcome, Other, has no separate stage.
+
+```{r prefit-model-attrition, echo=FALSE}
+table(aggregate(totals[c("Start", "Removed", "Restored", "Retained")],
+                list(Model = totals$Model), sum))
+```
+
+Random level support counts columns removed with a low-support intercept.
+Slope support and linear hierarchy count additional removals among levels
+that clear the intercept cutoff. Whole smooths and spline levels report
+the associated estimated basis columns. These rows count each removal once.
+The substantive pattern is the same in both models. Most removals are
+low-support random levels. The slope screen also removes
+`pres_share:state_fips` because presidential share is constant within
+each state. The condition screen removes `house_share:pres_share` in all
+stages and `pres_share:incumbent` in both Republican stages. Their
+corresponding smooths are removed as well.
+
+```{r prefit-causes, echo=FALSE}
+table(reasons)
+```
+
+```{r prefit-terms, echo=FALSE}
+table(audit_table("terms"))
+```
+
+## 6. Inspect support and conditioning before fitting
+
+The left panels show how many candidate random-effect levels have at most
+the given number of survey respondents. Each level is counted once per
+random term, including crossed factor levels. The right panels show the
+full fixed-design condition-index spectrum by stage, after the support
+screen and again after collinearity and hierarchy pruning. The horizontal
+line marks 30. The spectra are sorted from their largest index, so the
+first point gives the reported maximum.
+
+```{r prefit-conditioning, echo=FALSE}
+table(audit_table("diagnostic"))
+```
+
+For each pre-pruning component at or above 30, the next table names the
+fixed columns with at least half of their variance proportion on that
+component. These proportions come from the weighted design's singular
+vectors. They diagnose shared weak directions in the design. They are
+separate from posterior coefficient variances and do not drive pruning.
+
+```{r prefit-condition-components, echo=FALSE}
+table(audit_table("components"))
+```
+
+```{r prefit-figures, echo=FALSE, results='asis'}
+asset_dir <- file.path("vignettes", "assets", "us-2026")
+dir.create(asset_dir, recursive = TRUE, showWarnings = FALSE)
+
+plot_model_audit <- function(model, stages, path) {
+  grDevices::png(path, width = 1560, height = 910, res = 130)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  graphics::par(mfrow = c(3, 2), mar = c(3.4, 3.7, 2.1, 1), oma = c(0.5, 0, 2.4, 0),
+                mgp = c(2.2, 0.7, 0), las = 1, bty = "l")
+  before_colour <- "#AE4526"
+  after_colour <- "#087A75"
+  x_max <- max(vapply(stages, function(x) max(x$group_support), numeric(1)))
+  y_max <- max(vapply(stages, function(x) max(x$indices$Before), numeric(1)))
+  for (stage in names(stages)) {
+    report <- stages[[stage]]
+    counts <- sort(report$group_support)
+    graphics::plot(stats::ecdf(counts), log = "x", xlim = c(1, x_max), ylim = c(0, 1),
+                   main = paste(stage, "· Group support"), xlab = "Eligible respondents per level",
+                   ylab = "Share of levels", col = after_colour, lwd = 2, do.points = FALSE,
+                   verticals = TRUE)
+    graphics::abline(v = minimum_support, lty = 2, col = "grey45")
+    before <- sort(report$indices$Before, decreasing = TRUE)
+    after <- sort(report$indices$After, decreasing = TRUE)
+    graphics::plot(seq_along(before), before, type = "o", log = "y", pch = 16, lwd = 2,
+                   ylim = c(1, y_max * 1.2), xlim = c(1, length(before)),
+                   col = before_colour, xaxt = "n", main = paste(stage, "· Fixed-design conditioning"),
+                   xlab = "Condition index rank", ylab = "Condition index")
+    graphics::axis(1, at = seq_along(before))
+    graphics::abline(h = 30, lty = 2, col = "grey45")
+    graphics::lines(seq_along(after), after, type = "o", pch = 17, lwd = 2, col = after_colour)
+    if (stage == names(stages)[1L]) {
+      graphics::legend("topright", c("Before pruning", "Retained design", "Cutoff (30)"),
+                       col = c(before_colour, after_colour, "grey45"), lty = c(1, 1, 2),
+                       pch = c(16, 17, NA), bty = "n", cex = 0.83)
+    }
+  }
+  graphics::mtext(paste(model, "model"), outer = TRUE, font = 2, cex = 1.35, line = 0.65)
+}
+
+for (model in names(audit)) {
+  filename <- paste0("prefit-", tolower(model), ".png")
+  plot_model_audit(model, audit[[model]], file.path(asset_dir, filename))
+  cat("\n![", model, " model support and condition indices](assets/us-2026/",
+      filename, ")\n", sep = "")
+}
+```
+
+## 7. Stop before fitting
+
+Both models have prepared designs. The later run is configured for
+`r n_draws` posterior draws. This knit stops before solver iterations,
+posterior prediction, or raking. To continue in a separate
+run, knit with `VOTEFRAME_US_FIT=true`.
+
+```{r prefit-stop, include=FALSE}
+if (!identical(Sys.getenv("VOTEFRAME_US_FIT"), "true")) knitr::knit_exit()
+```
+
+## 8. Fit and extend with 2024 presidential vote
 
 ### Scaling to more posterior draws
 
@@ -181,11 +472,15 @@ House totals per draw and calculate intervals from those totals.
 out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
                   unset = file.path("data", "output", "us-2026-fit"))
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
-n_draws <- 30L
 requested_depth <- 2L
-no_interactions <- c("district_id", "state_fips")
-control <- vglmer::vglmer_control(tolerance_parameters = 1e-3, tolerance_elbo = 1e-5,
-                                  quiet = FALSE, quiet_rho = FALSE, print_prog = 1L)
+max_iterations <- 100L
+minimum_support <- 10L
+depth_support_dir <- file.path(out, "depth_support")
+stage_columns <- c("outcome", "observations", "fitted_depth", "estimated_parameters",
+                   "dropped_fixed", "dropped_scalar_random", "dropped_correlated_random",
+                   "dropped_smooth", "estimated_retained_parameters", "fixed_condition_after",
+                   "iterations_used", "max_parameter_change")
+control <- vglmer::vglmer_control(quiet = FALSE, quiet_rho = FALSE, print_prog = 1L)
 # Stream diagnostics to the console while knitr also records them in the vignette.
 fit_us_model <- function(...) {
   if (!isTRUE(getOption("knitr.in.progress"))) return(fit_sequential_logit(...))
@@ -200,10 +495,14 @@ set.seed(2026)
 pres_fit <- fit_us_model(
   survey, pres, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
   predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
-  no_interactions = no_interactions,
+  tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
+  minimum_support = minimum_support, depth_support_dir = depth_support_dir,
+  interaction_support_log = file.path(out, "presidential_interaction_support.csv"),
   log_file = file.path(out, "presidential_fit_log.csv")
 )
-pres_fit$fit_log[c("outcome", "observations", "fitted_depth", "estimated_parameters")]
+knitr::kable(pres_fit$fit_log[stage_columns])
+knitr::include_graphics(list.files(depth_support_dir, "^vote_pres_2024-stage-.*[.]png$",
+                                  full.names = TRUE))
 for (stage in names(pres_fit$stages)) {
   cat(stage, "\n")
   cat(trimws(deparse(pres_fit$stages[[stage]]$formula), which = "right"), sep = "\n")
@@ -222,7 +521,7 @@ predict_presidential_state <- function(original) {
 }
 ```
 
-## 4. Fit and extend with 2024 House vote
+## 9. Fit and extend with 2024 House vote
 
 The House model adds the reported presidential choice to the CES predictors.
 In the population frame it uses the presidential categories created in the
@@ -240,15 +539,53 @@ set.seed(2027)
 house_fit <- fit_us_model(
   survey, house, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
   predictors = c(predictors, pres), depth = requested_depth, splines = TRUE, control = control,
-  no_interactions = no_interactions,
+  tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
+  minimum_support = minimum_support, depth_support_dir = depth_support_dir,
+  interaction_support_log = file.path(out, "house_interaction_support.csv"),
   log_file = file.path(out, "house_fit_log.csv")
 )
-house_fit$fit_log[c("outcome", "observations", "fitted_depth", "estimated_parameters")]
+knitr::kable(house_fit$fit_log[stage_columns])
+knitr::include_graphics(list.files(depth_support_dir, "^vote_house_2024-stage-.*[.]png$",
+                                  full.names = TRUE))
 for (stage in names(house_fit$stages)) {
   cat(stage, "\n")
   cat(trimws(deparse(house_fit$stages[[stage]]$formula), which = "right"), sep = "\n")
   cat("\n")
 }
+```
+
+### Coefficients by predictor combination
+
+Each row counts the fixed, random, and spline coefficients attributed to a
+single predictor or interaction. A categorical combination contributes one
+random intercept per observed combination of levels. A categorical predictor
+interacted with a numeric predictor contributes a slope per observed level
+plus any spline-basis coefficients. Totals use the same estimated counts as
+the depth-selection rule. Zero means the combination contributes no
+coefficients in that stage.
+
+```{r coefficient-counts, echo=FALSE, results='asis'}
+stage_counts <- c(
+  setNames(lapply(pres_fit$stages, "[[", "combination_counts"),
+           paste("Pres.", names(pres_fit$stages))),
+  setNames(lapply(house_fit$stages, "[[", "combination_counts"),
+           paste("House", names(house_fit$stages)))
+)
+combinations <- unique(unlist(lapply(stage_counts, names), use.names = FALSE))
+counts <- vapply(stage_counts, function(stage) {
+  values <- as.integer(stage[combinations])
+  replace(values, is.na(values), 0L)
+}, integer(length(combinations)))
+totals <- colSums(counts)
+stopifnot(all(totals == c(pres_fit$fit_log$estimated_parameters,
+                         house_fit$fit_log$estimated_parameters)))
+rows <- order(-rowSums(counts), combinations)
+count_table <- data.frame(
+  Combination = c(combinations[rows], "**Total**"),
+  rbind(counts[rows, , drop = FALSE], totals), check.names = FALSE
+)
+knitr::kable(count_table, format = "pipe", row.names = FALSE,
+             format.args = list(big.mark = ","))
 ```
 
 ```{r house-extension}
@@ -262,19 +599,18 @@ predict_house_state <- function(incoming) {
 }
 ```
 
-## 5. Rake both outcome margins and preserve the original cells
+## 10. Predict the joint frame by state
 
-Jointly calibrate the state presidential targets and district House targets
-on every count column. Each district belongs to one state, and all original
-cells belong to a single district. The constraints therefore separate by
-state. Predict and rake one state at a time to bound memory usage. House
-targets of zero constrain their district and choice to zero while calibration
-preserves the other outcome margins and the original joint cell totals.
+The default run scores the pre-rake predictions and saves no raked
+partitions. Set `VOTEFRAME_US_RAKE=true` to also calibrate the state
+presidential and district House targets and save the joint frame. Prediction
+and optional calibration run one state at a time to limit memory use.
 
 ```{r joint-rake}
 rake_tolerance <- 1e-8
+run_rake <- identical(Sys.getenv("VOTEFRAME_US_RAKE"), "true")
 raked_dir <- file.path(out, "raked")
-dir.create(raked_dir, showWarnings = FALSE)
+if (run_rake) dir.create(raked_dir, showWarnings = FALSE)
 states <- split(seq_len(nrow(frame)), frame$state_fips)
 count_columns <- c("N", paste0("N_draw_", seq_len(n_draws)))
 
@@ -287,12 +623,15 @@ plot_totals <- function(block, extension) {
         rowsum(block[count_columns], group, reorder = FALSE))
 }
 
-rake_states <- function() {
+summarize_states <- function() {
   lapply(names(states), function(state) {
     original <- frame[states[[state]], , drop = FALSE]
     incoming <- predict_presidential_state(original)
     joint <- predict_house_state(incoming)
     stopifnot(nrow(joint) == nrow(original) * length(choices)^2L)
+    before <- setNames(lapply(names(plot_targets), function(x) plot_totals(joint, x)),
+                       names(plot_targets))
+    if (!run_rake) return(list(before = before))
     # Use the same named configuration for the rake in every block.
     targets <- lapply(names(rake_targets), function(outcome) {
       by <- rake_by[[outcome]]
@@ -312,8 +651,7 @@ rake_states <- function() {
     stopifnot(error <= rake_tolerance)
     saveRDS(raked, file.path(raked_dir, paste0("state_", state, ".rds")))
 
-    list(before = setNames(lapply(names(plot_targets), function(x) plot_totals(joint, x)),
-                           names(plot_targets)),
+    list(before = before,
          after = setNames(lapply(names(plot_targets), function(x) plot_totals(raked, x)),
                           names(plot_targets)),
          cell_error = error)
@@ -321,14 +659,16 @@ rake_states <- function() {
 }
 
 set.seed(2028)
-summaries <- rake_states()
-max(vapply(summaries, function(x) x$cell_error, numeric(1)))
+summaries <- summarize_states()
+if (run_rake) max(vapply(summaries, function(x) x$cell_error, numeric(1)))
 ```
 
-## 6. Plot each outcome against its own targets
+## 11. Compare predictions with election benchmarks
 
-The panels compare the unraked and raked joint frame to the selected
-benchmarks, with posterior intervals from the draw counts. Presidential
+The panels compare the pre-rake predictions to the selected benchmarks,
+with posterior intervals from the draw counts. When raking is enabled they
+also show the post-rake comparison. The fit output directory contains a
+metrics CSV for each comparison. Presidential
 shares are marginalized over House vote. House shares are marginalized over
 presidential vote. For party panels, divide both the predictions and targets
 by turnout at their own comparison geography. Draw intervals divide each
@@ -342,7 +682,8 @@ agreement with them measures calibration.
 figure_dir <- file.path("vignettes", "assets", "us-2026")
 dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 fits <- setNames(list(pres_fit, house_fit), c(pres, house))
-for (phase in c("before", "after")) {
+figures <- character()
+for (phase in c("before", if (run_rake) "after")) {
   for (outcome in names(plot_targets)) {
     specification <- plot_targets[[outcome]]
     totals <- do.call(rbind, lapply(summaries, function(x) x[[phase]][[outcome]]))
@@ -353,35 +694,29 @@ for (phase in c("before", "after")) {
       no_vote = fits[[outcome]]$no_vote,
       plot_file = figure, coverage_tolerance = if (phase == "after") rake_tolerance else 0
     )
+    cat(outcome, phase, "rake\n")
     print(check$metrics)
+    utils::write.csv(check$metrics, file.path(out, paste0(outcome, "_", phase, "_rake_metrics.csv")))
+    figures <- c(figures, sub("^vignettes/", "", figure))
   }
 }
+knitr::include_graphics(figures, error = FALSE)
 ```
 
-### Presidential vote by state
+## 12. Inspect the final frame
 
-![State presidential estimates before joint calibration](assets/us-2026/vote_pres_2024_before_rake.png)
-
-![State presidential estimates after joint calibration](assets/us-2026/vote_pres_2024_after_rake.png)
-
-### House vote by district
-
-![District House estimates before joint calibration](assets/us-2026/vote_house_2024_before_rake.png)
-
-![District House estimates after joint calibration](assets/us-2026/vote_house_2024_after_rake.png)
-
-## 7. Inspect the final frame
-
-Each state RDS includes both outcome columns, `N`, and the draw-specific
+When raking is enabled, each state RDS includes both outcome columns, `N`, and the draw-specific
 counts. The original state and district keys are carried by `state_fips`
 and `district_id`. Read the partitions together when a later analysis needs
 the national joint frame. The rows below sample Alabama and show all
 demographic keys, both vote outcomes, and three draw counts.
 
 ```{r final-preview}
-alabama <- readRDS(file.path(raked_dir, "state_01.rds"))
-preview_rows <- round(seq(1L, nrow(alabama), length.out = 6L))
-preview_columns <- c(predictors, pres, house, "N",
-                     paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
-knitr::kable(alabama[preview_rows, preview_columns], digits = 3, row.names = FALSE)
+if (run_rake) {
+  alabama <- readRDS(file.path(raked_dir, "state_01.rds"))
+  preview_rows <- round(seq(1L, nrow(alabama), length.out = 6L))
+  preview_columns <- c(predictors, pres, house, "N",
+                       paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
+  knitr::kable(alabama[preview_rows, preview_columns], digits = 3, row.names = FALSE)
+}
 ```

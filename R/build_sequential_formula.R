@@ -1,7 +1,8 @@
 # Build a candidate formula and count the coefficients it would estimate.
 sequential_stage_design <- function(data, area_variable, depth, splines,
                                     area_predictors = character(),
-                                    no_interactions = character()) {
+                                    no_interactions = character(), trials = rep(1, nrow(data)),
+                                    minimum_support = -1L) {
   if (anyDuplicated(names(data)) || anyNA(names(data)) || any(!nzchar(names(data)))) {
     stop("Stage predictors must have unique, nonempty names.")
   }
@@ -36,6 +37,7 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
   fixed <- character()
   smooth <- character()
   smooth_width <- numeric()
+  smooth_predictors <- list()
   grouping_columns <- list()
   group_slopes <- list()
   predictors <- c(factors, continuous)
@@ -106,6 +108,7 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
         # A by-smooth includes the global basis plus one basis per observed level.
         if (!is.null(group)) width <- width * (1 + nlevels(data[[group]]))
         smooth_width <- c(smooth_width, width)
+        smooth_predictors[[length(smooth_width)]] <- terms
       }
     }
   }
@@ -118,31 +121,62 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
   global <- !grepl(", by = ", smooth, fixed = TRUE)
   supplied_by_group <- sub(", by = [^)]*\\)$", ")", smooth[!global])
   keep_smooth <- !(global & smooth %in% supplied_by_group)
-  smooth <- smooth[keep_smooth]
+  nominal_smooth <- smooth[keep_smooth]
 
   # Count fixed columns, random coefficients per group level, and spline columns.
   # Include the global intercept. Count columns as built, before shrinkage.
-  fixed_design <- independent_sequential_fixed_effects(fixed, data)
+  supported_random_levels <- lapply(names(group_slopes), function(group) {
+    counts <- rowsum(trials, data[[group]])
+    rownames(counts)[counts[, 1L] >= minimum_support]
+  })
+  fixed_design <- independent_sequential_fixed_effects(fixed, data, trials, minimum_support)
   fixed <- fixed_design$terms
   data <- fixed_design$data
   fixed_width <- fixed_design$rank
   # Each observed level gets its own coefficient for every term in its group.
-  random_width <- sum(vapply(names(group_slopes), function(group) {
-    nlevels(data[[group]]) * length(group_slopes[[group]])
-  }, numeric(1)))
+  random_counts <- lapply(names(group_slopes), function(group) {
+    group_predictors <- grouping_columns[[group]]
+    if (is.null(group_predictors)) group_predictors <- group
+    slopes <- strsplit(group_slopes[[group]], ":", fixed = TRUE)
+    list(predictors = lapply(slopes, function(slope) c(group_predictors, setdiff(slope, "1"))),
+         counts = rep(nlevels(data[[group]]), length(slopes)))
+  })
+  random_counts <- list(
+    predictors = unlist(lapply(random_counts, "[[", "predictors"), recursive = FALSE),
+    counts = unlist(lapply(random_counts, "[[", "counts"), use.names = FALSE)
+  )
+  random_width <- sum(random_counts$counts)
   spline_width <- sum(smooth_width[keep_smooth])
-  parameter_count <- fixed_width + random_width + spline_width
+  parameter_count <- fixed_design$nominal_rank + random_width + spline_width
+  combination_predictors <- c(fixed_design$coefficient_predictors, random_counts$predictors,
+                              smooth_predictors[keep_smooth])
+  combinations <- vapply(combination_predictors, function(variables) {
+    if (!length(variables)) return("(Intercept)")
+    paste(names(predictor_names)[predictor_names %in% variables], collapse = " × ")
+  }, character(1))
+  combination_counts <- tapply(c(fixed_design$coefficient_counts, random_counts$counts,
+                                  smooth_width[keep_smooth]), combinations, sum)
 
   # vglmer treats the two response columns as binomial successes and failures.
-  formula <- stats::reformulate(c("1", fixed, random, smooth),
+  formula <- stats::reformulate(c("1", fixed, random, nominal_smooth),
                                 response = "cbind(.success, .failure)", env = baseenv())
   list(data = data, formula = formula, predictor_names = predictor_names,
-       grouping_columns = grouping_columns, factors = factors,
+       grouping_columns = grouping_columns, group_slopes = group_slopes, factors = factors,
+       supported_random_levels = supported_random_levels,
+       fixed_terms = fixed, candidate_fixed_terms = fixed_design$candidate_terms,
+       smooth_terms = nominal_smooth, candidate_smooth_terms = smooth,
+       candidate_smooth_width = smooth_width,
        fixed_contrasts = fixed_design$contrasts,
        constant_predictors = names(predictor_names)[unique_values[unname(predictor_names)] == 1L],
        aliased_fixed = fixed_design$aliased,
+       unsupported_fixed = fixed_design$unsupported,
+       orphaned_fixed = fixed_design$orphaned, retained_keys = fixed_design$retained_keys,
+       smooth_predictors = smooth_predictors,
+       fixed_screen = fixed_design$diagnostics,
        parameter_count = parameter_count,
-       fixed_coefficients = fixed_width, random_coefficients = random_width,
+       combination_counts = combination_counts,
+       fixed_coefficients = fixed_design$nominal_rank, retained_fixed_coefficients = fixed_width,
+       random_coefficients = random_width,
        spline_coefficients = spline_width,
        hierarchical = length(random) + length(smooth) > 0L,
        joint_smooth = any(grepl('type = "gKRLS"', smooth, fixed = TRUE)))
@@ -150,15 +184,66 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
 
 # Keep an independent basis for the unpenalized design. Hierarchical terms
 # have their own priors and do not enter this rank check.
-independent_sequential_fixed_effects <- function(fixed, data) {
+independent_sequential_fixed_effects <- function(fixed, data, trials = rep(1, nrow(data)),
+                                                 minimum_support = -1L) {
   terms <- stats::terms(stats::reformulate(c("1", fixed)), keep.order = TRUE)
   columns <- stats::model.matrix(terms, data)
-  norms <- sqrt(colSums(columns^2))
-  rank <- qr(sweep(columns, 2L, ifelse(norms > 0, norms, 1), "/"), tol = 1e-10)
-  keep <- sort(rank$pivot[seq_len(rank$rank)])
-  aliases <- colnames(columns)[-keep]
   term_labels <- attr(terms, "term.labels")
   assignment <- attr(columns, "assign")
+  supported <- assignment == 0L | colSums((columns != 0) * trials) >= minimum_support
+  eligible <- which(supported)
+  weighted <- columns * sqrt(trials)
+  norms <- sqrt(colSums(weighted^2))
+  scaled <- sweep(weighted, 2L, ifelse(norms > 0, norms, 1), "/")
+  condition <- function(x) {
+    if (nrow(x) < ncol(x)) return(Inf)
+    values <- svd(x, nu = 0L, nv = 0L)$d
+    max(values) / min(values)
+  }
+  maximum_condition <- 30
+  tolerance <- 1e-6
+  before <- condition(scaled[, eligible, drop = FALSE])
+  keep <- eligible
+  removed <- list()
+  orphaned <- integer()
+  keys <- c("", vapply(strsplit(term_labels, ":", fixed = TRUE),
+                       sequential_term_key, character(1)))[assignment + 1L]
+  parents <- lapply(strsplit(term_labels, ":", fixed = TRUE), sequential_term_parents)
+  if (before >= maximum_condition || any(lengths(parents) > 0L)) {
+    degree <- c(0L, attr(terms, "order"))[assignment + 1L]
+    residual <- scaled
+    keep <- integer()
+    remaining <- eligible
+    while (length(remaining)) {
+      candidates <- remaining[degree[remaining] == min(degree[remaining])]
+      independent <- sqrt(colSums(residual[, candidates, drop = FALSE]^2))
+      # Tied fractions of independent variation use unscaled residual
+      # variation within the same term, then the original column order.
+      tied <- which(independent >= max(independent) - 1e-12)
+      best <- tied[1L]
+      same_term <- tied[assignment[candidates[tied]] == assignment[candidates[best]]]
+      best <- same_term[which.max(independent[same_term] * norms[candidates[same_term]])]
+      column <- candidates[best]
+      remaining <- setdiff(remaining, column)
+      if (assignment[column] > 0L && !all(parents[[assignment[column]]] %in% keys[keep])) {
+        orphaned <- c(orphaned, column)
+        next
+      }
+      if (before >= maximum_condition && (independent[best] <= tolerance ||
+          condition(scaled[, c(keep, column), drop = FALSE]) >= maximum_condition)) {
+        basis <- scaled[, keep, drop = FALSE]
+        relation <- qr.coef(qr(basis), scaled[, column])
+        related <- abs(relation) >= max(abs(relation)) * 0.01 & relation != 0
+        removed[[colnames(columns)[column]]] <- colnames(columns)[keep[related]]
+        next
+      }
+      keep <- c(keep, column)
+      direction <- residual[, column] / independent[best]
+      residual <- residual - tcrossprod(direction, as.vector(crossprod(direction, residual)))
+    }
+    keep <- sort(keep)
+  }
+  aliases <- colnames(columns)[setdiff(eligible, c(keep, orphaned))]
   retained <- character()
   contrasts <- list()
   for (i in seq_along(term_labels)) {
@@ -175,18 +260,46 @@ independent_sequential_fixed_effects <- function(fixed, data) {
     predictor <- data[[label]]
     levels <- levels(predictor)
     level_rows <- match(levels, predictor)
+    coding <- columns[level_rows, term_columns, drop = FALSE]
+    reference <- which(rowSums(abs(coding)) == 0)
+    baseline <- if (length(reference)) reference[1L] else 1L
     for (column in retained_columns) {
       name <- tail(make.unique(c(names(data), paste0(".fixed_", make.names(colnames(columns)[column])))), 1L)
       data[[name]] <- columns[, column]
-      contrasts[[name]] <- list(predictor = label, values = setNames(columns[level_rows, column], levels))
+      contrasts[[name]] <- list(predictor = label,
+                               values = setNames(columns[level_rows, column], levels),
+                               baseline = columns[level_rows[baseline], column])
       retained <- c(retained, name)
     }
   }
-  list(terms = retained, data = data, rank = rank$rank, aliased = aliases, contrasts = contrasts)
+  counts <- tabulate(assignment[keep] + 1L, nbins = length(term_labels) + 1L)
+  nominal_rank <- if (length(keep) == ncol(scaled)) length(keep) else qr(scaled, tol = 1e-10)$rank
+  list(terms = retained, candidate_terms = fixed, data = data, rank = length(keep),
+       nominal_rank = nominal_rank, aliased = aliases, contrasts = contrasts,
+       unsupported = colnames(columns)[!supported],
+       orphaned = colnames(columns)[orphaned],
+       retained_keys = unique(keys[keep]),
+       diagnostics = list(condition_before = before,
+                          condition_after = if (identical(eligible, keep)) before else {
+                            condition(scaled[, keep, drop = FALSE])
+                          },
+                          related_columns = removed),
+       coefficient_predictors = c(list(character()), strsplit(term_labels, ":", fixed = TRUE))[counts > 0L],
+       coefficient_counts = counts[counts > 0L])
 }
 
 # Use the same group labels in the survey and the prediction frame.
 sequential_group <- function(data, columns) {
   labels <- lapply(data[columns], function(x) encodeString(as.character(x), quote = '"'))
   factor(do.call(paste, c(unname(labels), sep = ".")))
+}
+
+# Canonical keys for checking immediate parent terms across effect types.
+sequential_term_key <- function(predictors) {
+  paste(sort(predictors), collapse = ":")
+}
+
+sequential_term_parents <- function(predictors) {
+  if (length(predictors) < 2L) return(character())
+  vapply(seq_along(predictors), function(i) sequential_term_key(predictors[-i]), character(1))
 }
