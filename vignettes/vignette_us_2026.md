@@ -329,9 +329,32 @@ for each reason. One dropped curve can account for many coefficients.
 |House        |Democratic |             0|                6,844|                      1,801|                  5|                        872|                0|        21,863|                    0|
 |House        |Republican |             0|                9,375|                      1,323|                  7|                        848|              514|        21,838|                    0|
 
-*Table 5. Number of candidate coefficient columns dropped for each
-reason in each stage. The row sum is the dropped-coefficient count in
-Table 4. Counts for the smooths use estimated basis widths.*
+*Table 5. Why coefficients were dropped.* Each row identifies the **model**
+(presidential or House) and the **stage** (the choice being modeled).
+The other columns count coefficients dropped for the reasons below.
+Their sum matches the dropped-coefficient count in Table 4.
+
+- **Fixed support.** Fewer than 10 respondents had a nonzero entry in
+  that fixed-effect column.
+- **Random level support.** A group, such as a district–age pair, had
+  fewer than 10 respondents. Its random intercept and any slopes were
+  left out of the fit together.
+- **Within-group slope support.** A varying slope averaged fewer than
+  10 informative respondents per retained group, so the slope was
+  dropped across all groups. A respondent counts as informative if
+  their slope value differs from the group's most common value.
+- **Fixed collinearity.** A fixed coefficient was removed to bring the
+  maximum condition index below 30.
+- **Redundant group intercepts.** A crossed grouping repeated one of
+  its parent groupings. For example, district × state makes the same
+  groups as district alone.
+- **Linear hierarchy.** An interaction was dropped because a main
+  effect or lower-order interaction it depended on was removed.
+- **Whole smooths.** Estimated spline coefficients dropped when the
+  entire curve term was removed.
+- **Spline level support.** Estimated spline coefficients left out for
+  a particular group whose linear random effects were screened. The
+  curve still has fitted deviations for the groups that qualified.
 
 
 |Model        |Stage      |Redundant crossed groups                   |Fixed interactions removed by hierarchy |Sparse slopes (mean respondents)                                                                                                                                                            |Whole smooths removed                                                                                                                                                                                                                                                                                                                   |
