@@ -540,10 +540,22 @@ The intercept participates in this calculation and is always kept. If
 the cutoff yields an empty candidate set, all remaining non-intercept
 columns enter the candidate set.
 
-The **110.40** in the first row comes from $s_1/s_p$. The **94%** uses a
-different formula. Divide the House-share coefficient's contribution
-$V_{jp}^2/s_p^2$ by the sum of its contributions across all directions,
-$\sum_k V_{jk}^2/s_k^2$.
+The **110.40** in the first row comes from $s_1/s_p$. To calculate
+the **94%**, pick the House-share coefficient. For each singular
+direction, square the House-share loading and multiply it by that
+direction's squared condition index. Add those contributions across
+all directions, then divide the weakest direction's contribution by
+that total.
+
+In general, with condition index $\kappa_k=s_1/s_k$, the share of
+coefficient $j$'s estimation variance attributable to direction $k$ is
+
+$$
+\frac{V_{jk}^2\,\kappa_k^2}{\sum_\ell V_{j\ell}^2\,\kappa_\ell^2}.
+$$
+
+The code uses $V_{jk}^2/s_k^2$ for each contribution. Since
+$\kappa_k^2=s_1^2/s_k^2$, the common factor $s_1^2$ cancels in the ratio.
 
 ### How to read the figures
 
