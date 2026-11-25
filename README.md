@@ -72,6 +72,9 @@ knitr::knit("vignettes/vignette_sweden_2026.Rmd", output = "vignettes/vignette_s
 
 ## US 2026
 
+The [national fit notes](US_2026_RESUME.md) cover checkpoints, restart commands,
+and earlier experiments.
+
 The [US 2026 inputs](data/input/us%202026/README.md) cover 2024 House and
 presidential vote on the 2026 congressional district map.
 The [US 2026 vignette](vignettes/vignette_us_2026.md) extends the frame first
