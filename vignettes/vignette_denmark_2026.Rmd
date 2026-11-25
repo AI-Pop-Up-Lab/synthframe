@@ -196,6 +196,10 @@ knitr::include_graphics(sub("^vignettes/", "", change_plot), error = FALSE)
 
 ## Inspect the extended frame
 
+The table shows 100 randomly selected rows from the raked frame.
+
 ```{r preview}
-knitr::kable(head(raked[c(predictors, outcome, "N", "N_draw_1", "N_draw_2")]), digits = 2)
+set.seed(2029)
+columns <- c(predictors, outcome, "N", "N_draw_1", "N_draw_2")
+knitr::kable(sample_extended_frame(raked, columns), digits = 2, row.names = FALSE)
 ```

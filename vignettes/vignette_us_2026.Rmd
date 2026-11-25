@@ -923,15 +923,17 @@ knitr::include_graphics(figures, error = FALSE)
 When raking is enabled, each state RDS includes both outcome columns, `N`, and the draw-specific
 counts. The original state and district keys are carried by `state_fips`
 and `district_id`. Read the partitions together when a later analysis needs
-the national joint frame. The rows below sample Alabama and show all
-demographic keys, both vote outcomes, and three draw counts.
+the national joint frame. The table shows 100 rows sampled across the
+state partitions, including DC, with both vote outcomes and three draw counts.
 
 ```{r final-preview}
 if (run_rake) {
-  alabama <- readRDS(file.path(raked_dir, "state_01.rds"))
-  preview_rows <- round(seq(1L, nrow(alabama), length.out = 6L))
+  set.seed(2029)
+  raked_paths <- file.path(raked_dir, paste0("state_", names(states), ".rds"))
+  partition_sizes <- lengths(states) * length(choices)^2L
   preview_columns <- c(predictors, pres, house, "N",
                        paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
-  knitr::kable(alabama[preview_rows, preview_columns], digits = 3, row.names = FALSE)
+  preview <- sample_extended_frame(raked_paths, preview_columns, partition_sizes)
+  knitr::kable(preview, digits = 3, row.names = FALSE)
 }
 ```

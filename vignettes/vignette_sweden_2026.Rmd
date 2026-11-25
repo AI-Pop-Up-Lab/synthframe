@@ -249,7 +249,12 @@ knitr::include_graphics(sub("^vignettes/", "", change_plot), error = FALSE)
 
 ## Inspect the extended frame
 
+The table shows 100 randomly selected rows across all raked partitions.
+
 ```{r preview}
-raked <- readRDS(raked_paths[1L])
-knitr::kable(head(raked[c(predictors, outcome, "N", "N_draw_1", "N_draw_2")]), digits = 2)
+set.seed(2029)
+columns <- c(predictors, outcome, "N", "N_draw_1", "N_draw_2")
+partition_sizes <- lengths(frame_rows) * length(fit$outcome_order)
+preview <- sample_extended_frame(raked_paths, columns, partition_sizes)
+knitr::kable(preview, digits = 2, row.names = FALSE)
 ```
