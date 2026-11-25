@@ -97,7 +97,8 @@ conditional_raking_summary <- function(extended, raked, joint, group, population
 
 # Use counts for national margins and combine weighted changes for local margins.
 plot_partitioned_raking_changes <- function(extended_paths, raked_paths, frame, frame_rows,
-                                            area, outcome, no_vote, plot_file) {
+                                            area, outcome, no_vote, plot_file, read_extended = readRDS,
+                                            read_raked = readRDS) {
   cells <- setdiff(names(frame), "N")
   demographic <- setdiff(cells, area)
   groupings <- unlist(lapply(seq_along(cells), function(size) {
@@ -127,8 +128,8 @@ plot_partitioned_raking_changes <- function(extended_paths, raked_paths, frame, 
   national_totals <- NULL
   local_summaries <- vector("list", length(frame_rows))
   for (i in seq_along(frame_rows)) {
-    extended <- readRDS(extended_paths[i])
-    raked <- readRDS(raked_paths[i])
+    extended <- read_extended(extended_paths[[i]])
+    raked <- read_raked(raked_paths[[i]])
     stopifnot(identical(extended[c(cells, outcome)], raked[c(cells, outcome)]))
     local_summaries[[i]] <- lapply(local_groups, function(by) {
       summarize_margin(extended, raked, frame[frame_rows[[i]], , drop = FALSE], by)

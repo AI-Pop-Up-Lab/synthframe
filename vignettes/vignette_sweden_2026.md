@@ -13,6 +13,7 @@ source data and outcome recodes. The auxiliary survey comes from the
 
 
 ``` r
+knitr::opts_chunk$set(error = FALSE)
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
 
 country <- file.path("data", "input", "sweden 2026")
@@ -20,6 +21,8 @@ survey <- read.csv(file.path(country, "auxiliary_survey.csv"), fileEncoding = "U
 frame <- read.csv(file.path(country, "frame.csv"), fileEncoding = "UTF-8")
 election <- read.csv(file.path(country, "election_results.csv"), fileEncoding = "UTF-8")
 area <- "municipality"
+parent_area <- Sys.getenv("VOTEFRAME_PARENT_AREA", "constituency")
+areas_per_batch <- vignette_areas_per_batch()
 outcome <- "vote_choice_2022"
 no_vote <- "No Vote"
 predictors <- c(area, "sex", "age", "education")
@@ -162,8 +165,9 @@ use each draw's own turnout denominator.
 
 The 2022 municipal results also enter as predictors. This comparison
 measures agreement with the calibration targets. Sweden uses 125
-posterior draws per cell. Complete municipalities are processed in
-batches to limit memory use. A shared draw state keeps fitted
+posterior draws per cell. Batches use constituencies by default and keep
+each municipality intact. Without a usable parent geography, the default
+is ten municipalities per batch. A shared draw state keeps fitted
 coefficients and effects for previously seen levels aligned across
 batches.
 
@@ -172,8 +176,7 @@ batches.
 
 ``` r
 n_draws <- 125L
-partition <- ceiling(match(frame[[area]], unique(frame[[area]])) / 10L)
-frame_rows <- split(seq_len(nrow(frame)), partition)
+frame_rows <- geographic_batches(frame, area, parent_area, areas_per_batch)
 part_paths <- function(name) {
   directory <- file.path(out, name)
   dir.create(directory, showWarnings = FALSE)
@@ -184,7 +187,13 @@ save_part <- function(part, path) {
   saveRDS(part, pending)
   stopifnot(file.rename(pending, path))
 }
-extended_paths <- part_paths("extended_frame")
+part_bytes <- pre_rake_frame_bytes(lengths(frame_rows) * length(fit$outcome_order),
+                                   n_draws, length(predictors) + 2L)
+storage <- vignette_pre_rake_storage(
+  out, sum(part_bytes), largest_part_bytes = max(part_bytes),
+  final_directory = out, final_bytes = sum(part_bytes)
+)
+extended_parts <- vector("list", length(frame_rows))
 set.seed(2027)
 draw_state <- new.env(parent = emptyenv())
 for (i in seq_along(frame_rows)) {
@@ -195,7 +204,7 @@ for (i in seq_along(frame_rows)) {
   extended <- aggregate_extended_frame(cells, posterior, by = setdiff(names(cells), "N"))
   rm(posterior)
   stopifnot(nrow(extended) == nrow(cells) * length(fit$outcome_order))
-  save_part(extended, extended_paths[i])
+  extended_parts[[i]] <- storage$put(extended, sprintf("part-%02d", i))
   rm(extended)
 }
 rm(draw_state)
@@ -204,9 +213,9 @@ rm(draw_state)
 
 ``` r
 figure <- function(name) file.path(figure_dir, paste0(name, ".png"))
-municipal_counts <- function(paths) {
-  do.call(rbind, lapply(paths, function(path) {
-    counts <- readRDS(path)
+municipal_counts <- function(parts, read_part = readRDS) {
+  do.call(rbind, lapply(parts, function(part) {
+    counts <- read_part(part)
     keys <- counts[c(area, outcome)]
     group <- frame_cell_keys(keys, keys)
     columns <- c("N", extended_frame_draw_columns(counts, "N"))
@@ -215,7 +224,7 @@ municipal_counts <- function(paths) {
   }))
 }
 before <- check_extended_frame(
-  municipal_counts(extended_paths), election, by = area, extension_variable = outcome,
+  municipal_counts(extended_parts, storage$get), election, by = area, extension_variable = outcome,
   target_variable = "share_eligible", no_vote = no_vote, outcome_order = fit$outcome_order,
   plot_file = figure("municipal-before")
 )
@@ -263,7 +272,7 @@ for (i in seq_along(frame_rows)) {
   cells <- frame[frame_rows[[i]], , drop = FALSE]
   targets <- election[election[[area]] %in% cells[[area]], , drop = FALSE]
   raked <- rake_extended_frame(
-    readRDS(extended_paths[i]), cells, targets, by = area, extension_variable = outcome,
+    storage$get(extended_parts[[i]]), cells, targets, by = area, extension_variable = outcome,
     target_variable = "share_eligible", tolerance = rake_tolerance
   )
   save_part(raked, raked_paths[i])
@@ -272,8 +281,11 @@ for (i in seq_along(frame_rows)) {
 ```
 
 The final raked frame is stored as RDS partitions under
-`data/output/sweden 2026/raked_frame/`. The pre-raking partitions are
-under `extended_frame/` in the same run directory.
+`data/output/sweden 2026/raked_frame/`. The pre-rake partitions use memory or temporary disk storage according to
+available memory. Temporary partitions are removed after the raked output
+and diagnostics finish. Set `VOTEFRAME_PRE_RAKE_STORAGE=keep` to save all
+pre-rake partitions. Use the saved
+`fit.rds` and the prediction chunk to recreate them.
 
 ## Check both margins after raking
 
@@ -339,8 +351,9 @@ square uses the mean counts.
 
 ``` r
 change_plot <- plot_partitioned_raking_changes(
-  extended_paths, raked_paths, frame[c(predictors, "N")], frame_rows,
-  area = area, outcome = outcome, no_vote = no_vote, plot_file = figure("raking-changes")
+  extended_parts, raked_paths, frame[c(predictors, "N")], frame_rows,
+  area = area, outcome = outcome, no_vote = no_vote, plot_file = figure("raking-changes"),
+  read_extended = storage$get
 )
 knitr::include_graphics(sub("^vignettes/", "", change_plot), error = FALSE)
 ```
@@ -464,3 +477,13 @@ knitr::kable(preview, digits = 2, row.names = FALSE)
 |Kumla        |Women |  78|Doctoral education                  |SD               |  0.00|     0.00|     0.00|
 |Linköping    |Women |  94|Post-secondary, 3 years or more     |M                |  3.24|     2.21|     3.89|
 |Heby         |Women |  64|Post-secondary, 3 years or more     |V                |  0.88|     0.75|     1.15|
+
+``` r
+if (storage$mode == "keep") {
+  paths <- unlist(extended_parts, use.names = FALSE)
+  prune_geographic_partitions(dirname(paths[1L]), paths, "^part-[0-9]+[.]rds$")
+}
+prune_geographic_partitions(dirname(raked_paths[1L]), raked_paths, "^part-[0-9]+[.]rds$")
+storage$cleanup()
+rm(extended_parts)
+```

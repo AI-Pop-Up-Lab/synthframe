@@ -4,7 +4,9 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
                                        target_variable = "target", count_variable = "N",
                                        target_scale = "share",
                                        tolerance = 0.000000000001, max_iterations = 1000L,
-                                       margin_variables = stats::setNames(names(targets), names(targets))) {
+                                       margin_variables = stats::setNames(names(targets), names(targets)),
+                                       area_variable = NULL, parent_area_variable = NULL,
+                                       areas_per_batch = NULL) {
   margin_names <- names(targets)
   if (!is.character(extension_variables) || !length(extension_variables) ||
       anyNA(extension_variables) || any(!nzchar(extension_variables)) ||
@@ -61,6 +63,45 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
     count_columns <- c(count_variable, prediction_count_draws(extended_frame, count_variable))
     if (length(population_draws) != length(count_columns) - 1L) {
       stop("Extended and original population draws must match by draw number.")
+    }
+  }
+
+  if (is.null(area_variable) && (!is.null(parent_area_variable) || !is.null(areas_per_batch))) {
+    stop("Set area_variable when supplying geographic batch options.")
+  }
+  if (!is.null(area_variable)) {
+    batches <- geographic_batches(frame, area_variable, parent_area_variable, areas_per_batch, by)
+    if (length(batches) > 1L) {
+      target_keys <- lapply(margin_names, function(margin) {
+        columns <- by[[margin]]
+        if (!all(columns %in% names(targets[[margin]]))) stop("Missing raking grouping columns.")
+        target <- frame_cell_keys(targets[[margin]][columns], frame[columns])
+        if (!all(target %in% frame_cell_keys(frame[columns], frame[columns]))) {
+          stop("A grouping target level does not match the frame for ", sQuote(margin), ".")
+        }
+        target
+      })
+      batch_index <- integer(nrow(frame))
+      batch_index[unlist(batches, use.names = FALSE)] <- rep(seq_along(batches), lengths(batches))
+      extended_rows <- split(seq_len(nrow(extended_frame)), batch_index[cell])
+      raked <- extended_frame
+      for (i in seq_along(batches)) {
+        original <- frame[batches[[i]], , drop = FALSE]
+        rows <- extended_rows[[i]]
+        batch_targets <- stats::setNames(lapply(seq_along(margin_names), function(j) {
+          margin <- margin_names[j]
+          columns <- by[[margin]]
+          keep <- target_keys[[j]] %in% frame_cell_keys(original[columns], frame[columns])
+          targets[[margin]][keep, , drop = FALSE]
+        }), margin_names)
+        block <- rake_joint_extended_frame(
+          extended_frame[rows, , drop = FALSE], original, batch_targets, by,
+          extension_variables, target_variable, count_variable, target_scale, tolerance,
+          max_iterations, margin_variables
+        )
+        raked[rows, count_columns] <- block[count_columns]
+      }
+      return(raked)
     }
   }
 

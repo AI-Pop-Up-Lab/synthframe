@@ -10,6 +10,7 @@ source data and outcome recodes.
 ## Read and inspect the inputs
 
 ```{r inputs}
+knitr::opts_chunk$set(error = FALSE)
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
 
 country <- file.path("data", "input", "denmark 2026")
@@ -17,6 +18,8 @@ survey <- read.csv(file.path(country, "auxiliary_survey.csv"), fileEncoding = "U
 frame <- read.csv(file.path(country, "frame.csv"), fileEncoding = "UTF-8")
 election <- read.csv(file.path(country, "election_results.csv"), fileEncoding = "UTF-8")
 area <- "municipality"
+parent_area <- Sys.getenv("VOTEFRAME_PARENT_AREA", "constituency")
+areas_per_batch <- vignette_areas_per_batch()
 outcome <- "vote_choice_2022"
 no_vote <- "No Vote"
 predictors <- c(area, "gender", "age_group", "education")
@@ -114,21 +117,44 @@ denominator includes invalid ballots. Posterior intervals
 use each draw's own turnout denominator.
 
 The 2022 municipal results also enter as predictors. This comparison
-measures agreement with the calibration targets.
+measures agreement with the calibration targets. Prediction and raking
+batch by constituency by default, keeping each municipality intact.
 
 ```{r predict}
+n_draws <- 125L
+frame_rows <- geographic_batches(frame, area, parent_area, areas_per_batch)
+part_bytes <- pre_rake_frame_bytes(lengths(frame_rows) * length(fit$outcome_order),
+                                   n_draws, ncol(frame))
+storage <- vignette_pre_rake_storage(
+  out, sum(part_bytes), largest_part_bytes = max(part_bytes),
+  final_directory = out, final_bytes = sum(part_bytes)
+)
 set.seed(2027)
-posterior <- predict_sequential_logit(fit, n_draws = 125L, write_files = FALSE)
-extended <- aggregate_extended_frame(frame, posterior, by = setdiff(names(frame), "N"))
-rm(posterior)
-stopifnot(nrow(extended) == nrow(frame) * length(fit$outcome_order))
-saveRDS(extended, file.path(out, "extended_frame.rds"))
+draw_state <- new.env(parent = emptyenv())
+extended_parts <- lapply(seq_along(frame_rows), function(i) {
+  cells <- frame[frame_rows[[i]], , drop = FALSE]
+  posterior <- predict_sequential_logit(
+    fit, frame = cells, n_draws = n_draws, draw_state = draw_state, write_files = FALSE
+  )
+  extended <- aggregate_extended_frame(cells, posterior, by = setdiff(names(cells), "N"))
+  stopifnot(nrow(extended) == nrow(cells) * length(fit$outcome_order))
+  storage$put(extended, sprintf("part-%02d", i))
+})
+rm(draw_state)
 ```
 
 ```{r before-rake}
 figure <- function(name) file.path(figure_dir, paste0(name, ".png"))
+municipal_counts <- do.call(rbind, lapply(extended_parts, function(part) {
+  counts <- storage$get(part)
+  keys <- counts[c(area, outcome)]
+  group <- frame_cell_keys(keys, keys)
+  columns <- c("N", extended_frame_draw_columns(counts, "N"))
+  cbind(keys[!duplicated(group), , drop = FALSE],
+        rowsum(counts[columns], group, reorder = FALSE))
+}))
 before <- check_extended_frame(
-  extended, election, by = area, extension_variable = outcome, target_variable = "share_eligible",
+  municipal_counts, election, by = area, extension_variable = outcome, target_variable = "share_eligible",
   no_vote = no_vote, outcome_order = fit$outcome_order,
   plot_file = figure("municipal-before")
 )
@@ -145,16 +171,28 @@ counts and each posterior draw.
 
 ```{r rake}
 rake_tolerance <- 1e-8
-raked <- rake_extended_frame(
-  extended, frame, election, by = area, extension_variable = outcome,
-  target_variable = "share_eligible", tolerance = rake_tolerance
-)
-saveRDS(raked, file.path(out, "raked_frame.rds"))
+raked_parts <- lapply(seq_along(frame_rows), function(i) {
+  cells <- frame[frame_rows[[i]], , drop = FALSE]
+  targets <- election[election[[area]] %in% cells[[area]], , drop = FALSE]
+  rake_extended_frame(
+    storage$get(extended_parts[[i]]), cells, targets, by = area, extension_variable = outcome,
+    target_variable = "share_eligible", tolerance = rake_tolerance
+  )
+})
+raked <- do.call(rbind, raked_parts)
+row_order <- order(rep(unlist(frame_rows, use.names = FALSE), each = length(fit$outcome_order)))
+raked <- raked[row_order, , drop = FALSE]
+rownames(raked) <- NULL
+raked_path <- file.path(out, "raked_frame.rds")
+pending <- paste0(raked_path, ".part")
+saveRDS(raked, pending)
+stopifnot(file.rename(pending, raked_path))
 ```
 
-By default, the final raked frame is saved to
-`data/output/denmark 2026/raked_frame.rds`. The pre-raking frame is
-`extended_frame.rds` in the same folder.
+The final raked frame is saved to
+`data/output/denmark 2026/raked_frame.rds`. The pre-rake frame uses memory or temporary
+disk according to available memory. Set `VOTEFRAME_PRE_RAKE_STORAGE=keep`
+to save it. Use the saved `fit.rds` and the prediction chunk to recreate it.
 
 ## Check both margins after raking
 
@@ -176,7 +214,7 @@ knitr::include_graphics(sub("^vignettes/", "", figure("original-cell-totals")), 
 
 ## Measure how raking changes the estimates
 
-`plot_raking_changes()` shows how calibration changed vote shares on
+`plot_partitioned_raking_changes()` shows how calibration changed vote shares on
 demographic margins. Each row shows a grouping, such as age group or
 municipality × education. In the outcome panels, dots are subgroup
 changes in percentage points and squares are population-weighted
@@ -187,9 +225,10 @@ whole distribution among voters. Its dots are posterior draws and its
 square uses the mean counts.
 
 ```{r raking-changes}
-change_plot <- plot_raking_changes(
-  extended, raked, frame[c(predictors, "N")], area = area, outcome = outcome,
-  plot_file = figure("raking-changes"), no_vote = no_vote
+change_plot <- plot_partitioned_raking_changes(
+  extended_parts, raked_parts, frame[c(predictors, "N")], frame_rows,
+  area = area, outcome = outcome, no_vote = no_vote, plot_file = figure("raking-changes"),
+  read_extended = storage$get, read_raked = identity
 )
 knitr::include_graphics(sub("^vignettes/", "", change_plot), error = FALSE)
 ```
@@ -202,4 +241,17 @@ The table shows 100 randomly selected rows from the raked frame.
 set.seed(2029)
 columns <- c(predictors, outcome, "N", "N_draw_1", "N_draw_2")
 knitr::kable(sample_extended_frame(raked, columns), digits = 2, row.names = FALSE)
+```
+
+```{r cleanup-pre-rake}
+legacy_extended_path <- file.path(out, "extended_frame.rds")
+if (storage$mode != "keep" && file.exists(legacy_extended_path)) {
+  stopifnot(file.remove(legacy_extended_path))
+}
+if (storage$mode == "keep") {
+  paths <- unlist(extended_parts, use.names = FALSE)
+  prune_geographic_partitions(dirname(paths[1L]), paths, "^part-[0-9]+[.]rds$")
+}
+storage$cleanup()
+rm(extended_parts, raked_parts)
 ```

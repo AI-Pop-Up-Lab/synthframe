@@ -154,7 +154,38 @@ If the mother frame already has numbered population draws such as
 `i` with population draw `i`. The rake preserves each incoming cell's
 count separately for `N` and each draw. With a mean-only mother frame,
 `n_draws` defaults to 125 and each draw starts from `N`.
-`result$frame` always contains the full calibrated frame.
+`result$frame` contains the full calibrated frame. MasterP keeps the
+pre-rake frame in memory or temporary storage according to available
+memory. Use
+`pre_rake_mode = "keep", pre_rake_dir = "path/to/output"` to save the full
+joint pre-rake frame as `extended_frame.rds`. The `"temporary"` mode uses
+disk after the joint rake and removes the temporary file when the call
+ends. Joint raking itself requires the full frame in memory. Set an
+extension's `predict$write_files = TRUE` to export that extension's own
+predictions as well.
+
+The vignettes use `VOTEFRAME_PRE_RAKE_STORAGE` with values `auto` (the
+default), `memory`, `temporary`, or `keep`. Automatic mode estimates the
+pre-rake footprint against available memory, including Linux container
+limits where visible, and uses temporary disk when memory looks tight or
+cannot be measured. The Sweden and Denmark vignettes batch by
+constituency, and the US vignette batches by state or DC. Set
+`VOTEFRAME_PARENT_AREA` to choose a parent column and
+`VOTEFRAME_AREAS_PER_BATCH` to request a fixed number of lower-level areas
+per batch. Without a usable parent, the default is ten lower-level areas.
+
+MasterP and `rake_joint_extended_frame()` accept `area_variable`,
+`parent_area_variable`, and `areas_per_batch`. MasterP infers the
+lower-level area from the fitted extensions when omitted. Every raking
+margin must remain whole within a batch. A statewide margin can therefore
+require an entire state even if the requested batch size is smaller.
+Crossing margins without a safe geographic grouping use one batch.
+MasterP batches joint calibration after fitting and extending the full
+frame. In the vignettes the active prediction or raking block must fit
+in memory. Disk modes check estimated space where `df` is available.
+Set `VOTEFRAME_PRE_RAKE_DIR` to choose another volume or output directory.
+Temporary files default to R's temporary directory. Kept files default
+to `extended_frame/` under the vignette's output directory.
 `result$aggregates` sums its mean and draw columns at each requested level.
 Fit details are in `result$fit_info`. Pass `keep_fits = TRUE` to retain
 the model objects as well.

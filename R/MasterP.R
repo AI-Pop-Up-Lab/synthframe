@@ -1,7 +1,12 @@
 # Fit ordered extensions, split population draws, and calibrate all margins together.
 MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "N",
                     aggregate_by = list(), tolerance = 1e-12, max_iterations = 1000L,
-                    keep_fits = FALSE) {
+                    keep_fits = FALSE, pre_rake_mode = "auto", pre_rake_dir = NULL,
+                    area_variable = NULL, parent_area_variable = NULL, areas_per_batch = NULL) {
+  pre_rake_mode <- match.arg(pre_rake_mode, c("auto", "memory", "temporary", "keep"))
+  if (pre_rake_mode == "keep" && is.null(pre_rake_dir)) {
+    stop("Set pre_rake_dir to keep the pre-rake frame.")
+  }
   population_draws <- prediction_count_draws(mother_frame, count_variable)
   keys <- setdiff(names(mother_frame), c(count_variable, population_draws))
   validate_prediction_frame(mother_frame, keys, count_variable)
@@ -93,6 +98,7 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
     if (keep_fits) fits[[outcome]] <- fit
 
     predict_args <- masterp_default(spec$predict, list())
+    # Keep intermediate predictions in memory unless the caller requests exports.
     if (is.null(predict_args$write_files)) predict_args$write_files <- FALSE
     posterior <- do.call(predict_sequential_logit, c(list(fit = fit, frame = extended,
                                                           n_draws = n_draws,
@@ -104,6 +110,14 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
     rm(posterior, fit)
   }
 
+  if (is.null(area_variable)) {
+    fitted_areas <- vapply(extensions, function(spec) spec$fit$area_variable, character(1))
+    area_columns <- intersect(fitted_areas, keys)
+    if (length(area_columns)) {
+      counts <- vapply(mother_frame[area_columns], function(x) length(unique(x)), integer(1))
+      area_variable <- area_columns[which.max(counts)]
+    }
+  }
   margin_ids <- make.unique(vapply(margins, function(x) paste(x$outcome, x$name, sep = "/"),
                                     character(1)))
   margin_option <- function(field, default = NULL) {
@@ -114,9 +128,14 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
     extension_variables = outcomes, margin_variables = unlist(margin_option("outcome")),
     count_variable = count_variable, target_variable = unlist(margin_option("target_variable", "target")),
     target_scale = unlist(margin_option("target_scale", "share")), tolerance = tolerance,
-    max_iterations = max_iterations
+    max_iterations = max_iterations, area_variable = area_variable,
+    parent_area_variable = parent_area_variable, areas_per_batch = areas_per_batch
   )
 
+  storage <- pre_rake_storage(pre_rake_mode, pre_rake_dir, bytes = as.numeric(object.size(extended)))
+  on.exit(storage$cleanup(), add = TRUE)
+  pre_rake_part <- storage$put(extended, "extended_frame")
+  rm(extended)
   for (outcome in outcomes) {
     for (comparison in names(extensions[[outcome]]$plots)) {
       plot <- extensions[[outcome]]$plots[[comparison]]
@@ -125,7 +144,7 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
       if (!"no_vote" %in% names(plot)) plot$no_vote <- fit_info[[outcome]]$no_vote
       if (is.null(plot$outcome_order)) plot$outcome_order <- fit_info[[outcome]]$outcome_order
       diagnostics[[outcome]][[comparison]] <- lapply(names(files), function(phase) {
-        counts <- if (phase == "before") extended else raked
+        counts <- if (phase == "before") storage$get(pre_rake_part) else raked
         if (is.null(plot$draw_plot)) plot$draw_plot <- !is.null(files[[phase]])
         do.call(check_extended_frame, c(list(extended_frame = counts, extension_variable = outcome,
                                             count_variable = count_variable, plot_file = files[[phase]]),
@@ -134,7 +153,7 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
       names(diagnostics[[outcome]][[comparison]]) <- names(files)
     }
   }
-  rm(extended)
+  rm(pre_rake_part)
 
   aggregates <- lapply(aggregate_by, function(by) {
     counts <- raked[c(count_variable, draw_columns)]

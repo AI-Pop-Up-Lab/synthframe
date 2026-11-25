@@ -26,20 +26,24 @@ lifetime limit. If it stops during House, the completed presidential fit
 is already on the workspace disk and can be reused. [GitHub Codespaces
 lifecycle](https://docs.github.com/en/codespaces/about-codespaces/understanding-the-codespace-lifecycle)
 
-Before starting another run, inspect the [run log](data/output/us-2026-national-b0bb47d/run.log).
-At 15:56 UTC on November 24, 2026, all presidential stages had converged
-and the full presidential fit was verified. House No Vote had finished
-iteration 2 and was still running. No House stage had been saved yet.
-If the original process is still advancing, let it continue.
-Otherwise run the following. The script skips each completed model when
-its full RDS file is present. If interrupted during House, it restarts
-House using the vignette seed and keeps the presidential fit.
+The November 25 run stopped in the House Democratic stage after 84 logged
+iterations. House No Vote had returned at the 100-iteration cap with
+a maximum parameter change of 0.092, above the 0.01 tolerance. Its
+checkpoint and the complete presidential fit were saved.
+
+The [November 25 restart log](data/output/us-2026-national-b0bb47d/resume-20261125.log)
+tracks the restarted House fit. The run queues the pre-rake comparisons
+once both full model files exist. Check the log and process before
+launching another run. The restart script reuses the saved presidential
+fit and restarts an incomplete House fit from stage 1 using the vignette
+seed. To start it manually, use a new log filename to preserve previous
+output.
 
 ```sh
 run_dir="$PWD/data/output/us-2026-national-b0bb47d"
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 R_GC_MEM_GROW=0 \
   R_LIBS="$run_dir/library" VOTEFRAME_US_OUTPUT_DIR="$run_dir" \
-  Rscript "$run_dir/resume.R" > "$run_dir/resume.log" 2>&1
+  Rscript "$run_dir/resume.R" > "$run_dir/resume-manual.log" 2>&1
 ```
 
 After both model RDS files exist, run the pre-rake benchmark comparisons

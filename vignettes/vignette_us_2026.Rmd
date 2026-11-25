@@ -43,6 +43,8 @@ fips <- c("state_fips", "district_fips")
 demographics <- c("age_cat", "gender_cat", "race_cat", "hispanic_cat", "educ_cat")
 pres <- "vote_pres_2024"
 house <- "vote_house_2024"
+parent_area <- Sys.getenv("VOTEFRAME_PARENT_AREA", "state_fips")
+areas_per_batch <- vignette_areas_per_batch()
 # The files use choices as their category order. The model uses vote_order
 # to define its three regressions. The final choice receives the remainder.
 choices <- c("Democratic", "Republican", "Other", "No Vote")
@@ -819,15 +821,27 @@ predict_house_state <- function(incoming) {
 The default run scores the pre-rake predictions and saves no raked
 partitions. Set `VOTEFRAME_US_RAKE=true` to also calibrate the state
 presidential and district House targets and save the joint frame. Prediction
-and optional calibration run one state at a time to limit memory use.
+and optional calibration use state or DC batches by default. Statewide
+presidential targets keep every district in a state together, even when
+an override requests smaller batches.
+The current state's pre-rake frame uses memory or temporary disk
+according to available memory. Set `VOTEFRAME_PRE_RAKE_STORAGE=keep`
+to save all joint pre-rake partitions.
 
 ```{r joint-rake}
 rake_tolerance <- 0.00000001
 run_rake <- identical(Sys.getenv("VOTEFRAME_US_RAKE"), "true")
 raked_dir <- file.path(out, "raked")
 if (run_rake) dir.create(raked_dir, showWarnings = FALSE)
-states <- split(seq_len(nrow(frame)), frame$state_fips)
+states <- geographic_batches(frame, "district_id", parent_area, areas_per_batch, rake_by)
 count_columns <- c("N", paste0("N_draw_", seq_len(n_draws)))
+state_bytes <- pre_rake_frame_bytes(lengths(states) * length(choices)^2,
+                                    n_draws, ncol(frame) + 1L)
+pre_rake_mode <- Sys.getenv("VOTEFRAME_PRE_RAKE_STORAGE", "auto")
+storage <- vignette_pre_rake_storage(
+  out, if (pre_rake_mode == "keep") sum(state_bytes) else max(state_bytes),
+  final_directory = out, final_bytes = if (run_rake) sum(state_bytes) else 0
+)
 
 # Reduce each block to group-outcome draw totals for the comparison plots.
 plot_totals <- function(block, extension) {
@@ -844,9 +858,13 @@ summarize_states <- function() {
     incoming <- predict_presidential_state(original)
     joint <- predict_house_state(incoming)
     stopifnot(nrow(joint) == nrow(original) * length(choices)^2L)
+    joint_part <- storage$put(joint, paste0("state_", state))
+    if (storage$mode == "temporary") on.exit(unlink(joint_part))
     before <- setNames(lapply(names(plot_targets), function(x) plot_totals(joint, x)),
                        names(plot_targets))
-    if (!run_rake) return(list(before = before))
+    extended_path <- if (storage$mode == "keep") joint_part
+    if (!run_rake) return(list(before = before, extended_path = extended_path))
+    rm(joint)
     # Use the same named configuration for the rake in every block.
     targets <- lapply(names(rake_targets), function(outcome) {
       by <- rake_by[[outcome]]
@@ -856,7 +874,7 @@ summarize_states <- function() {
       table[keep, , drop = FALSE]
     }) |> setNames(names(rake_targets))
 
-    raked <- rake_joint_extended_frame(joint, original, targets, by = rake_by,
+    raked <- rake_joint_extended_frame(storage$get(joint_part), original, targets, by = rake_by,
                                        tolerance = rake_tolerance)
     keys <- setdiff(names(original), "N")
     cell <- match(frame_cell_keys(raked[keys], original[keys]),
@@ -866,7 +884,7 @@ summarize_states <- function() {
     stopifnot(error <= rake_tolerance)
     saveRDS(raked, file.path(raked_dir, paste0("state_", state, ".rds")))
 
-    list(before = before,
+    list(before = before, extended_path = extended_path,
          after = setNames(lapply(names(plot_targets), function(x) plot_totals(raked, x)),
                           names(plot_targets)),
          cell_error = error)
@@ -875,6 +893,11 @@ summarize_states <- function() {
 
 set.seed(2028)
 summaries <- summarize_states()
+if (storage$mode == "keep") {
+  paths <- vapply(summaries, function(x) x$extended_path, character(1))
+  prune_geographic_partitions(dirname(paths[1L]), paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
+}
+storage$cleanup()
 if (run_rake) max(vapply(summaries, function(x) x$cell_error, numeric(1)))
 ```
 
@@ -934,6 +957,7 @@ if (run_rake) {
   preview_columns <- c(predictors, pres, house, "N",
                        paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
   preview <- sample_extended_frame(raked_paths, preview_columns, partition_sizes)
+  prune_geographic_partitions(raked_dir, raked_paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
   knitr::kable(preview, digits = 3, row.names = FALSE)
 }
 ```
