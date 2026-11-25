@@ -390,28 +390,10 @@ moves each stage away from the cutoff of 30.
 before and after backward pruning. The column counts describe that fixed
 design alone. Random effects and spline bases are outside this check.*
 
-Table 8 shows why some coefficients would be hard to estimate separately.
-Imagine keeping the survey predictors exactly as observed and fitting a
-linear regression over and over, each time with fresh random noise in
-the outcome. The coefficient estimates would change from run to run.
-Their variation in that thought experiment is what we mean here by
-**design-based estimation variance**. We can calculate it from the
-predictor matrix alone, before using any votes as outcomes or fitting a
-Bayesian model.
-
-When several predictors carry nearly the same information, their
-coefficients can trade off. One can rise and another fall while the
-predictions barely change. Each row below describes one such trade-off
-in the original design. A larger condition index means the predictions
-change less along that trade-off, relative to the strongest direction in
-the design.
-
-A stage has one condition index for each direction in its fixed design,
-and several directions can be weak. Table 7 reports only the largest
-index per stage. Table 8 gives each direction with an index of at least
-30 its own row. So the same model and stage can appear several times,
-with one index per row.
-
+Each row in Table 8 is a weak principal component (PC) of the weighted,
+scaled fixed design before pruning. Its condition index is the square
+root of the ratio of the strongest PC's sum of squared scores to that
+PC's sum of squared scores. A larger index means a weaker PC.
 
 |Model        |Stage      |Condition index        |Affected coefficients and their individual variance shares                           |
 |:------------|:----------|:----------------------|:------------------------------------------------------------------------------------|
@@ -441,20 +423,15 @@ with one index per row.
 |House        |Republican |558,850,570,096,225    |house_share (100%), house_share:on_ballot (100%)                                     |
 |House        |Republican |893,841,368,873,835    |incumbent (100%), incumbent:on_ballot (100%)                                         |
 
-*Table 8. How much of each coefficient's design-based estimation variance
-comes from a particular trade-off. The first row says that the same
-trade-off accounts for 98% of the intercept's variance and 94% of the
-House-share coefficient's variance. Each percentage has its own
-denominator. For a single coefficient, the percentages across all
-directions sum to 100%, including directions omitted from this table.
-The table shows only directions with a condition index of 30 or higher
-and lists only coefficients for which that direction accounts for at
-least 50% of their variance. A dash means none reached 50%.*
-
-The intercept appears because it can trade off with predictors that are
-nearly constant. VoteFrame always keeps the intercept. In the first row,
-the screen keeps both vote-share main effects and removes their
-interaction, as shown in Table 7.
+*Table 8. Share of each coefficient's estimation variance accounted for
+by a weak PC. In the first row (Presidential, No Vote), the weakest PC
+has a condition index of 110.40. It accounts for 94% of the estimation
+variance of the House-share coefficient and 99% of the estimation
+variance of the interaction coefficient. Each percentage is a share of
+that coefficient's own variance. The design is held fixed while outcome
+noise varies in a hypothetical linear regression. The table shows PCs
+with a condition index of at least 30 and lists coefficients whose
+variance share is at least 50%. A dash means no coefficient reached 50%.*
 
 ### How to read the figures
 
