@@ -1,0 +1,3191 @@
+municipality_code,municipality,constituency,vote_choice_2022,share_eligible
+0114,Upplands Väsby,Stockholms län,M,0.16122281866982077
+0114,Upplands Väsby,Stockholms län,C,0.04631061777818215
+0114,Upplands Väsby,Stockholms län,L,0.03408849664877324
+0114,Upplands Väsby,Stockholms län,KD,0.03918357443969308
+0114,Upplands Väsby,Stockholms län,S,0.236830133745792
+0114,Upplands Väsby,Stockholms län,V,0.05989749188730173
+0114,Upplands Väsby,Stockholms län,MP,0.028447517665969126
+0114,Upplands Väsby,Stockholms län,SD,0.1644982258211264
+0114,Upplands Väsby,Stockholms län,Other,0.01525490552876596
+0114,Upplands Väsby,Stockholms län,Invalid,0.009068025354077578
+0114,Upplands Väsby,Stockholms län,No Vote,0.20519819246049797
+0115,Vallentuna,Stockholms län,M,0.22542717656631409
+0115,Vallentuna,Stockholms län,C,0.06875508543531327
+0115,Vallentuna,Stockholms län,L,0.05203417412530512
+0115,Vallentuna,Stockholms län,KD,0.044914564686737185
+0115,Vallentuna,Stockholms län,S,0.20858421480878764
+0115,Vallentuna,Stockholms län,V,0.031855166802278276
+0115,Vallentuna,Stockholms län,MP,0.04532139951179821
+0115,Vallentuna,Stockholms län,SD,0.1790073230268511
+0115,Vallentuna,Stockholms län,Other,0.010374288039056143
+0115,Vallentuna,Stockholms län,Invalid,0.008096013018714402
+0115,Vallentuna,Stockholms län,No Vote,0.1256305939788446
+0117,Österåker,Stockholms län,M,0.23745819397993312
+0117,Österåker,Stockholms län,C,0.06504440087648483
+0117,Österåker,Stockholms län,L,0.05532810517818014
+0117,Österåker,Stockholms län,KD,0.04096989966555184
+0117,Österåker,Stockholms län,S,0.2153154192134702
+0117,Österåker,Stockholms län,V,0.032060892630607775
+0117,Österåker,Stockholms län,MP,0.04053742359589436
+0117,Österåker,Stockholms län,SD,0.167483565909353
+0117,Österåker,Stockholms län,Other,0.010667743051551147
+0117,Österåker,Stockholms län,Invalid,0.008130550109560604
+0117,Österåker,Stockholms län,No Vote,0.12700380578941298
+0120,Värmdö,Stockholms län,M,0.20759516133802608
+0120,Värmdö,Stockholms län,C,0.07003637869332466
+0120,Värmdö,Stockholms län,L,0.04714442045488155
+0120,Värmdö,Stockholms län,KD,0.039247582147821716
+0120,Värmdö,Stockholms län,S,0.23190677590133388
+0120,Värmdö,Stockholms län,V,0.04090384786016385
+0120,Värmdö,Stockholms län,MP,0.055632782230635
+0120,Värmdö,Stockholms län,SD,0.17307976693975333
+0120,Värmdö,Stockholms län,Other,0.009434799325663245
+0120,Värmdö,Stockholms län,Invalid,0.008872852030404306
+0120,Värmdö,Stockholms län,No Vote,0.11614563307799237
+0123,Järfälla,Stockholms län,M,0.16535991830659258
+0123,Järfälla,Stockholms län,C,0.047839105526420546
+0123,Järfälla,Stockholms län,L,0.040327465946656975
+0123,Järfälla,Stockholms län,KD,0.033438911677657196
+0123,Järfälla,Stockholms län,S,0.24137632621977603
+0123,Järfälla,Stockholms län,V,0.07175865828963082
+0123,Järfälla,Stockholms län,MP,0.0377658930024058
+0123,Järfälla,Stockholms län,SD,0.1290305831040033
+0123,Järfälla,Stockholms län,Other,0.01903871782889385
+0123,Järfälla,Stockholms län,Invalid,0.007892413936341451
+0123,Järfälla,Stockholms län,No Vote,0.2061720061616214
+0125,Ekerö,Stockholms län,M,0.22923228346456692
+0125,Ekerö,Stockholms län,C,0.08179133858267716
+0125,Ekerö,Stockholms län,L,0.056594488188976375
+0125,Ekerö,Stockholms län,KD,0.050688976377952756
+0125,Ekerö,Stockholms län,S,0.20605314960629922
+0125,Ekerö,Stockholms län,V,0.033759842519685036
+0125,Ekerö,Stockholms län,MP,0.0547244094488189
+0125,Ekerö,Stockholms län,SD,0.17239173228346458
+0125,Ekerö,Stockholms län,Other,0.009744094488188977
+0125,Ekerö,Stockholms län,Invalid,0.008562992125984253
+0125,Ekerö,Stockholms län,No Vote,0.09645669291338582
+0126,Huddinge,Stockholms län,M,0.17107233886013085
+0126,Huddinge,Stockholms län,C,0.05491762356465302
+0126,Huddinge,Stockholms län,L,0.03790367080957511
+0126,Huddinge,Stockholms län,KD,0.03033607483511575
+0126,Huddinge,Stockholms län,S,0.2402054812518065
+0126,Huddinge,Stockholms län,V,0.06732007252279476
+0126,Huddinge,Stockholms län,MP,0.04519536484746564
+0126,Huddinge,Stockholms län,SD,0.13649262947683738
+0126,Huddinge,Stockholms län,Other,0.01711905825472318
+0126,Huddinge,Stockholms län,Invalid,0.007436214099902777
+0126,Huddinge,Stockholms län,No Vote,0.19200147147699503
+0127,Botkyrka,Stockholms län,M,0.12221786449651927
+0127,Botkyrka,Stockholms län,C,0.033124162499591464
+0127,Botkyrka,Stockholms län,L,0.022191718142301534
+0127,Botkyrka,Stockholms län,KD,0.04636075432231918
+0127,Botkyrka,Stockholms län,S,0.2281269405497271
+0127,Botkyrka,Stockholms län,V,0.07301369415302154
+0127,Botkyrka,Stockholms län,MP,0.027731476942183874
+0127,Botkyrka,Stockholms län,SD,0.13043762460371933
+0127,Botkyrka,Stockholms län,Other,0.023760499395365557
+0127,Botkyrka,Stockholms län,Invalid,0.00625878354087002
+0127,Botkyrka,Stockholms län,No Vote,0.28677648135438116
+0128,Salem,Stockholms län,M,0.20013370101111388
+0128,Salem,Stockholms län,C,0.05632155093172892
+0128,Salem,Stockholms län,L,0.04286788668839308
+0128,Salem,Stockholms län,KD,0.04821592713294894
+0128,Salem,Stockholms län,S,0.23447814824099608
+0128,Salem,Stockholms län,V,0.040528118993899895
+0128,Salem,Stockholms län,MP,0.041698002841146484
+0128,Salem,Stockholms län,SD,0.16453580680203894
+0128,Salem,Stockholms län,Other,0.012701596055820172
+0128,Salem,Stockholms län,Invalid,0.008272750062672349
+0128,Salem,Stockholms län,No Vote,0.15024651123924124
+0136,Haninge,Stockholms län,M,0.16282487623762376
+0136,Haninge,Stockholms län,C,0.041831683168316834
+0136,Haninge,Stockholms län,L,0.030228960396039603
+0136,Haninge,Stockholms län,KD,0.03268873762376238
+0136,Haninge,Stockholms län,S,0.2327506188118812
+0136,Haninge,Stockholms län,V,0.05716274752475248
+0136,Haninge,Stockholms län,MP,0.028913985148514853
+0136,Haninge,Stockholms län,SD,0.17772277227722771
+0136,Haninge,Stockholms län,Other,0.016955445544554457
+0136,Haninge,Stockholms län,Invalid,0.009142945544554455
+0136,Haninge,Stockholms län,No Vote,0.20977722772277227
+0138,Tyresö,Stockholms län,M,0.20343985922688312
+0138,Tyresö,Stockholms län,C,0.05662144519498212
+0138,Tyresö,Stockholms län,L,0.04719872850087983
+0138,Tyresö,Stockholms län,KD,0.0335471419651473
+0138,Tyresö,Stockholms län,S,0.25651359482318214
+0138,Tyresö,Stockholms län,V,0.04416188908440711
+0138,Tyresö,Stockholms län,MP,0.04583640801498553
+0138,Tyresö,Stockholms län,SD,0.16285406141794856
+0138,Tyresö,Stockholms län,Other,0.010416075381733553
+0138,Tyresö,Stockholms län,Invalid,0.008741556451155135
+0138,Tyresö,Stockholms län,No Vote,0.13066923993869559
+0139,Upplands-Bro,Stockholms län,M,0.17236662106703146
+0139,Upplands-Bro,Stockholms län,C,0.042847371506742234
+0139,Upplands-Bro,Stockholms län,L,0.03503029118624194
+0139,Upplands-Bro,Stockholms län,KD,0.04445964432284542
+0139,Upplands-Bro,Stockholms län,S,0.22728161031854602
+0139,Upplands-Bro,Stockholms län,V,0.05628297830760211
+0139,Upplands-Bro,Stockholms län,MP,0.02716435411373852
+0139,Upplands-Bro,Stockholms län,SD,0.18365253077975377
+0139,Upplands-Bro,Stockholms län,Other,0.015634160641000587
+0139,Upplands-Bro,Stockholms län,Invalid,0.008354504592534688
+0139,Upplands-Bro,Stockholms län,No Vote,0.18692593316396325
+0140,Nykvarn,Stockholms län,M,0.2252448313384113
+0140,Nykvarn,Stockholms län,C,0.046789989118607184
+0140,Nykvarn,Stockholms län,L,0.0390521097811631
+0140,Nykvarn,Stockholms län,KD,0.04642727602466449
+0140,Nykvarn,Stockholms län,S,0.218957804376738
+0140,Nykvarn,Stockholms län,V,0.022004594365856608
+0140,Nykvarn,Stockholms län,MP,0.022488211824446862
+0140,Nykvarn,Stockholms län,SD,0.2526901221134083
+0140,Nykvarn,Stockholms län,Other,0.0060452182323781885
+0140,Nykvarn,Stockholms län,Invalid,0.009188731713214847
+0140,Nykvarn,Stockholms län,No Vote,0.1111111111111111
+0160,Täby,Stockholms län,M,0.29837654559861426
+0160,Täby,Stockholms län,C,0.08751174747083863
+0160,Täby,Stockholms län,L,0.0856505795418947
+0160,Täby,Stockholms län,KD,0.04612379530838263
+0160,Täby,Stockholms län,S,0.17410212467982383
+0160,Täby,Stockholms län,V,0.024361029723404648
+0160,Täby,Stockholms län,MP,0.04041129968489137
+0160,Täby,Stockholms län,SD,0.11378922733889842
+0160,Täby,Stockholms län,Other,0.00926898483424549
+0160,Täby,Stockholms län,Invalid,0.0059889067020472845
+0160,Täby,Stockholms län,No Vote,0.11441575911695874
+0162,Danderyd,Stockholms län,M,0.3660397591355275
+0162,Danderyd,Stockholms län,C,0.08921059143776293
+0162,Danderyd,Stockholms län,L,0.10987379361544172
+0162,Danderyd,Stockholms län,KD,0.05299843273117215
+0162,Danderyd,Stockholms län,S,0.1116885259424235
+0162,Danderyd,Stockholms län,V,0.019178421182875525
+0162,Danderyd,Stockholms län,MP,0.03707828095355935
+0162,Danderyd,Stockholms län,SD,0.09919161923616267
+0162,Danderyd,Stockholms län,Other,0.008001319805328713
+0162,Danderyd,Stockholms län,Invalid,0.004000659902664357
+0162,Danderyd,Stockholms län,No Vote,0.10273859605708158
+0163,Sollentuna,Stockholms län,M,0.20977818536138018
+0163,Sollentuna,Stockholms län,C,0.07944059150570298
+0163,Sollentuna,Stockholms län,L,0.06467205441241092
+0163,Sollentuna,Stockholms län,KD,0.03790527502340421
+0163,Sollentuna,Stockholms län,S,0.225521102004165
+0163,Sollentuna,Stockholms län,V,0.052234386045356414
+0163,Sollentuna,Stockholms län,MP,0.049005559695076514
+0163,Sollentuna,Stockholms län,SD,0.10855734510230985
+0163,Sollentuna,Stockholms län,Other,0.014118950726963566
+0163,Sollentuna,Stockholms län,Invalid,0.006247492405571159
+0163,Sollentuna,Stockholms län,No Vote,0.1525190577176592
+0180,Stockholm,Stockholms kommun,M,0.1589173850998985
+0180,Stockholm,Stockholms kommun,C,0.07064658304135896
+0180,Stockholm,Stockholms kommun,L,0.057222400008790135
+0180,Stockholm,Stockholms kommun,KD,0.026407485898015216
+0180,Stockholm,Stockholms kommun,S,0.2339109641815767
+0180,Stockholm,Stockholms kommun,V,0.09775041238090398
+0180,Stockholm,Stockholms kommun,MP,0.08349391351881431
+0180,Stockholm,Stockholms kommun,SD,0.0889039664106998
+0180,Stockholm,Stockholms kommun,Other,0.01609830666305905
+0180,Stockholm,Stockholms kommun,Invalid,0.007078804926320821
+0180,Stockholm,Stockholms kommun,No Vote,0.15956977787056253
+0181,Södertälje,Stockholms län,M,0.1440242102595447
+0181,Södertälje,Stockholms län,C,0.03126164671506731
+0181,Södertälje,Stockholms län,L,0.02507491167131293
+0181,Södertälje,Stockholms län,KD,0.05752918200927265
+0181,Södertälje,Stockholms län,S,0.19909360604660176
+0181,Södertälje,Stockholms län,V,0.04916590885373962
+0181,Södertälje,Stockholms län,MP,0.03354253939384905
+0181,Södertälje,Stockholms län,SD,0.1455298975834464
+0181,Södertälje,Stockholms län,Other,0.012254207725219518
+0181,Södertälje,Stockholms län,Invalid,0.008229102997957632
+0181,Södertälje,Stockholms län,No Vote,0.29429478674398846
+0182,Nacka,Stockholms län,M,0.23299328512396694
+0182,Nacka,Stockholms län,C,0.0902763429752066
+0182,Nacka,Stockholms län,L,0.0659478305785124
+0182,Nacka,Stockholms län,KD,0.03450413223140496
+0182,Nacka,Stockholms län,S,0.21893078512396694
+0182,Nacka,Stockholms län,V,0.045893595041322316
+0182,Nacka,Stockholms län,MP,0.0640495867768595
+0182,Nacka,Stockholms län,SD,0.10258264462809917
+0182,Nacka,Stockholms län,Other,0.011053719008264462
+0182,Nacka,Stockholms län,Invalid,0.006805268595041322
+0182,Nacka,Stockholms län,No Vote,0.12696280991735537
+0183,Sundbyberg,Stockholms län,M,0.16126837946732248
+0183,Sundbyberg,Stockholms län,C,0.06064570142849668
+0183,Sundbyberg,Stockholms län,L,0.04774737062424782
+0183,Sundbyberg,Stockholms län,KD,0.02846528177489404
+0183,Sundbyberg,Stockholms län,S,0.251896813353566
+0183,Sundbyberg,Stockholms län,V,0.08782899900580818
+0183,Sundbyberg,Stockholms län,MP,0.05065145727591439
+0183,Sundbyberg,Stockholms län,SD,0.10234943226414107
+0183,Sundbyberg,Stockholms län,Other,0.013500078488828423
+0183,Sundbyberg,Stockholms län,Invalid,0.00763957929987965
+0183,Sundbyberg,Stockholms län,No Vote,0.18800690701690126
+0184,Solna,Stockholms län,M,0.17607350770404526
+0184,Solna,Stockholms län,C,0.0714510805566152
+0184,Solna,Stockholms län,L,0.056839102383361255
+0184,Solna,Stockholms län,KD,0.03156253628116033
+0184,Solna,Stockholms län,S,0.24515283697941717
+0184,Solna,Stockholms län,V,0.07360721808501816
+0184,Solna,Stockholms län,MP,0.05755228633506377
+0184,Solna,Stockholms län,SD,0.10394241454231834
+0184,Solna,Stockholms län,Other,0.01411440797439172
+0184,Solna,Stockholms län,Invalid,0.007364038943160897
+0184,Solna,Stockholms län,No Vote,0.1623405702154479
+0186,Lidingö,Stockholms län,M,0.29793460991721715
+0186,Lidingö,Stockholms län,C,0.09044791927976141
+0186,Lidingö,Stockholms län,L,0.09284499818825431
+0186,Lidingö,Stockholms län,KD,0.04562811829305683
+0186,Lidingö,Stockholms län,S,0.15483457368230344
+0186,Lidingö,Stockholms län,V,0.027148312289210358
+0186,Lidingö,Stockholms län,MP,0.047774340106474904
+0186,Lidingö,Stockholms län,SD,0.10524848788917691
+0186,Lidingö,Stockholms län,Other,0.009086601443821948
+0186,Lidingö,Stockholms län,Invalid,0.0056860941550296844
+0186,Lidingö,Stockholms län,No Vote,0.12336594475569307
+0187,Vaxholm,Stockholms län,M,0.25571679859278806
+0187,Vaxholm,Stockholms län,C,0.08981970096745823
+0187,Vaxholm,Stockholms län,L,0.07047053649956024
+0187,Vaxholm,Stockholms län,KD,0.04661389621811785
+0187,Vaxholm,Stockholms län,S,0.1994283201407212
+0187,Vaxholm,Stockholms län,V,0.025945470536499562
+0187,Vaxholm,Stockholms län,MP,0.055848724714160074
+0187,Vaxholm,Stockholms län,SD,0.13940193491644678
+0187,Vaxholm,Stockholms län,Other,0.008355321020228672
+0187,Vaxholm,Stockholms län,Invalid,0.005496921723834653
+0187,Vaxholm,Stockholms län,No Vote,0.10290237467018469
+0188,Norrtälje,Stockholms län,M,0.1736658432341293
+0188,Norrtälje,Stockholms län,C,0.052621260243892874
+0188,Norrtälje,Stockholms län,L,0.03536838803278046
+0188,Norrtälje,Stockholms län,KD,0.03989726698819747
+0188,Norrtälje,Stockholms län,S,0.24516723522722816
+0188,Norrtälje,Stockholms län,V,0.039054228914245384
+0188,Norrtälje,Stockholms län,MP,0.033976394933929344
+0188,Norrtälje,Stockholms län,SD,0.21175940085480138
+0188,Norrtälje,Stockholms län,Other,0.009645924008940125
+0188,Norrtälje,Stockholms län,Invalid,0.009332235423283534
+0188,Norrtälje,Stockholms län,No Vote,0.14951182213857192
+0191,Sigtuna,Stockholms län,M,0.17036027853466545
+0191,Sigtuna,Stockholms län,C,0.040508628519527703
+0191,Sigtuna,Stockholms län,L,0.03115349682107175
+0191,Sigtuna,Stockholms län,KD,0.04550408719346049
+0191,Sigtuna,Stockholms län,S,0.21114138661822585
+0191,Sigtuna,Stockholms län,V,0.04798667877686951
+0191,Sigtuna,Stockholms län,MP,0.025794732061762034
+0191,Sigtuna,Stockholms län,SD,0.1709355131698456
+0191,Sigtuna,Stockholms län,Other,0.021980018165304267
+0191,Sigtuna,Stockholms län,Invalid,0.008658795034816834
+0191,Sigtuna,Stockholms län,No Vote,0.2259763851044505
+0192,Nynäshamn,Stockholms län,M,0.1454984669701756
+0192,Nynäshamn,Stockholms län,C,0.037024993031682614
+0192,Nynäshamn,Stockholms län,L,0.027733903186843815
+0192,Nynäshamn,Stockholms län,KD,0.04162408250487782
+0192,Nynäshamn,Stockholms län,S,0.25815293133884604
+0192,Nynäshamn,Stockholms län,V,0.042785468735482675
+0192,Nynäshamn,Stockholms län,MP,0.03293691349995354
+0192,Nynäshamn,Stockholms län,SD,0.22386880981139087
+0192,Nynäshamn,Stockholms län,Other,0.011520951407600111
+0192,Nynäshamn,Stockholms län,Invalid,0.009802099786304934
+0192,Nynäshamn,Stockholms län,No Vote,0.16905137972684195
+0305,Håbo,Uppsala län,M,0.20400661643080317
+0305,Håbo,Uppsala län,C,0.04478343441769283
+0305,Håbo,Uppsala län,L,0.03730931814004779
+0305,Håbo,Uppsala län,KD,0.051277338724499175
+0305,Håbo,Uppsala län,S,0.21025546774489984
+0305,Håbo,Uppsala län,V,0.032959627519451085
+0305,Håbo,Uppsala län,MP,0.023708877044660907
+0305,Håbo,Uppsala län,SD,0.2430925687679961
+0305,Håbo,Uppsala län,Other,0.00980211970838694
+0305,Håbo,Uppsala län,Invalid,0.008209275255774062
+0305,Håbo,Uppsala län,No Vote,0.13459535624578814
+0319,Älvkarleby,Uppsala län,M,0.12048687089715536
+0319,Älvkarleby,Uppsala län,C,0.02776258205689278
+0319,Älvkarleby,Uppsala län,L,0.02024070021881838
+0319,Älvkarleby,Uppsala län,KD,0.036105032822757115
+0319,Älvkarleby,Uppsala län,S,0.2959518599562363
+0319,Älvkarleby,Uppsala län,V,0.0387035010940919
+0319,Älvkarleby,Uppsala län,MP,0.023796498905908098
+0319,Älvkarleby,Uppsala län,SD,0.25806892778993434
+0319,Älvkarleby,Uppsala län,Other,0.011487964989059081
+0319,Älvkarleby,Uppsala län,Invalid,0.009299781181619256
+0319,Älvkarleby,Uppsala län,No Vote,0.15809628008752735
+0330,Knivsta,Uppsala län,M,0.1865551152209012
+0330,Knivsta,Uppsala län,C,0.06891237340378688
+0330,Knivsta,Uppsala län,L,0.04990459415822692
+0330,Knivsta,Uppsala län,KD,0.07522383678262146
+0330,Knivsta,Uppsala län,S,0.22163510934977249
+0330,Knivsta,Uppsala län,V,0.041244679289593425
+0330,Knivsta,Uppsala län,MP,0.05489505357404961
+0330,Knivsta,Uppsala län,SD,0.17305151915455746
+0330,Knivsta,Uppsala län,Other,0.014017319829737267
+0330,Knivsta,Uppsala län,Invalid,0.006384852487890797
+0330,Knivsta,Uppsala län,No Vote,0.10817554674886247
+0331,Heby,Uppsala län,M,0.12427772172796478
+0331,Heby,Uppsala län,C,0.0665871778409612
+0331,Heby,Uppsala län,L,0.020177932679079153
+0331,Heby,Uppsala län,KD,0.06888012473631111
+0331,Heby,Uppsala län,S,0.23186279005778226
+0331,Heby,Uppsala län,V,0.04108960836467027
+0331,Heby,Uppsala län,MP,0.024213519214894983
+0331,Heby,Uppsala län,SD,0.24855544345592956
+0331,Heby,Uppsala län,Other,0.013482527744657434
+0331,Heby,Uppsala län,Invalid,0.012015041731633496
+0331,Heby,Uppsala län,No Vote,0.14885811244611574
+0360,Tierp,Uppsala län,M,0.12066728452270621
+0360,Tierp,Uppsala län,C,0.059870250231696016
+0360,Tierp,Uppsala län,L,0.02143960457213469
+0360,Tierp,Uppsala län,KD,0.049737411183194316
+0360,Tierp,Uppsala län,S,0.28674698795180725
+0360,Tierp,Uppsala län,V,0.03966635773864689
+0360,Tierp,Uppsala län,MP,0.027494593759654
+0360,Tierp,Uppsala län,SD,0.22391102873030583
+0360,Tierp,Uppsala län,Other,0.010750695088044486
+0360,Tierp,Uppsala län,Invalid,0.013160333642261353
+0360,Tierp,Uppsala län,No Vote,0.14655545257954897
+0380,Uppsala,Uppsala län,M,0.15025853566766054
+0380,Uppsala,Uppsala län,C,0.06686581799317033
+0380,Uppsala,Uppsala län,L,0.05076648556817987
+0380,Uppsala,Uppsala län,KD,0.04594922781353507
+0380,Uppsala,Uppsala län,S,0.25151216286321837
+0380,Uppsala,Uppsala län,V,0.08718951491069546
+0380,Uppsala,Uppsala län,MP,0.07619818597465382
+0380,Uppsala,Uppsala län,SD,0.11128150458067054
+0380,Uppsala,Uppsala län,Other,0.0159397073159608
+0380,Uppsala,Uppsala län,Invalid,0.00705771017781097
+0380,Uppsala,Uppsala län,No Vote,0.13698114713444426
+0381,Enköping,Uppsala län,M,0.18072461283501914
+0381,Enköping,Uppsala län,C,0.055831761814960856
+0381,Enköping,Uppsala län,L,0.030430310303445913
+0381,Enköping,Uppsala län,KD,0.053088747928453056
+0381,Enköping,Uppsala län,S,0.23275615749471398
+0381,Enköping,Uppsala län,V,0.03520201154351677
+0381,Enköping,Uppsala län,MP,0.027944453968798216
+0381,Enköping,Uppsala län,SD,0.20589747985599177
+0381,Enköping,Uppsala län,Other,0.012257843305331733
+0381,Enköping,Uppsala län,Invalid,0.009457683296188353
+0381,Enköping,Uppsala län,No Vote,0.15640893765358022
+0382,Östhammar,Uppsala län,M,0.1551123049665657
+0382,Östhammar,Uppsala län,C,0.04509344459050123
+0382,Östhammar,Uppsala län,L,0.02806195347773904
+0382,Östhammar,Uppsala län,KD,0.06663999542778762
+0382,Östhammar,Uppsala län,S,0.25432931359661654
+0382,Östhammar,Uppsala län,V,0.031091044179002113
+0382,Östhammar,Uppsala län,MP,0.02217523003943533
+0382,Östhammar,Uppsala län,SD,0.22655312339258157
+0382,Östhammar,Uppsala län,Other,0.008744356175344345
+0382,Östhammar,Uppsala län,Invalid,0.011887752186089043
+0382,Östhammar,Uppsala län,No Vote,0.15031148196833743
+0428,Vingåker,Södermanlands län,M,0.1442083818393481
+0428,Vingåker,Södermanlands län,C,0.04336437718277066
+0428,Vingåker,Södermanlands län,L,0.018335273573923165
+0428,Vingåker,Södermanlands län,KD,0.044965075669383
+0428,Vingåker,Södermanlands län,S,0.284487776484284
+0428,Vingåker,Södermanlands län,V,0.03841676367869616
+0428,Vingåker,Södermanlands län,MP,0.028376018626309663
+0428,Vingåker,Södermanlands län,SD,0.24723515715948777
+0428,Vingåker,Södermanlands län,Other,0.00960419091967404
+0428,Vingåker,Södermanlands län,Invalid,0.009458672875436554
+0428,Vingåker,Södermanlands län,No Vote,0.13154831199068684
+0461,Gnesta,Södermanlands län,M,0.16575739988392338
+0461,Gnesta,Södermanlands län,C,0.06465467208357516
+0461,Gnesta,Södermanlands län,L,0.02518862449216483
+0461,Gnesta,Södermanlands län,KD,0.037028438769587925
+0461,Gnesta,Södermanlands län,S,0.2485200232153221
+0461,Gnesta,Södermanlands län,V,0.05861868833430064
+0461,Gnesta,Södermanlands län,MP,0.05293093441671503
+0461,Gnesta,Södermanlands län,SD,0.18932095182820663
+0461,Gnesta,Södermanlands län,Other,0.012304120719674986
+0461,Gnesta,Södermanlands län,Invalid,0.010098665118978526
+0461,Gnesta,Södermanlands län,No Vote,0.13557748113755078
+0480,Nyköping,Södermanlands län,M,0.16362551355321445
+0480,Nyköping,Södermanlands län,C,0.05786224150198536
+0480,Nyköping,Södermanlands län,L,0.032637884734558975
+0480,Nyköping,Södermanlands län,KD,0.04076292776974454
+0480,Nyköping,Södermanlands län,S,0.2897243452913769
+0480,Nyköping,Södermanlands län,V,0.042048245312033786
+0480,Nyköping,Södermanlands län,MP,0.03979893961302761
+0480,Nyköping,Södermanlands län,SD,0.17136037090591935
+0480,Nyköping,Södermanlands län,Other,0.0106727260207946
+0480,Nyköping,Södermanlands län,Invalid,0.009157887488810851
+0480,Nyköping,Södermanlands län,No Vote,0.1423489178085336
+0481,Oxelösund,Södermanlands län,M,0.13999118165784832
+0481,Oxelösund,Södermanlands län,C,0.03042328042328042
+0481,Oxelösund,Södermanlands län,L,0.02105379188712522
+0481,Oxelösund,Södermanlands län,KD,0.027667548500881833
+0481,Oxelösund,Södermanlands län,S,0.32220017636684306
+0481,Oxelösund,Södermanlands län,V,0.056768077601410935
+0481,Oxelösund,Södermanlands län,MP,0.023699294532627865
+0481,Oxelösund,Södermanlands län,SD,0.1857363315696649
+0481,Oxelösund,Södermanlands län,Other,0.017416225749559082
+0481,Oxelösund,Södermanlands län,Invalid,0.006283068783068783
+0481,Oxelösund,Södermanlands län,No Vote,0.1687610229276896
+0482,Flen,Södermanlands län,M,0.12509344629952654
+0482,Flen,Södermanlands län,C,0.05116704045186477
+0482,Flen,Södermanlands län,L,0.025085139961790848
+0482,Flen,Södermanlands län,KD,0.04144862530110474
+0482,Flen,Södermanlands län,S,0.28474125757953317
+0482,Flen,Södermanlands län,V,0.04203006894260321
+0482,Flen,Södermanlands län,MP,0.03355760445219703
+0482,Flen,Södermanlands län,SD,0.20367140127917602
+0482,Flen,Södermanlands län,Other,0.010299858792258493
+0482,Flen,Södermanlands län,Invalid,0.00847246449040618
+0482,Flen,Södermanlands län,No Vote,0.174433092449539
+0483,Katrineholm,Södermanlands län,M,0.13854864802403513
+0483,Katrineholm,Södermanlands län,C,0.050150219551652414
+0483,Katrineholm,Södermanlands län,L,0.02488252060704106
+0483,Katrineholm,Södermanlands län,KD,0.03840228025575842
+0483,Katrineholm,Södermanlands län,S,0.3104152222479008
+0483,Katrineholm,Södermanlands län,V,0.03855635159078653
+0483,Katrineholm,Södermanlands län,MP,0.030621677836838456
+0483,Katrineholm,Södermanlands län,SD,0.17891533780140204
+0483,Katrineholm,Södermanlands län,Other,0.010515368615669055
+0483,Katrineholm,Södermanlands län,Invalid,0.009090208766658963
+0483,Katrineholm,Södermanlands län,No Vote,0.16990216470225714
+0484,Eskilstuna,Södermanlands län,M,0.14671002295332825
+0484,Eskilstuna,Södermanlands län,C,0.04055087987758225
+0484,Eskilstuna,Södermanlands län,L,0.02862790104565162
+0484,Eskilstuna,Södermanlands län,KD,0.03760520275439939
+0484,Eskilstuna,Södermanlands län,S,0.2624840601887274
+0484,Eskilstuna,Södermanlands län,V,0.04711808212190768
+0484,Eskilstuna,Södermanlands län,MP,0.027518490181076258
+0484,Eskilstuna,Södermanlands län,SD,0.19242540168324407
+0484,Eskilstuna,Södermanlands län,Other,0.011565927059423617
+0484,Eskilstuna,Södermanlands län,Invalid,0.008990053557765876
+0484,Eskilstuna,Södermanlands län,No Vote,0.19640397857689365
+0486,Strängnäs,Södermanlands län,M,0.2028214943995463
+0486,Strängnäs,Södermanlands län,C,0.05696157663405643
+0486,Strängnäs,Södermanlands län,L,0.038884162767616616
+0486,Strängnäs,Södermanlands län,KD,0.04210974053594215
+0486,Strängnäs,Södermanlands län,S,0.2318516943144761
+0486,Strängnäs,Södermanlands län,V,0.03406351906989934
+0486,Strängnäs,Södermanlands län,MP,0.035375017722954774
+0486,Strängnäs,Södermanlands län,SD,0.19941868708351057
+0486,Strängnäs,Södermanlands län,Other,0.01109456968665816
+0486,Strängnäs,Södermanlands län,Invalid,0.009074152842761946
+0486,Strängnäs,Södermanlands län,No Vote,0.13834538494257761
+0488,Trosa,Södermanlands län,M,0.2148827912047974
+0488,Trosa,Södermanlands län,C,0.057423223696165725
+0488,Trosa,Södermanlands län,L,0.03607123387243322
+0488,Trosa,Södermanlands län,KD,0.04397601308377249
+0488,Trosa,Södermanlands län,S,0.2395965836816282
+0488,Trosa,Södermanlands län,V,0.029620207159731057
+0488,Trosa,Södermanlands län,MP,0.04125022714882791
+0488,Trosa,Södermanlands län,SD,0.20470652371433765
+0488,Trosa,Södermanlands län,Other,0.009267672178811557
+0488,Trosa,Södermanlands län,Invalid,0.008540795929493004
+0488,Trosa,Södermanlands län,No Vote,0.11466472833000181
+0509,Ödeshög,Östergötlands län,M,0.1506449257726941
+0509,Ödeshög,Östergötlands län,C,0.06741299586274033
+0509,Ödeshög,Östergötlands län,L,0.01849598442443417
+0509,Ödeshög,Östergötlands län,KD,0.11073253833049404
+0509,Ödeshög,Östergötlands län,S,0.20954003407155025
+0509,Ödeshög,Östergötlands län,V,0.02385008517887564
+0509,Ödeshög,Östergötlands län,MP,0.0333414456072037
+0509,Ödeshög,Östergötlands län,SD,0.23168654173764908
+0509,Ödeshög,Östergötlands län,Other,0.014602092966658554
+0509,Ödeshög,Östergötlands län,Invalid,0.010221465076660987
+0509,Ödeshög,Östergötlands län,No Vote,0.12947189097103917
+0512,Ydre,Östergötlands län,M,0.14330003444712366
+0512,Ydre,Östergötlands län,C,0.09955218739235273
+0512,Ydre,Östergötlands län,L,0.028935583878746125
+0512,Ydre,Östergötlands län,KD,0.0957630037891836
+0512,Ydre,Östergötlands län,S,0.2297623148467103
+0512,Ydre,Östergötlands län,V,0.02583534274888047
+0512,Ydre,Östergötlands län,MP,0.03548053737512918
+0512,Ydre,Östergötlands län,SD,0.21736135032724768
+0512,Ydre,Östergötlands län,Other,0.010678608336203927
+0512,Ydre,Östergötlands län,Invalid,0.009300723389596968
+0512,Ydre,Östergötlands län,No Vote,0.10403031346882535
+0513,Kinda,Östergötlands län,M,0.14372182871860914
+0513,Kinda,Östergötlands län,C,0.06967160334835802
+0513,Kinda,Östergötlands län,L,0.022021893110109464
+0513,Kinda,Östergötlands län,KD,0.0713457823567289
+0513,Kinda,Östergötlands län,S,0.259111397295557
+0513,Kinda,Östergötlands län,V,0.03425627817128139
+0513,Kinda,Östergötlands län,MP,0.03915003219575016
+0513,Kinda,Östergötlands län,SD,0.22047649710238248
+0513,Kinda,Östergötlands län,Other,0.01313586606567933
+0513,Kinda,Östergötlands län,Invalid,0.00798454603992273
+0513,Kinda,Östergötlands län,No Vote,0.11912427559562137
+0560,Boxholm,Östergötlands län,M,0.12955653587183655
+0560,Boxholm,Östergötlands län,C,0.051543998142558625
+0560,Boxholm,Östergötlands län,L,0.021592755978639425
+0560,Boxholm,Östergötlands län,KD,0.052472718829811936
+0560,Boxholm,Östergötlands län,S,0.3127466914325517
+0560,Boxholm,Östergötlands län,V,0.03575574645925238
+0560,Boxholm,Östergötlands län,MP,0.02275365683770606
+0560,Boxholm,Östergötlands län,SD,0.2319479916415138
+0560,Boxholm,Östergötlands län,Other,0.012073368934293012
+0560,Boxholm,Östergötlands län,Invalid,0.009287206872533085
+0560,Boxholm,Östergötlands län,No Vote,0.12026932899930345
+0561,Åtvidaberg,Östergötlands län,M,0.14049586776859505
+0561,Åtvidaberg,Östergötlands län,C,0.05333333333333334
+0561,Åtvidaberg,Östergötlands län,L,0.026115702479338844
+0561,Åtvidaberg,Östergötlands län,KD,0.05454545454545454
+0561,Åtvidaberg,Östergötlands län,S,0.301267217630854
+0561,Åtvidaberg,Östergötlands län,V,0.03162534435261708
+0561,Åtvidaberg,Östergötlands län,MP,0.0265564738292011
+0561,Åtvidaberg,Östergötlands län,SD,0.2231404958677686
+0561,Åtvidaberg,Östergötlands län,Other,0.008154269972451791
+0561,Åtvidaberg,Östergötlands län,Invalid,0.012121212121212121
+0561,Åtvidaberg,Östergötlands län,No Vote,0.12264462809917355
+0562,Finspång,Östergötlands län,M,0.12781413219667406
+0562,Finspång,Östergötlands län,C,0.04040343399171519
+0562,Finspång,Östergötlands län,L,0.026595425346701087
+0562,Finspång,Östergötlands län,KD,0.04646695083148226
+0562,Finspång,Östergötlands län,S,0.2980728822717176
+0562,Finspång,Östergötlands län,V,0.04514618478717656
+0562,Finspång,Östergötlands län,MP,0.02407396289848112
+0562,Finspång,Östergötlands län,SD,0.2194873026355286
+0562,Finspång,Östergötlands län,Other,0.012367172960316983
+0562,Finspång,Östergötlands län,Invalid,0.012907486342078405
+0562,Finspång,Östergötlands län,No Vote,0.14666506573812813
+0563,Valdemarsvik,Östergötlands län,M,0.14730831973898859
+0563,Valdemarsvik,Östergötlands län,C,0.055301794453507344
+0563,Valdemarsvik,Östergötlands län,L,0.02300163132137031
+0563,Valdemarsvik,Östergötlands län,KD,0.0632952691680261
+0563,Valdemarsvik,Östergötlands län,S,0.2570962479608483
+0563,Valdemarsvik,Östergötlands län,V,0.03556280587275693
+0563,Valdemarsvik,Östergötlands län,MP,0.017618270799347472
+0563,Valdemarsvik,Östergötlands län,SD,0.25171288743882547
+0563,Valdemarsvik,Östergötlands län,Other,0.011256117455138662
+0563,Valdemarsvik,Östergötlands län,Invalid,0.008482871125611746
+0563,Valdemarsvik,Östergötlands län,No Vote,0.12936378466557913
+0580,Linköping,Östergötlands län,M,0.1786377634297936
+0580,Linköping,Östergötlands län,C,0.06892392798848587
+0580,Linköping,Östergötlands län,L,0.05088084651319863
+0580,Linköping,Östergötlands län,KD,0.04561426078846015
+0580,Linköping,Östergötlands län,S,0.2572747228006979
+0580,Linköping,Östergötlands län,V,0.05092104945766228
+0580,Linköping,Östergötlands län,MP,0.05404883853693444
+0580,Linköping,Östergötlands län,SD,0.13574122168707636
+0580,Linköping,Östergötlands län,Other,0.012382506894804976
+0580,Linköping,Östergötlands län,Invalid,0.008016467126052312
+0580,Linköping,Östergötlands län,No Vote,0.13755839477683346
+0581,Norrköping,Östergötlands län,M,0.16697687275407722
+0581,Norrköping,Östergötlands län,C,0.04154611628121257
+0581,Norrköping,Östergötlands län,L,0.030599834147240393
+0581,Norrköping,Östergötlands län,KD,0.04965447341748825
+0581,Norrköping,Östergötlands län,S,0.24008108357136276
+0581,Norrköping,Östergötlands län,V,0.055910808071500964
+0581,Norrköping,Östergötlands län,MP,0.03570441352621395
+0581,Norrköping,Östergötlands län,SD,0.18513774993089469
+0581,Norrköping,Östergötlands län,Other,0.010955496176172487
+0581,Norrköping,Östergötlands län,Invalid,0.009518105592923615
+0581,Norrköping,Östergötlands län,No Vote,0.1739150465309131
+0582,Söderköping,Östergötlands län,M,0.18819511340747877
+0582,Söderköping,Östergötlands län,C,0.06261494001226027
+0582,Söderköping,Östergötlands län,L,0.03853227077677555
+0582,Söderköping,Östergötlands län,KD,0.06200192661353884
+0582,Söderköping,Östergötlands län,S,0.2145546895525002
+0582,Söderköping,Östergötlands län,V,0.035905070496540854
+0582,Söderköping,Östergötlands län,MP,0.03231456344688677
+0582,Söderköping,Östergötlands län,SD,0.23425869165426044
+0582,Söderköping,Östergötlands län,Other,0.009633067694193887
+0582,Söderköping,Östergötlands län,Invalid,0.009808214379542867
+0582,Söderköping,Östergötlands län,No Vote,0.11218145196602154
+0583,Motala,Östergötlands län,M,0.1577053408102678
+0583,Motala,Östergötlands län,C,0.0429723813236573
+0583,Motala,Östergötlands län,L,0.02962785258044202
+0583,Motala,Östergötlands län,KD,0.04639097969832369
+0583,Motala,Östergötlands län,S,0.28821183314840915
+0583,Motala,Östergötlands län,V,0.03733469277596185
+0583,Motala,Östergötlands län,MP,0.022850631241191112
+0583,Motala,Östergötlands län,SD,0.20958407053108224
+0583,Motala,Östergötlands län,Other,0.008096680361051968
+0583,Motala,Östergötlands län,Invalid,0.01034575823912196
+0583,Motala,Östergötlands län,No Vote,0.1468797792904909
+0584,Vadstena,Östergötlands län,M,0.1860953920776071
+0584,Vadstena,Östergötlands län,C,0.05966046887631366
+0584,Vadstena,Östergötlands län,L,0.03411479385610348
+0584,Vadstena,Östergötlands län,KD,0.055295068714632176
+0584,Vadstena,Östergötlands län,S,0.27825383993532743
+0584,Vadstena,Östergötlands län,V,0.03993532740501213
+0584,Vadstena,Östergötlands län,MP,0.04510913500404204
+0584,Vadstena,Östergötlands län,SD,0.1746160064672595
+0584,Vadstena,Östergötlands län,Other,0.00549717057396928
+0584,Vadstena,Östergötlands län,Invalid,0.0095392077607114
+0584,Vadstena,Östergötlands län,No Vote,0.11188358932902183
+0586,Mjölby,Östergötlands län,M,0.1732044456897357
+0586,Mjölby,Östergötlands län,C,0.04931353320257775
+0586,Mjölby,Östergötlands län,L,0.03446343513589241
+0586,Mjölby,Östergötlands län,KD,0.05202204165499206
+0586,Mjölby,Östergötlands län,S,0.27271878210516487
+0586,Mjölby,Östergötlands län,V,0.03413654618473896
+0586,Mjölby,Östergötlands län,MP,0.024189782385355376
+0586,Mjölby,Östergötlands län,SD,0.20995610348370225
+0586,Mjölby,Östergötlands län,Other,0.008218922200429626
+0586,Mjölby,Östergötlands län,Invalid,0.009900065377790231
+0586,Mjölby,Östergötlands län,No Vote,0.1318763425796208
+0604,Aneby,Jönköpings län,M,0.1464893408957559
+0604,Aneby,Jönköpings län,C,0.0809700762761588
+0604,Aneby,Jönköpings län,L,0.030119303735575982
+0604,Aneby,Jönköpings län,KD,0.09994132603168394
+0604,Aneby,Jönköpings län,S,0.2180715822413456
+0604,Aneby,Jönköpings län,V,0.023274007432035986
+0604,Aneby,Jönköpings län,MP,0.02386074711519656
+0604,Aneby,Jönköpings län,SD,0.235282612947389
+0604,Aneby,Jönköpings län,Other,0.015255231762174849
+0604,Aneby,Jönköpings län,Invalid,0.008996675141795423
+0604,Aneby,Jönköpings län,No Vote,0.11773909642088794
+0617,Gnosjö,Jönköpings län,M,0.1667398623920363
+0617,Gnosjö,Jönköpings län,C,0.058410188844971456
+0617,Gnosjö,Jönköpings län,L,0.024300980822719954
+0617,Gnosjö,Jönköpings län,KD,0.10481627872932221
+0617,Gnosjö,Jönköpings län,S,0.19879959010393794
+0617,Gnosjö,Jönköpings län,V,0.020933977455716585
+0617,Gnosjö,Jönköpings län,MP,0.013468013468013467
+0617,Gnosjö,Jönköpings län,SD,0.21431708388230128
+0617,Gnosjö,Jönköpings län,Other,0.00600204948031035
+0617,Gnosjö,Jönköpings län,Invalid,0.007758746889181671
+0617,Gnosjö,Jönköpings län,No Vote,0.1844532279314888
+0642,Mullsjö,Jönköpings län,M,0.14364739471805854
+0642,Mullsjö,Jönköpings län,C,0.049964311206281226
+0642,Mullsjö,Jönköpings län,L,0.027837259100642397
+0642,Mullsjö,Jönköpings län,KD,0.10920770877944326
+0642,Mullsjö,Jönköpings län,S,0.22733761598857957
+0642,Mullsjö,Jönköpings län,V,0.03408279800142755
+0642,Mullsjö,Jönköpings län,MP,0.03354746609564597
+0642,Mullsjö,Jönköpings län,SD,0.2366167023554604
+0642,Mullsjö,Jönköpings län,Other,0.012669521770164168
+0642,Mullsjö,Jönköpings län,Invalid,0.011598857958601
+0642,Mullsjö,Jönköpings län,No Vote,0.11349036402569593
+0643,Habo,Jönköpings län,M,0.184881304014878
+0643,Habo,Jönköpings län,C,0.06345038836013565
+0643,Habo,Jönköpings län,L,0.03456952193414287
+0643,Habo,Jönköpings län,KD,0.10064544360573241
+0643,Habo,Jönköpings län,S,0.23772016190788753
+0643,Habo,Jönköpings län,V,0.025051963680122524
+0643,Habo,Jönköpings län,MP,0.02942785253254567
+0643,Habo,Jönköpings län,SD,0.21496553987528716
+0643,Habo,Jönköpings län,Other,0.012471283229405973
+0643,Habo,Jönköpings län,Invalid,0.011596105458921343
+0643,Habo,Jönköpings län,No Vote,0.08522043540094082
+0662,Gislaved,Jönköpings län,M,0.15542659240885479
+0662,Gislaved,Jönköpings län,C,0.05691018860860205
+0662,Gislaved,Jönköpings län,L,0.024102588103149716
+0662,Gislaved,Jönköpings län,KD,0.062432723358449946
+0662,Gislaved,Jönköpings län,S,0.2331632891842561
+0662,Gislaved,Jönköpings län,V,0.02798708288482239
+0662,Gislaved,Jönköpings län,MP,0.014835961997472738
+0662,Gislaved,Jönköpings län,SD,0.22146300369729022
+0662,Gislaved,Jönköpings län,Other,0.007441381569710301
+0662,Gislaved,Jönköpings län,Invalid,0.012261899190340245
+0662,Gislaved,Jönköpings län,No Vote,0.18397528899705154
+0665,Vaggeryd,Jönköpings län,M,0.14054714675190375
+0665,Vaggeryd,Jönköpings län,C,0.06477390241609476
+0665,Vaggeryd,Jönköpings län,L,0.029801635799567548
+0665,Vaggeryd,Jönköpings län,KD,0.08837078123531071
+0665,Vaggeryd,Jönköpings län,S,0.2560872426436025
+0665,Vaggeryd,Jönköpings län,V,0.028485475227977813
+0665,Vaggeryd,Jönköpings län,MP,0.021528626492432076
+0665,Vaggeryd,Jönköpings län,SD,0.21566231080191783
+0665,Vaggeryd,Jönköpings län,Other,0.013819686001692207
+0665,Vaggeryd,Jönköpings län,Invalid,0.00883707812353107
+0665,Vaggeryd,Jönköpings län,No Vote,0.13208611450596972
+0680,Jönköping,Jönköpings län,M,0.16358910337631363
+0680,Jönköping,Jönköpings län,C,0.06364127599314302
+0680,Jönköping,Jönköpings län,L,0.037219572184542
+0680,Jönköping,Jönköpings län,KD,0.07646083327122308
+0680,Jönköping,Jönköpings län,S,0.2517887754341507
+0680,Jönköping,Jönköpings län,V,0.04048967727509876
+0680,Jönköping,Jönköpings län,MP,0.03535626444063501
+0680,Jönköping,Jönköpings län,SD,0.16359841991503316
+0680,Jönköping,Jönköpings län,Other,0.010723336066184691
+0680,Jönköping,Jönköpings län,Invalid,0.008990459864351196
+0680,Jönköping,Jönköpings län,No Vote,0.14814228217932474
+0682,Nässjö,Jönköpings län,M,0.13308365631668337
+0682,Nässjö,Jönköpings län,C,0.05195314201106127
+0682,Nässjö,Jönköpings län,L,0.026869311501110483
+0682,Nässjö,Jönköpings län,KD,0.07041762835866394
+0682,Nässjö,Jönköpings län,S,0.2514044332186561
+0682,Nässjö,Jönköpings län,V,0.03383704219831903
+0682,Nässjö,Jönköpings län,MP,0.025519313678526324
+0682,Nässjö,Jönköpings län,SD,0.23450768627792537
+0682,Nässjö,Jönköpings län,Other,0.010712885946958151
+0682,Nässjö,Jönköpings län,Invalid,0.008840308322083351
+0682,Nässjö,Jönköpings län,No Vote,0.15285459217001263
+0683,Värnamo,Jönköpings län,M,0.17510175869748867
+0683,Värnamo,Jönköpings län,C,0.07119268873358421
+0683,Värnamo,Jönköpings län,L,0.028108440211965287
+0683,Värnamo,Jönköpings län,KD,0.07660701943015129
+0683,Värnamo,Jönköpings län,S,0.2465632439904769
+0683,Värnamo,Jönköpings län,V,0.029529222025958066
+0683,Värnamo,Jönköpings län,MP,0.020274940480761845
+0683,Värnamo,Jönköpings län,SD,0.187005606328239
+0683,Värnamo,Jönköpings län,Other,0.008793487443360726
+0683,Värnamo,Jönköpings län,Invalid,0.008908685968819599
+0683,Värnamo,Jönköpings län,No Vote,0.14791490668919438
+0684,Sävsjö,Jönköpings län,M,0.1467287488061127
+0684,Sävsjö,Jönköpings län,C,0.05873925501432665
+0684,Sävsjö,Jönköpings län,L,0.01886341929321872
+0684,Sävsjö,Jönköpings län,KD,0.12547755491881565
+0684,Sävsjö,Jönköpings län,S,0.19138013371537727
+0684,Sävsjö,Jönköpings län,V,0.02566857688634193
+0684,Sävsjö,Jönköpings län,MP,0.013490926456542502
+0684,Sävsjö,Jönköpings län,SD,0.2521489971346705
+0684,Sävsjö,Jönköpings län,Other,0.017430754536771727
+0684,Sävsjö,Jönköpings län,Invalid,0.007640878701050621
+0684,Sävsjö,Jönköpings län,No Vote,0.14243075453677173
+0685,Vetlanda,Jönköpings län,M,0.14920389101292164
+0685,Vetlanda,Jönköpings län,C,0.06436625852973915
+0685,Vetlanda,Jönköpings län,L,0.02443981996805885
+0685,Vetlanda,Jönköpings län,KD,0.08125635193340754
+0685,Vetlanda,Jönköpings län,S,0.23171853070706094
+0685,Vetlanda,Jönköpings län,V,0.02506896384842472
+0685,Vetlanda,Jönköpings län,MP,0.019793834389972415
+0685,Vetlanda,Jönköpings län,SD,0.23486425010889028
+0685,Vetlanda,Jönköpings län,Other,0.011760150994531288
+0685,Vetlanda,Jönköpings län,Invalid,0.008517640226491797
+0685,Vetlanda,Jönköpings län,No Vote,0.14901030828050138
+0686,Eksjö,Jönköpings län,M,0.15221450444394652
+0686,Eksjö,Jönköpings län,C,0.07760101575920532
+0686,Eksjö,Jönköpings län,L,0.032638733288520426
+0686,Eksjö,Jönköpings län,KD,0.06811561729778176
+0686,Eksjö,Jönköpings län,S,0.24378220927627156
+0686,Eksjö,Jönköpings län,V,0.03092090522070356
+0686,Eksjö,Jönköpings län,MP,0.02584210919411457
+0686,Eksjö,Jönköpings län,SD,0.20845470162073343
+0686,Eksjö,Jönköpings län,Other,0.016132646202106207
+0686,Eksjö,Jönköpings län,Invalid,0.01008290387631638
+0686,Eksjö,Jönköpings län,No Vote,0.13421465382030023
+0687,Tranås,Jönköpings län,M,0.1541115178822867
+0687,Tranås,Jönköpings län,C,0.053576457335961704
+0687,Tranås,Jönköpings län,L,0.02900591382709096
+0687,Tranås,Jönköpings län,KD,0.05857504928189242
+0687,Tranås,Jönköpings län,S,0.2863277949873275
+0687,Tranås,Jönköpings län,V,0.03147000844832441
+0687,Tranås,Jönköpings län,MP,0.026964235426640382
+0687,Tranås,Jönköpings län,SD,0.19593072373979162
+0687,Tranås,Jönköpings län,Other,0.009504364967614757
+0687,Tranås,Jönköpings län,Invalid,0.010067586595325261
+0687,Tranås,Jönköpings län,No Vote,0.14446634750774429
+0760,Uppvidinge,Kronobergs län,M,0.13669711034586016
+0760,Uppvidinge,Kronobergs län,C,0.054648899535858664
+0760,Uppvidinge,Kronobergs län,L,0.019014822578230273
+0760,Uppvidinge,Kronobergs län,KD,0.06497978739332236
+0760,Uppvidinge,Kronobergs län,S,0.23057343913759545
+0760,Uppvidinge,Kronobergs län,V,0.034586015870639315
+0760,Uppvidinge,Kronobergs län,MP,0.018116484503668213
+0760,Uppvidinge,Kronobergs län,SD,0.2653091780206618
+0760,Uppvidinge,Kronobergs län,Other,0.012427010031441832
+0760,Uppvidinge,Kronobergs län,Invalid,0.012277287019014822
+0760,Uppvidinge,Kronobergs län,No Vote,0.15136996556370713
+0761,Lessebo,Kronobergs län,M,0.12982220731298222
+0761,Lessebo,Kronobergs län,C,0.039080845353908086
+0761,Lessebo,Kronobergs län,L,0.013586044951358605
+0761,Lessebo,Kronobergs län,KD,0.049647769204964776
+0761,Lessebo,Kronobergs län,S,0.3056021469305602
+0761,Lessebo,Kronobergs län,V,0.05635692720563569
+0761,Lessebo,Kronobergs län,MP,0.02079838980207984
+0761,Lessebo,Kronobergs län,SD,0.21519624287151962
+0761,Lessebo,Kronobergs län,Other,0.009728279100972828
+0761,Lessebo,Kronobergs län,Invalid,0.012076484401207649
+0761,Lessebo,Kronobergs län,No Vote,0.14810466286481047
+0763,Tingsryd,Kronobergs län,M,0.130169786678276
+0763,Tingsryd,Kronobergs län,C,0.05387461906835002
+0763,Tingsryd,Kronobergs län,L,0.0174140182847192
+0763,Tingsryd,Kronobergs län,KD,0.07052677405311275
+0763,Tingsryd,Kronobergs län,S,0.22997387897257293
+0763,Tingsryd,Kronobergs län,V,0.032977797126686983
+0763,Tingsryd,Kronobergs län,MP,0.020352633870265563
+0763,Tingsryd,Kronobergs län,SD,0.2763387026556378
+0763,Tingsryd,Kronobergs län,Other,0.011319111885067479
+0763,Tingsryd,Kronobergs län,Invalid,0.00805398345668263
+0763,Tingsryd,Kronobergs län,No Vote,0.14899869394862864
+0764,Alvesta,Kronobergs län,M,0.15056935107696529
+0764,Alvesta,Kronobergs län,C,0.052407737686925505
+0764,Alvesta,Kronobergs län,L,0.02003018246673069
+0764,Alvesta,Kronobergs län,KD,0.061119495129647414
+0764,Alvesta,Kronobergs län,S,0.2431060502126492
+0764,Alvesta,Kronobergs län,V,0.03464124022499657
+0764,Alvesta,Kronobergs län,MP,0.021813691864453286
+0764,Alvesta,Kronobergs län,SD,0.23816710111126355
+0764,Alvesta,Kronobergs län,Other,0.016806146247770614
+0764,Alvesta,Kronobergs län,Invalid,0.008574564412127865
+0764,Alvesta,Kronobergs län,No Vote,0.15276443956647
+0765,Älmhult,Kronobergs län,M,0.16369930761622156
+0765,Älmhult,Kronobergs län,C,0.05555555555555555
+0765,Älmhult,Kronobergs län,L,0.02242004615891856
+0765,Älmhult,Kronobergs län,KD,0.0586053412462908
+0765,Älmhult,Kronobergs län,S,0.2691229805473129
+0765,Älmhult,Kronobergs län,V,0.03297065611605671
+0765,Älmhult,Kronobergs län,MP,0.024810418727332674
+0765,Älmhult,Kronobergs län,SD,0.20689086712825586
+0765,Älmhult,Kronobergs län,Other,0.010550609957138147
+0765,Älmhult,Kronobergs län,Invalid,0.008737223870755028
+0765,Älmhult,Kronobergs län,No Vote,0.1466369930761622
+0767,Markaryd,Kronobergs län,M,0.12561174551386622
+0767,Markaryd,Kronobergs län,C,0.032082653616095705
+0767,Markaryd,Kronobergs län,L,0.01468189233278956
+0767,Markaryd,Kronobergs län,KD,0.07803153887982599
+0767,Markaryd,Kronobergs län,S,0.21954866775421425
+0767,Markaryd,Kronobergs län,V,0.025965198477433386
+0767,Markaryd,Kronobergs län,MP,0.011827079934747145
+0767,Markaryd,Kronobergs län,SD,0.2903752039151713
+0767,Markaryd,Kronobergs län,Other,0.013322457857531268
+0767,Markaryd,Kronobergs län,Invalid,0.00897226753670473
+0767,Markaryd,Kronobergs län,No Vote,0.17958129418162044
+0780,Växjö,Kronobergs län,M,0.18337004405286345
+0780,Växjö,Kronobergs län,C,0.05375296509657743
+0780,Växjö,Kronobergs län,L,0.03423980571557664
+0780,Växjö,Kronobergs län,KD,0.04989833954591664
+0780,Växjö,Kronobergs län,S,0.2783660905907602
+0780,Växjö,Kronobergs län,V,0.051606799954817574
+0780,Växjö,Kronobergs län,MP,0.03889924319439738
+0780,Växjö,Kronobergs län,SD,0.15287190782785495
+0780,Växjö,Kronobergs län,Other,0.012749915282954931
+0780,Växjö,Kronobergs län,Invalid,0.008697616627132046
+0780,Växjö,Kronobergs län,No Vote,0.13554727211114875
+0781,Ljungby,Kronobergs län,M,0.16115331980557784
+0781,Ljungby,Kronobergs län,C,0.046481997074229627
+0781,Ljungby,Kronobergs län,L,0.02038601293001746
+0781,Ljungby,Kronobergs län,KD,0.0643197583879949
+0781,Ljungby,Kronobergs län,S,0.24057382851210418
+0781,Ljungby,Kronobergs län,V,0.03114529753197112
+0781,Ljungby,Kronobergs län,MP,0.0209994809117078
+0781,Ljungby,Kronobergs län,SD,0.23486385729790948
+0781,Ljungby,Kronobergs län,Other,0.01080647444669907
+0781,Ljungby,Kronobergs län,Invalid,0.011891840875843518
+0781,Ljungby,Kronobergs län,No Vote,0.157378132225945
+0821,Högsby,Kalmar län,M,0.09754262788365095
+0821,Högsby,Kalmar län,C,0.06369107321965897
+0821,Högsby,Kalmar län,L,0.010280842527582748
+0821,Högsby,Kalmar län,KD,0.08876629889669008
+0821,Högsby,Kalmar län,S,0.25501504513540624
+0821,Högsby,Kalmar län,V,0.03259779338014042
+0821,Högsby,Kalmar län,MP,0.015295887662988967
+0821,Högsby,Kalmar län,SD,0.25401203610832496
+0821,Högsby,Kalmar län,Other,0.011283851554663993
+0821,Högsby,Kalmar län,Invalid,0.010030090270812437
+0821,Högsby,Kalmar län,No Vote,0.16148445336008024
+0834,Torsås,Kalmar län,M,0.12287368802026782
+0834,Torsås,Kalmar län,C,0.06098443720593558
+0834,Torsås,Kalmar län,L,0.02370611653999276
+0834,Torsås,Kalmar län,KD,0.06406080347448426
+0834,Torsås,Kalmar län,S,0.22728917842924357
+0834,Torsås,Kalmar län,V,0.03257328990228013
+0834,Torsås,Kalmar län,MP,0.023887079261672096
+0834,Torsås,Kalmar län,SD,0.29297864639884186
+0834,Torsås,Kalmar län,Other,0.010857763300760043
+0834,Torsås,Kalmar län,Invalid,0.010857763300760043
+0834,Torsås,Kalmar län,No Vote,0.12993123416576186
+0840,Mörbylånga,Kalmar län,M,0.17433968435685665
+0840,Mörbylånga,Kalmar län,C,0.06836209011366425
+0840,Mörbylånga,Kalmar län,L,0.03131899582958541
+0840,Mörbylånga,Kalmar län,KD,0.06705372475263717
+0840,Mörbylånga,Kalmar län,S,0.2652710769482378
+0840,Mörbylånga,Kalmar län,V,0.03704309428407883
+0840,Mörbylånga,Kalmar län,MP,0.042276555728187094
+0840,Mörbylånga,Kalmar län,SD,0.20377790497996565
+0840,Mörbylånga,Kalmar län,Other,0.006868918145392101
+0840,Mörbylånga,Kalmar län,Invalid,0.008095510671354975
+0840,Mörbylånga,Kalmar län,No Vote,0.09559244419004007
+0860,Hultsfred,Kalmar län,M,0.10211027910142954
+0860,Hultsfred,Kalmar län,C,0.06029368861227268
+0860,Hultsfred,Kalmar län,L,0.01594865311679471
+0860,Hultsfred,Kalmar län,KD,0.08402217251774774
+0860,Hultsfred,Kalmar län,S,0.2762812408830108
+0860,Hultsfred,Kalmar län,V,0.03782942720995818
+0860,Hultsfred,Kalmar län,MP,0.014781678498492658
+0860,Hultsfred,Kalmar län,SD,0.2159875522707381
+0860,Hultsfred,Kalmar län,Other,0.014003695419624623
+0860,Hultsfred,Kalmar län,Invalid,0.008168822328114363
+0860,Hultsfred,Kalmar län,No Vote,0.17057279004181658
+0861,Mönsterås,Kalmar län,M,0.12067435669920142
+0861,Mönsterås,Kalmar län,C,0.05412599822537711
+0861,Mönsterås,Kalmar län,L,0.022675736961451247
+0861,Mönsterås,Kalmar län,KD,0.06921029281277728
+0861,Mönsterås,Kalmar län,S,0.2724046140195209
+0861,Mönsterås,Kalmar län,V,0.03085872029971409
+0861,Mönsterås,Kalmar län,MP,0.01873213053337277
+0861,Mönsterås,Kalmar län,SD,0.2640244503598541
+0861,Mönsterås,Kalmar län,Other,0.010253376713004043
+0861,Mönsterås,Kalmar län,Invalid,0.009957606230898156
+0861,Mönsterås,Kalmar län,No Vote,0.12708271714482894
+0862,Emmaboda,Kalmar län,M,0.12216734456711215
+0862,Emmaboda,Kalmar län,C,0.05781522370714701
+0862,Emmaboda,Kalmar län,L,0.020482277745496803
+0862,Emmaboda,Kalmar län,KD,0.05244044160371877
+0862,Emmaboda,Kalmar län,S,0.27919814061592096
+0862,Emmaboda,Kalmar län,V,0.036461359674607785
+0862,Emmaboda,Kalmar län,MP,0.02251597908192911
+0862,Emmaboda,Kalmar län,SD,0.2347472399767577
+0862,Emmaboda,Kalmar län,Other,0.011330621731551424
+0862,Emmaboda,Kalmar län,Invalid,0.011766414875072632
+0862,Emmaboda,Kalmar län,No Vote,0.15107495642068564
+0880,Kalmar,Kalmar län,M,0.17686937350725704
+0880,Kalmar,Kalmar län,C,0.05535550248024986
+0880,Kalmar,Kalmar län,L,0.03358442035642109
+0880,Kalmar,Kalmar län,KD,0.050321513871027006
+0880,Kalmar,Kalmar län,S,0.27326841815175457
+0880,Kalmar,Kalmar län,V,0.04695939739114459
+0880,Kalmar,Kalmar län,MP,0.04027190887378284
+0880,Kalmar,Kalmar län,SD,0.17304795149733604
+0880,Kalmar,Kalmar län,Other,0.010031232776042624
+0880,Kalmar,Kalmar län,Invalid,0.010104721660848796
+0880,Kalmar,Kalmar län,No Vote,0.1301855594341356
+0881,Nybro,Kalmar län,M,0.13151807547419206
+0881,Nybro,Kalmar län,C,0.05260723018967682
+0881,Nybro,Kalmar län,L,0.023131319807018703
+0881,Nybro,Kalmar län,KD,0.05789438900270967
+0881,Nybro,Kalmar län,S,0.2741391844557531
+0881,Nybro,Kalmar län,V,0.039389333157094704
+0881,Nybro,Kalmar län,MP,0.018372876875289143
+0881,Nybro,Kalmar län,SD,0.2280087238120415
+0881,Nybro,Kalmar län,Other,0.012821360121604652
+0881,Nybro,Kalmar län,Invalid,0.010045601744762407
+0881,Nybro,Kalmar län,No Vote,0.15207190535985723
+0882,Oskarshamn,Kalmar län,M,0.16048317515099222
+0882,Oskarshamn,Kalmar län,C,0.03547119164030294
+0882,Oskarshamn,Kalmar län,L,0.027610008628127698
+0882,Oskarshamn,Kalmar län,KD,0.062410123669830314
+0882,Oskarshamn,Kalmar län,S,0.26440417984852843
+0882,Oskarshamn,Kalmar län,V,0.03748442143610392
+0882,Oskarshamn,Kalmar län,MP,0.015578563896078996
+0882,Oskarshamn,Kalmar län,SD,0.23454127121081392
+0882,Oskarshamn,Kalmar län,Other,0.010209951107276388
+0882,Oskarshamn,Kalmar län,Invalid,0.010881027705876714
+0882,Oskarshamn,Kalmar län,No Vote,0.14092608570606846
+0883,Västervik,Kalmar län,M,0.14412999692759362
+0883,Västervik,Kalmar län,C,0.050660567371044275
+0883,Västervik,Kalmar län,L,0.02929027412692452
+0883,Västervik,Kalmar län,KD,0.051104359403270405
+0883,Västervik,Kalmar län,S,0.2850168982350732
+0883,Västervik,Kalmar län,V,0.036937152220667055
+0883,Västervik,Kalmar län,MP,0.026798211176731642
+0883,Västervik,Kalmar län,SD,0.19226436349981224
+0883,Västervik,Kalmar län,Other,0.012972382480456082
+0883,Västervik,Kalmar län,Invalid,0.010685146622059877
+0883,Västervik,Kalmar län,No Vote,0.16014064793636704
+0884,Vimmerby,Kalmar län,M,0.14964232240891698
+0884,Vimmerby,Kalmar län,C,0.06845782731658626
+0884,Vimmerby,Kalmar län,L,0.01538845450008318
+0884,Vimmerby,Kalmar län,KD,0.06538013641656962
+0884,Vimmerby,Kalmar län,S,0.25619697221760107
+0884,Vimmerby,Kalmar län,V,0.03842954583264016
+0884,Vimmerby,Kalmar län,MP,0.025203793046082182
+0884,Vimmerby,Kalmar län,SD,0.20928298120113126
+0884,Vimmerby,Kalmar län,Other,0.01397438030277824
+0884,Vimmerby,Kalmar län,Invalid,0.013225752786557977
+0884,Vimmerby,Kalmar län,No Vote,0.14481783397105308
+0885,Borgholm,Kalmar län,M,0.1525027808676307
+0885,Borgholm,Kalmar län,C,0.07486095661846497
+0885,Borgholm,Kalmar län,L,0.026585094549499443
+0885,Borgholm,Kalmar län,KD,0.06351501668520579
+0885,Borgholm,Kalmar län,S,0.24126807563959957
+0885,Borgholm,Kalmar län,V,0.03225806451612903
+0885,Borgholm,Kalmar län,MP,0.0374860956618465
+0885,Borgholm,Kalmar län,SD,0.21879866518353727
+0885,Borgholm,Kalmar län,Other,0.010901001112347052
+0885,Borgholm,Kalmar län,Invalid,0.010011123470522803
+0885,Borgholm,Kalmar län,No Vote,0.13181312569521692
+0980,Gotland,Gotlands län,M,0.14436342544641007
+0980,Gotland,Gotlands län,C,0.10063388159257572
+0980,Gotland,Gotlands län,L,0.024215934043170236
+0980,Gotland,Gotlands län,KD,0.034076314372125785
+0980,Gotland,Gotlands län,S,0.29748933173136677
+0980,Gotland,Gotlands län,V,0.054729253842648214
+0980,Gotland,Gotlands län,MP,0.05557857231636077
+0980,Gotland,Gotlands län,SD,0.1347309110494262
+0980,Gotland,Gotlands län,Other,0.013009073207109418
+0980,Gotland,Gotlands län,Invalid,0.012180469818121556
+0980,Gotland,Gotlands län,No Vote,0.12899283258068525
+1060,Olofström,Blekinge län,M,0.10651062155782848
+1060,Olofström,Blekinge län,C,0.03589693154996066
+1060,Olofström,Blekinge län,L,0.01622738001573564
+1060,Olofström,Blekinge län,KD,0.03943745082612116
+1060,Olofström,Blekinge län,S,0.263375295043273
+1060,Olofström,Blekinge län,V,0.03688040912667191
+1060,Olofström,Blekinge län,MP,0.015932336742722267
+1060,Olofström,Blekinge län,SD,0.2770456333595594
+1060,Olofström,Blekinge län,Other,0.006982690794649882
+1060,Olofström,Blekinge län,Invalid,0.011014948859166011
+1060,Olofström,Blekinge län,No Vote,0.19069630212431157
+1080,Karlskrona,Blekinge län,M,0.1650624938490306
+1080,Karlskrona,Blekinge län,C,0.04676705048715678
+1080,Karlskrona,Blekinge län,L,0.03690581635665781
+1080,Karlskrona,Blekinge län,KD,0.051235114654069484
+1080,Karlskrona,Blekinge län,S,0.2765672670012794
+1080,Karlskrona,Blekinge län,V,0.03964176754256471
+1080,Karlskrona,Blekinge län,MP,0.02940655447298494
+1080,Karlskrona,Blekinge län,SD,0.21133746678476528
+1080,Karlskrona,Blekinge län,Other,0.010746973723058753
+1080,Karlskrona,Blekinge län,Invalid,0.01011711445723846
+1080,Karlskrona,Blekinge län,No Vote,0.12221238067119378
+1081,Ronneby,Blekinge län,M,0.1378744357816988
+1081,Ronneby,Blekinge län,C,0.03857201477226098
+1081,Ronneby,Blekinge län,L,0.027538412437878995
+1081,Ronneby,Blekinge län,KD,0.04554780467788264
+1081,Ronneby,Blekinge län,S,0.25983677563488805
+1081,Ronneby,Blekinge län,V,0.03943828933570419
+1081,Ronneby,Blekinge län,MP,0.020790589522637123
+1081,Ronneby,Blekinge län,SD,0.2627091597136735
+1081,Ronneby,Blekinge län,Other,0.013267678840103953
+1081,Ronneby,Blekinge län,Invalid,0.00879952582866001
+1081,Ronneby,Blekinge län,No Vote,0.14562531345461177
+1082,Karlshamn,Blekinge län,M,0.1495637557031938
+1082,Karlshamn,Blekinge län,C,0.03970223325062035
+1082,Karlshamn,Blekinge län,L,0.02561434403265829
+1082,Karlshamn,Blekinge län,KD,0.04130312975266149
+1082,Karlshamn,Blekinge län,S,0.2669895141279116
+1082,Karlshamn,Blekinge län,V,0.038701672936844636
+1082,Karlshamn,Blekinge län,MP,0.027695509485311774
+1082,Karlshamn,Blekinge län,SD,0.2421756183462739
+1082,Karlshamn,Blekinge län,Other,0.009325222124389658
+1082,Karlshamn,Blekinge län,Invalid,0.01124629792683903
+1082,Karlshamn,Blekinge län,No Vote,0.14768270231329544
+1083,Sölvesborg,Blekinge län,M,0.1633446067496582
+1083,Sölvesborg,Blekinge län,C,0.031301719795639345
+1083,Sölvesborg,Blekinge län,L,0.025401165719219975
+1083,Sölvesborg,Blekinge län,KD,0.050370583579189755
+1083,Sölvesborg,Blekinge län,S,0.2270993739656041
+1083,Sölvesborg,Blekinge län,V,0.027272073109304167
+1083,Sölvesborg,Blekinge län,MP,0.015183133050298626
+1083,Sölvesborg,Blekinge län,SD,0.3014319637331798
+1083,Sölvesborg,Blekinge län,Other,0.009138663020795855
+1083,Sölvesborg,Blekinge län,Invalid,0.011945024105922141
+1083,Sölvesborg,Blekinge län,No Vote,0.13751169317118803
+1214,Svalöv,Skåne läns västra,M,0.12098838354006694
+1214,Svalöv,Skåne läns västra,C,0.04833628667060445
+1214,Svalöv,Skåne läns västra,L,0.026186257137231737
+1214,Svalöv,Skåne läns västra,KD,0.0443985036424493
+1214,Svalöv,Skåne läns västra,S,0.2067336089781453
+1214,Svalöv,Skåne läns västra,V,0.03731049419177003
+1214,Svalöv,Skåne läns västra,MP,0.03061626304390628
+1214,Svalöv,Skåne läns västra,SD,0.30645796416617443
+1214,Svalöv,Skåne läns västra,Other,0.014274463477062413
+1214,Svalöv,Skåne läns västra,Invalid,0.012896239417208112
+1214,Svalöv,Skåne läns västra,No Vote,0.151801535735381
+1230,Staffanstorp,Skåne läns södra,M,0.23604922554636112
+1230,Staffanstorp,Skåne läns södra,C,0.05437088903034161
+1230,Staffanstorp,Skåne läns södra,L,0.04731593464884362
+1230,Staffanstorp,Skåne läns södra,KD,0.03967748779970295
+1230,Staffanstorp,Skåne läns södra,S,0.23058561425843413
+1230,Staffanstorp,Skåne läns södra,V,0.02784850413749204
+1230,Staffanstorp,Skåne läns södra,MP,0.030819011245491194
+1230,Staffanstorp,Skåne läns södra,SD,0.20395713982601316
+1230,Staffanstorp,Skåne läns södra,Other,0.00790367069806917
+1230,Staffanstorp,Skåne läns södra,Invalid,0.007214088690855082
+1230,Staffanstorp,Skåne läns södra,No Vote,0.11425843411839592
+1231,Burlöv,Skåne läns södra,M,0.12996068540909428
+1231,Burlöv,Skåne läns södra,C,0.036124916549217415
+1231,Burlöv,Skåne läns södra,L,0.026852607373340255
+1231,Burlöv,Skåne läns södra,KD,0.024627253171129737
+1231,Burlöv,Skåne läns södra,S,0.2408575031525851
+1231,Burlöv,Skåne läns södra,V,0.052889251539203326
+1231,Burlöv,Skåne läns södra,MP,0.027742749054224466
+1231,Burlöv,Skåne läns södra,SD,0.17869594243750464
+1231,Burlöv,Skåne läns södra,Other,0.020102366293301685
+1231,Burlöv,Skåne läns södra,Invalid,0.007195311920480676
+1231,Burlöv,Skåne läns södra,No Vote,0.2549514130999184
+1233,Vellinge,Skåne läns södra,M,0.32532263690268576
+1233,Vellinge,Skåne läns södra,C,0.05570282525287757
+1233,Vellinge,Skåne läns södra,L,0.06906173700732474
+1233,Vellinge,Skåne läns södra,KD,0.057725845831880014
+1233,Vellinge,Skåne läns södra,S,0.13498430415068016
+1233,Vellinge,Skåne läns södra,V,0.011335891175444715
+1233,Vellinge,Skåne läns södra,MP,0.01988140913847227
+1233,Vellinge,Skåne läns södra,SD,0.22989187303801883
+1233,Vellinge,Skåne läns södra,Other,0.006522497384025113
+1233,Vellinge,Skåne läns södra,Invalid,0.005615626089989536
+1233,Vellinge,Skåne läns södra,No Vote,0.08395535402860133
+1256,Östra Göinge,Skåne läns norra och östra,M,0.14450539058066958
+1256,Östra Göinge,Skåne läns norra och östra,C,0.036315490826555705
+1256,Östra Göinge,Skåne läns norra och östra,L,0.018157745413277852
+1256,Östra Göinge,Skåne läns norra och östra,KD,0.05116323056553811
+1256,Östra Göinge,Skåne läns norra och östra,S,0.21202950633629658
+1256,Östra Göinge,Skåne läns norra och östra,V,0.026858331757140155
+1256,Östra Göinge,Skåne läns norra och östra,MP,0.016644599962171363
+1256,Östra Göinge,Skåne läns norra och östra,SD,0.3167202572347267
+1256,Östra Göinge,Skåne läns norra och östra,Other,0.011348590883298657
+1256,Östra Göinge,Skåne läns norra och östra,Invalid,0.008038585209003215
+1256,Östra Göinge,Skåne läns norra och östra,No Vote,0.15821827123132212
+1257,Örkelljunga,Skåne läns norra och östra,M,0.1176316821330545
+1257,Örkelljunga,Skåne läns norra och östra,C,0.03620441772317344
+1257,Örkelljunga,Skåne läns norra och östra,L,0.020389491569729447
+1257,Örkelljunga,Skåne läns norra och östra,KD,0.09305973075414978
+1257,Örkelljunga,Skåne läns norra och östra,S,0.1786694549732061
+1257,Örkelljunga,Skåne läns norra och östra,V,0.020912299045876357
+1257,Örkelljunga,Skåne läns norra och östra,MP,0.018428963534178538
+1257,Örkelljunga,Skåne läns norra och östra,SD,0.3249248464253039
+1257,Örkelljunga,Skåne läns norra och östra,Other,0.01738334858188472
+1257,Örkelljunga,Skåne läns norra och östra,Invalid,0.009933342046791268
+1257,Örkelljunga,Skåne läns norra och östra,No Vote,0.16246242321265195
+1260,Bjuv,Skåne läns västra,M,0.11877220147554422
+1260,Bjuv,Skåne läns västra,C,0.02322615903087713
+1260,Bjuv,Skåne läns västra,L,0.014117861371709627
+1260,Bjuv,Skåne läns västra,KD,0.032425539666636305
+1260,Bjuv,Skåne läns västra,S,0.21377174606066127
+1260,Bjuv,Skåne läns västra,V,0.02905546953274433
+1260,Bjuv,Skåne läns västra,MP,0.010747791237817652
+1260,Bjuv,Skåne läns västra,SD,0.33190636670006374
+1260,Bjuv,Skåne läns västra,Other,0.014846525184443028
+1260,Bjuv,Skåne läns västra,Invalid,0.010474542308042626
+1260,Bjuv,Skåne läns västra,No Vote,0.20065579743146006
+1261,Kävlinge,Skåne läns södra,M,0.21822491217674694
+1261,Kävlinge,Skåne läns södra,C,0.06132814153299192
+1261,Kävlinge,Skåne läns södra,L,0.04647225631692555
+1261,Kävlinge,Skåne läns södra,KD,0.04126634782240657
+1261,Kävlinge,Skåne läns södra,S,0.2238117408050112
+1261,Kävlinge,Skåne läns södra,V,0.022643585728192323
+1261,Kävlinge,Skåne läns södra,MP,0.030135015025183055
+1261,Kävlinge,Skåne läns södra,SD,0.23870995048038263
+1261,Kävlinge,Skåne läns södra,Other,0.007491429296990731
+1261,Kävlinge,Skåne läns södra,Invalid,0.008295594023786346
+1261,Kävlinge,Skåne läns södra,No Vote,0.10162102679138274
+1262,Lomma,Skåne läns södra,M,0.27045251894783773
+1262,Lomma,Skåne läns södra,C,0.07807623718234508
+1262,Lomma,Skåne läns södra,L,0.08192153366027642
+1262,Lomma,Skåne läns södra,KD,0.04452741863575568
+1262,Lomma,Skåne läns södra,S,0.21321890325456977
+1262,Lomma,Skåne läns södra,V,0.020229603209986624
+1262,Lomma,Skåne läns södra,MP,0.04185242978154258
+1262,Lomma,Skåne läns södra,SD,0.16194828354881854
+1262,Lomma,Skåne läns södra,Other,0.0069103878733838605
+1262,Lomma,Skåne läns södra,Invalid,0.004736959429335711
+1262,Lomma,Skåne läns södra,No Vote,0.07612572447614802
+1263,Svedala,Skåne läns södra,M,0.19435245950990426
+1263,Svedala,Skåne läns södra,C,0.04286832440243241
+1263,Svedala,Skåne läns södra,L,0.03058582696128605
+1263,Svedala,Skåne läns södra,KD,0.047805406707206934
+1263,Svedala,Skåne läns södra,S,0.21879703775061712
+1263,Svedala,Skåne läns södra,V,0.026913119393100128
+1263,Svedala,Skåne läns södra,MP,0.024805828165452466
+1263,Svedala,Skåne läns södra,SD,0.28893973147088925
+1263,Svedala,Skåne läns södra,Other,0.008429164910590644
+1263,Svedala,Skåne läns södra,Invalid,0.010114997892708772
+1263,Svedala,Skåne läns södra,No Vote,0.1063881028358119
+1264,Skurup,Skåne läns södra,M,0.1714518096787312
+1264,Skurup,Skåne läns södra,C,0.04375762505083367
+1264,Skurup,Skåne läns södra,L,0.027816185441236273
+1264,Skurup,Skåne läns södra,KD,0.0428629524196828
+1264,Skurup,Skåne läns södra,S,0.20471736478243188
+1264,Skurup,Skåne läns södra,V,0.032126880845872306
+1264,Skurup,Skåne läns södra,MP,0.02008946726311509
+1264,Skurup,Skåne läns södra,SD,0.2970313135420903
+1264,Skurup,Skåne läns södra,Other,0.011712078080520537
+1264,Skurup,Skåne läns södra,Invalid,0.010736071573810492
+1264,Skurup,Skåne läns södra,No Vote,0.13769825132167549
+1265,Sjöbo,Skåne läns södra,M,0.149032992036405
+1265,Sjöbo,Skåne läns södra,C,0.03633808472194339
+1265,Sjöbo,Skåne läns södra,L,0.024693836579000202
+1265,Sjöbo,Skåne läns södra,KD,0.058288161681054676
+1265,Sjöbo,Skåne läns södra,S,0.1609449240447032
+1265,Sjöbo,Skåne läns södra,V,0.022753128555176336
+1265,Sjöbo,Skåne läns södra,MP,0.02315465435320886
+1265,Sjöbo,Skåne läns södra,SD,0.3593655892391086
+1265,Sjöbo,Skåne läns södra,Other,0.009770461085458074
+1265,Sjöbo,Skåne läns södra,Invalid,0.011309643311249415
+1265,Sjöbo,Skåne läns södra,No Vote,0.14434852439269222
+1266,Hörby,Skåne läns västra,M,0.1374863937034246
+1266,Hörby,Skåne läns västra,C,0.047308046554467055
+1266,Hörby,Skåne läns västra,L,0.031231683831533116
+1266,Hörby,Skåne läns västra,KD,0.05794189064724106
+1266,Hörby,Skåne läns västra,S,0.17826341790169975
+1266,Hörby,Skåne läns västra,V,0.03148287699907896
+1266,Hörby,Skåne läns västra,MP,0.023695888805157835
+1266,Hörby,Skåne läns västra,SD,0.32931424265259984
+1266,Hörby,Skåne läns västra,Other,0.00845683664071004
+1266,Hörby,Skåne läns västra,Invalid,0.008791760864104497
+1266,Hörby,Skåne läns västra,No Vote,0.14602696139998325
+1267,Höör,Skåne läns västra,M,0.1501874414245548
+1267,Höör,Skåne läns västra,C,0.04522024367385192
+1267,Höör,Skåne läns västra,L,0.036785379568884724
+1267,Höör,Skåne läns västra,KD,0.0506872852233677
+1267,Höör,Skåne läns västra,S,0.1970477975632615
+1267,Höör,Skåne läns västra,V,0.04420493595751328
+1267,Höör,Skåne läns västra,MP,0.05287410184317401
+1267,Höör,Skåne läns västra,SD,0.26085598250546704
+1267,Höör,Skåne läns västra,Other,0.014448609809434552
+1267,Höör,Skåne läns västra,Invalid,0.01077788191190253
+1267,Höör,Skåne läns västra,No Vote,0.13691034051858794
+1270,Tomelilla,Skåne läns norra och östra,M,0.14243209521067282
+1270,Tomelilla,Skåne läns norra och östra,C,0.04856512141280353
+1270,Tomelilla,Skåne läns norra och östra,L,0.021883098186006335
+1270,Tomelilla,Skåne läns norra och östra,KD,0.04587772338996065
+1270,Tomelilla,Skåne läns norra och östra,S,0.19541222766100394
+1270,Tomelilla,Skåne läns norra och östra,V,0.03320856128227277
+1270,Tomelilla,Skåne läns norra och östra,MP,0.02975333525290335
+1270,Tomelilla,Skåne läns norra och östra,SD,0.3124100201554852
+1270,Tomelilla,Skåne läns norra och östra,Other,0.010269699587292446
+1270,Tomelilla,Skåne läns norra och östra,Invalid,0.013724925616661868
+1270,Tomelilla,Skåne läns norra och östra,No Vote,0.14646319224493715
+1272,Bromölla,Skåne läns norra och östra,M,0.13410682554614822
+1272,Bromölla,Skåne läns norra och östra,C,0.019964461168600397
+1272,Bromölla,Skåne läns norra och östra,L,0.02236855858680882
+1272,Bromölla,Skåne läns norra och östra,KD,0.043273753527751646
+1272,Bromölla,Skåne läns norra och östra,S,0.23633322880735863
+1272,Bromölla,Skåne läns norra och östra,V,0.027908435246158672
+1272,Bromölla,Skåne läns norra och östra,MP,0.01494721438277412
+1272,Bromölla,Skåne läns norra och östra,SD,0.3268527229016411
+1272,Bromölla,Skåne läns norra och östra,Other,0.00940733772342427
+1272,Bromölla,Skåne läns norra och östra,Invalid,0.011706909166927982
+1272,Bromölla,Skåne läns norra och östra,No Vote,0.15313055294240618
+1273,Osby,Skåne läns norra och östra,M,0.1321804207119741
+1273,Osby,Skåne läns norra och östra,C,0.03964401294498382
+1273,Osby,Skåne läns norra och östra,L,0.019316343042071197
+1273,Osby,Skåne läns norra och östra,KD,0.05451051779935275
+1273,Osby,Skåne läns norra och östra,S,0.22673948220064724
+1273,Osby,Skåne läns norra och östra,V,0.028923948220064725
+1273,Osby,Skåne läns norra och östra,MP,0.021237864077669904
+1273,Osby,Skåne läns norra och östra,SD,0.30380258899676377
+1273,Osby,Skåne läns norra och östra,Other,0.007787216828478965
+1273,Osby,Skåne läns norra och östra,Invalid,0.012439320388349514
+1273,Osby,Skåne läns norra och östra,No Vote,0.153418284789644
+1275,Perstorp,Skåne läns norra och östra,M,0.1139412794089053
+1275,Perstorp,Skåne läns norra och östra,C,0.031888003111024694
+1275,Perstorp,Skåne läns norra och östra,L,0.015555123468792533
+1275,Perstorp,Skåne läns norra och östra,KD,0.043359906669259186
+1275,Perstorp,Skåne läns norra och östra,S,0.20785533735174022
+1275,Perstorp,Skåne läns norra och östra,V,0.030138051720785534
+1275,Perstorp,Skåne läns norra och östra,MP,0.013221854948473654
+1275,Perstorp,Skåne läns norra och östra,SD,0.3204355434571262
+1275,Perstorp,Skåne läns norra och östra,Other,0.0077775617343962666
+1275,Perstorp,Skåne läns norra och östra,Invalid,0.00816643982111608
+1275,Perstorp,Skåne läns norra och östra,No Vote,0.20766089830838033
+1276,Klippan,Skåne läns norra och östra,M,0.12711733908222975
+1276,Klippan,Skåne läns norra och östra,C,0.033261472128118266
+1276,Klippan,Skåne läns norra och östra,L,0.01763165999384047
+1276,Klippan,Skåne läns norra och östra,KD,0.05366492146596859
+1276,Klippan,Skåne läns norra och östra,S,0.19233138281490605
+1276,Klippan,Skåne läns norra och östra,V,0.028410840776101016
+1276,Klippan,Skåne läns norra och östra,MP,0.018709578072066524
+1276,Klippan,Skåne läns norra och östra,SD,0.32722513089005234
+1276,Klippan,Skåne läns norra och östra,Other,0.013935940868493995
+1276,Klippan,Skåne läns norra och östra,Invalid,0.010317215891592239
+1276,Klippan,Skåne läns norra och östra,No Vote,0.17739451801663073
+1277,Åstorp,Skåne läns norra och östra,M,0.13130128956623682
+1277,Åstorp,Skåne läns norra och östra,C,0.025610965821985753
+1277,Åstorp,Skåne läns norra och östra,L,0.016412661195779603
+1277,Åstorp,Skåne läns norra och östra,KD,0.03913788438993597
+1277,Åstorp,Skåne läns norra och östra,S,0.22157092614302462
+1277,Åstorp,Skåne läns norra och östra,V,0.030931553792046172
+1277,Åstorp,Skåne läns norra och östra,MP,0.01109207322571918
+1277,Åstorp,Skåne läns norra och östra,SD,0.2989449003516999
+1277,Åstorp,Skåne läns norra och östra,Other,0.010100099197402831
+1277,Åstorp,Skåne läns norra och östra,Invalid,0.00874740734060781
+1277,Åstorp,Skåne läns norra och östra,No Vote,0.20615023897556137
+1278,Båstad,Skåne läns norra och östra,M,0.22301587301587303
+1278,Båstad,Skåne läns norra och östra,C,0.06603174603174604
+1278,Båstad,Skåne läns norra och östra,L,0.05380952380952381
+1278,Båstad,Skåne läns norra och östra,KD,0.05928571428571429
+1278,Båstad,Skåne läns norra och östra,S,0.1792063492063492
+1278,Båstad,Skåne läns norra och östra,V,0.022698412698412697
+1278,Båstad,Skåne läns norra och östra,MP,0.036587301587301585
+1278,Båstad,Skåne läns norra och östra,SD,0.21349206349206348
+1278,Båstad,Skåne läns norra och östra,Other,0.01
+1278,Båstad,Skåne läns norra och östra,Invalid,0.007380952380952381
+1278,Båstad,Skåne läns norra och östra,No Vote,0.1284920634920635
+1280,Malmö,Malmö kommun,M,0.13661156498335802
+1280,Malmö,Malmö kommun,C,0.041987164174350645
+1280,Malmö,Malmö kommun,L,0.03466150685585973
+1280,Malmö,Malmö kommun,KD,0.022904623126781647
+1280,Malmö,Malmö kommun,S,0.2260960616629242
+1280,Malmö,Malmö kommun,V,0.09549631328332776
+1280,Malmö,Malmö kommun,MP,0.05727549249120125
+1280,Malmö,Malmö kommun,SD,0.12514531874572007
+1280,Malmö,Malmö kommun,Other,0.02441753061646999
+1280,Malmö,Malmö kommun,Invalid,0.007624257480929403
+1280,Malmö,Malmö kommun,No Vote,0.2277801665790773
+1281,Lund,Skåne läns södra,M,0.14617712800658803
+1281,Lund,Skåne läns södra,C,0.07566602141107771
+1281,Lund,Skåne läns södra,L,0.07333454541565511
+1281,Lund,Skåne läns södra,KD,0.029293177759002385
+1281,Lund,Skåne läns södra,S,0.24634503705763452
+1281,Lund,Skåne läns södra,V,0.07927018384436862
+1281,Lund,Skåne läns södra,MP,0.09570815909649957
+1281,Lund,Skåne läns södra,SD,0.11124776745131172
+1281,Lund,Skåne läns södra,Other,0.012619915938526037
+1281,Lund,Skåne läns södra,Invalid,0.007411526902880121
+1281,Lund,Skåne läns södra,No Vote,0.12292653711645615
+1282,Landskrona,Skåne läns västra,M,0.13592661197847755
+1282,Landskrona,Skåne läns västra,C,0.029461056716944517
+1282,Landskrona,Skåne läns västra,L,0.04780806209755667
+1282,Landskrona,Skåne läns västra,KD,0.028049748610743584
+1282,Landskrona,Skåne läns västra,S,0.2436270618329364
+1282,Landskrona,Skåne läns västra,V,0.03748787157096234
+1282,Landskrona,Skåne läns västra,MP,0.024345064831966128
+1282,Landskrona,Skåne läns västra,SD,0.21487165916909234
+1282,Landskrona,Skåne läns västra,Other,0.022198700420452206
+1282,Landskrona,Skåne läns västra,Invalid,0.011025844579694804
+1282,Landskrona,Skåne läns västra,No Vote,0.20519831819117346
+1283,Helsingborg,Skåne läns västra,M,0.17129805517865218
+1283,Helsingborg,Skåne läns västra,C,0.03934871099050204
+1283,Helsingborg,Skåne läns västra,L,0.034871099050203525
+1283,Helsingborg,Skåne läns västra,KD,0.03550429669832655
+1283,Helsingborg,Skåne läns västra,S,0.22305744007236544
+1283,Helsingborg,Skåne läns västra,V,0.039466304839439165
+1283,Helsingborg,Skåne läns västra,MP,0.027010402532790592
+1283,Helsingborg,Skåne läns västra,SD,0.2085119855269109
+1283,Helsingborg,Skåne läns västra,Other,0.013695160560832203
+1283,Helsingborg,Skåne läns västra,Invalid,0.00835820895522388
+1283,Helsingborg,Skåne läns västra,No Vote,0.1988783355947535
+1284,Höganäs,Skåne läns västra,M,0.21860334146799323
+1284,Höganäs,Skåne läns västra,C,0.05739628308616482
+1284,Höganäs,Skåne läns västra,L,0.051576872536136666
+1284,Höganäs,Skåne läns västra,KD,0.049652712596207994
+1284,Höganäs,Skåne läns västra,S,0.21142293974094237
+1284,Höganäs,Skåne läns västra,V,0.027172892810212127
+1284,Höganäs,Skåne läns västra,MP,0.03914022902196358
+1284,Höganäs,Skåne läns västra,SD,0.20532194480946123
+1284,Höganäs,Skåne läns västra,Other,0.010183968462549276
+1284,Höganäs,Skåne läns västra,Invalid,0.007086540266566548
+1284,Höganäs,Skåne läns västra,No Vote,0.12244227520180213
+1285,Eslöv,Skåne läns västra,M,0.14688088465082735
+1285,Eslöv,Skåne läns västra,C,0.04242958451861052
+1285,Eslöv,Skåne läns västra,L,0.029929083697263513
+1285,Eslöv,Skåne läns västra,KD,0.038863736527905764
+1285,Eslöv,Skåne läns västra,S,0.23450458752353862
+1285,Eslöv,Skåne läns västra,V,0.039064065066709404
+1285,Eslöv,Skåne läns västra,MP,0.029728755158459873
+1285,Eslöv,Skåne läns västra,SD,0.25401658720301296
+1285,Eslöv,Skåne läns västra,Other,0.013341880684322288
+1285,Eslöv,Skåne läns västra,Invalid,0.009735966985856805
+1285,Eslöv,Skåne läns västra,No Vote,0.16150486798349292
+1286,Ystad,Skåne läns södra,M,0.1867142573864763
+1286,Ystad,Skåne läns södra,C,0.04191949236565536
+1286,Ystad,Skåne läns södra,L,0.03886575451120365
+1286,Ystad,Skåne läns södra,KD,0.05068411659726353
+1286,Ystad,Skåne läns södra,S,0.23216339480467976
+1286,Ystad,Skåne läns södra,V,0.030616696410866548
+1286,Ystad,Skåne läns södra,MP,0.030497719611342455
+1286,Ystad,Skåne läns södra,SD,0.22918897481657743
+1286,Ystad,Skåne läns södra,Other,0.009280190362879238
+1286,Ystad,Skåne läns södra,Invalid,0.011382113821138212
+1286,Ystad,Skåne läns södra,No Vote,0.1386872893119175
+1287,Trelleborg,Skåne läns södra,M,0.16553216036919527
+1287,Trelleborg,Skåne läns södra,C,0.03712143063167003
+1287,Trelleborg,Skåne läns södra,L,0.03146812806460917
+1287,Trelleborg,Skåne läns södra,KD,0.04681280646091722
+1287,Trelleborg,Skåne läns södra,S,0.22281511393135275
+1287,Trelleborg,Skåne läns södra,V,0.0297086818575137
+1287,Trelleborg,Skåne läns södra,MP,0.01946928179982694
+1287,Trelleborg,Skåne läns södra,SD,0.2647822324776464
+1287,Trelleborg,Skåne läns södra,Other,0.010960484568791463
+1287,Trelleborg,Skåne läns södra,Invalid,0.00934525526391693
+1287,Trelleborg,Skåne läns södra,No Vote,0.16198442457456014
+1290,Kristianstad,Skåne läns norra och östra,M,0.1800590457834274
+1290,Kristianstad,Skåne läns norra och östra,C,0.03821149404188273
+1290,Kristianstad,Skåne läns norra och östra,L,0.039802364890704114
+1290,Kristianstad,Skåne läns norra och östra,KD,0.04520214767564591
+1290,Kristianstad,Skåne läns norra och östra,S,0.2121671026264666
+1290,Kristianstad,Skåne läns norra och östra,V,0.03685007571933367
+1290,Kristianstad,Skåne läns norra och östra,MP,0.021813286830954674
+1290,Kristianstad,Skåne läns norra och östra,SD,0.23687149128845242
+1290,Kristianstad,Skåne läns norra och östra,Other,0.012696373120401389
+1290,Kristianstad,Skåne läns norra och östra,Invalid,0.007816682728343505
+1290,Kristianstad,Skåne läns norra och östra,No Vote,0.1685099352943876
+1291,Simrishamn,Skåne läns norra och östra,M,0.15562216978123605
+1291,Simrishamn,Skåne läns norra och östra,C,0.049237834045538616
+1291,Simrishamn,Skåne läns norra och östra,L,0.03820396708973787
+1291,Simrishamn,Skåne läns norra och östra,KD,0.04464570444543657
+1291,Simrishamn,Skåne läns norra och östra,S,0.21551119331590024
+1291,Simrishamn,Skåne läns norra och östra,V,0.042413419223164744
+1291,Simrishamn,Skåne läns norra och östra,MP,0.05198035589004401
+1291,Simrishamn,Skåne läns norra och östra,SD,0.23336947509407488
+1291,Simrishamn,Skåne läns norra och östra,Other,0.013648829644747751
+1291,Simrishamn,Skåne läns norra och östra,Invalid,0.009630716244658461
+1291,Simrishamn,Skåne läns norra och östra,No Vote,0.1457363352254608
+1292,Ängelholm,Skåne läns norra och östra,M,0.1943416181914331
+1292,Ängelholm,Skåne läns norra och östra,C,0.048974675362829775
+1292,Ängelholm,Skåne läns norra och östra,L,0.032904400963628885
+1292,Ängelholm,Skåne läns norra och östra,KD,0.0531171044127152
+1292,Ängelholm,Skåne läns norra och östra,S,0.21878488747870029
+1292,Ängelholm,Skåne läns norra och östra,V,0.02611786826488043
+1292,Ängelholm,Skåne läns norra och östra,MP,0.02849756154885716
+1292,Ängelholm,Skåne läns norra och östra,SD,0.23817498090369588
+1292,Ängelholm,Skåne läns norra och östra,Other,0.009107468123861567
+1292,Ängelholm,Skåne läns norra och östra,Invalid,0.009195604912157
+1292,Ängelholm,Skåne läns norra och östra,No Vote,0.14078382983724072
+1293,Hässleholm,Skåne läns norra och östra,M,0.14599797365754813
+1293,Hässleholm,Skåne läns norra och östra,C,0.04156534954407295
+1293,Hässleholm,Skåne läns norra och östra,L,0.02922998986828774
+1293,Hässleholm,Skåne läns norra och östra,KD,0.056534954407294835
+1293,Hässleholm,Skåne läns norra och östra,S,0.2033434650455927
+1293,Hässleholm,Skåne läns norra och östra,V,0.038703140830800405
+1293,Hässleholm,Skåne läns norra och östra,MP,0.02330293819655522
+1293,Hässleholm,Skåne läns norra och östra,SD,0.27786220871327255
+1293,Hässleholm,Skåne läns norra och östra,Other,0.010106382978723405
+1293,Hässleholm,Skåne läns norra och östra,Invalid,0.010081053698074974
+1293,Hässleholm,Skåne läns norra och östra,No Vote,0.1632725430597771
+1315,Hylte,Hallands län,M,0.11905401773716742
+1315,Hylte,Hallands län,C,0.06221445847890352
+1315,Hylte,Hallands län,L,0.02163396936307444
+1315,Hylte,Hallands län,KD,0.05804891158290782
+1315,Hylte,Hallands län,S,0.24563289438323033
+1315,Hylte,Hallands län,V,0.029561945713517872
+1315,Hylte,Hallands län,MP,0.02042461703843053
+1315,Hylte,Hallands län,SD,0.2471109916689062
+1315,Hylte,Hallands län,Other,0.007390486428379468
+1315,Hylte,Hallands län,Invalid,0.010346680999731255
+1315,Hylte,Hallands län,No Vote,0.17858102660575115
+1380,Halmstad,Hallands län,M,0.17200156698216926
+1380,Halmstad,Hallands län,C,0.050497264099680285
+1380,Halmstad,Hallands län,L,0.03643233543527984
+1380,Halmstad,Hallands län,KD,0.04573313282701275
+1380,Halmstad,Hallands län,S,0.26168602226631116
+1380,Halmstad,Hallands län,V,0.04032451695247242
+1380,Halmstad,Hallands län,MP,0.029899030745706594
+1380,Halmstad,Hallands län,SD,0.17962164962784175
+1380,Halmstad,Hallands län,Other,0.01213147485878205
+1380,Halmstad,Hallands län,Invalid,0.01014747324125207
+1380,Halmstad,Hallands län,No Vote,0.16152553296349184
+1381,Laholm,Hallands län,M,0.15587649402390438
+1381,Laholm,Hallands län,C,0.06210159362549801
+1381,Laholm,Hallands län,L,0.03296812749003984
+1381,Laholm,Hallands län,KD,0.061105577689243025
+1381,Laholm,Hallands län,S,0.21165338645418327
+1381,Laholm,Hallands län,V,0.025697211155378485
+1381,Laholm,Hallands län,MP,0.023306772908366535
+1381,Laholm,Hallands län,SD,0.2607569721115538
+1381,Laholm,Hallands län,Other,0.009262948207171315
+1381,Laholm,Hallands län,Invalid,0.010956175298804782
+1381,Laholm,Hallands län,No Vote,0.14631474103585657
+1382,Falkenberg,Hallands län,M,0.1702442016057092
+1382,Falkenberg,Hallands län,C,0.0715878679750223
+1382,Falkenberg,Hallands län,L,0.03389830508474576
+1382,Falkenberg,Hallands län,KD,0.0463592774308653
+1382,Falkenberg,Hallands län,S,0.2661407225691347
+1382,Falkenberg,Hallands län,V,0.03573818019625335
+1382,Falkenberg,Hallands län,MP,0.029410124888492418
+1382,Falkenberg,Hallands län,SD,0.18320695807314896
+1382,Falkenberg,Hallands län,Other,0.008586083853702051
+1382,Falkenberg,Hallands län,Invalid,0.010844112399643176
+1382,Falkenberg,Hallands län,No Vote,0.14398416592328278
+1383,Varberg,Hallands län,M,0.18033827858915893
+1383,Varberg,Hallands län,C,0.06748253766668591
+1383,Varberg,Hallands län,L,0.041197637052858435
+1383,Varberg,Hallands län,KD,0.05160768919933037
+1383,Varberg,Hallands län,S,0.27212376609132366
+1383,Varberg,Hallands län,V,0.038522965614116104
+1383,Varberg,Hallands län,MP,0.03361619426966076
+1383,Varberg,Hallands län,SD,0.17687467528719045
+1383,Varberg,Hallands län,Other,0.008909157382285593
+1383,Varberg,Hallands län,Invalid,0.010756412476668782
+1383,Varberg,Hallands län,No Vote,0.118570686370721
+1384,Kungsbacka,Hallands län,M,0.25979035117733057
+1384,Kungsbacka,Hallands län,C,0.059239789729074
+1384,Kungsbacka,Hallands län,L,0.0571712961522909
+1384,Kungsbacka,Hallands län,KD,0.05762232106752932
+1384,Kungsbacka,Hallands län,S,0.1896015428162618
+1384,Kungsbacka,Hallands län,V,0.02724812591371427
+1384,Kungsbacka,Hallands län,MP,0.033826868642881584
+1384,Kungsbacka,Hallands län,SD,0.20207471461009674
+1384,Kungsbacka,Hallands län,Other,0.009300444803881924
+1384,Kungsbacka,Hallands län,Invalid,0.007154188310678404
+1384,Kungsbacka,Hallands län,No Vote,0.09697035677626054
+1401,Härryda,Västra Götalands läns västra,M,0.19806592786052094
+1401,Härryda,Västra Götalands läns västra,C,0.06211618550151761
+1401,Härryda,Västra Götalands läns västra,L,0.0549869414837298
+1401,Härryda,Västra Götalands läns västra,KD,0.043904849297663584
+1401,Härryda,Västra Götalands läns västra,S,0.2391473141808428
+1401,Härryda,Västra Götalands läns västra,V,0.04175195877744053
+1401,Härryda,Västra Götalands läns västra,MP,0.04944589539069669
+1401,Härryda,Västra Götalands läns västra,SD,0.18161925601750548
+1401,Härryda,Västra Götalands läns västra,Other,0.009423307686877956
+1401,Härryda,Västra Götalands läns västra,Invalid,0.008152749347074186
+1401,Härryda,Västra Götalands läns västra,No Vote,0.11138561445613045
+1402,Partille,Västra Götalands läns västra,M,0.18309411016050342
+1402,Partille,Västra Götalands läns västra,C,0.056918616983666834
+1402,Partille,Västra Götalands läns västra,L,0.04935303683801174
+1402,Partille,Västra Götalands läns västra,KD,0.045110655447924766
+1402,Partille,Västra Götalands läns västra,S,0.24132079473944706
+1402,Partille,Västra Götalands läns västra,V,0.05483277946687407
+1402,Partille,Västra Götalands läns västra,MP,0.05239341016757407
+1402,Partille,Västra Götalands läns västra,SD,0.1501803012090787
+1402,Partille,Västra Götalands läns västra,Other,0.009792830375450753
+1402,Partille,Västra Götalands läns västra,Invalid,0.00806052464116524
+1402,Partille,Västra Götalands läns västra,No Vote,0.14894293997030333
+1407,Öckerö,Västra Götalands läns västra,M,0.17792195026049346
+1407,Öckerö,Västra Götalands läns västra,C,0.04344834365477244
+1407,Öckerö,Västra Götalands läns västra,L,0.040597660473803206
+1407,Öckerö,Västra Götalands läns västra,KD,0.12719944952324783
+1407,Öckerö,Västra Götalands läns västra,S,0.2232379828959009
+1407,Öckerö,Västra Götalands läns västra,V,0.037452079032733704
+1407,Öckerö,Västra Götalands läns västra,MP,0.040007863953602674
+1407,Öckerö,Västra Götalands läns västra,SD,0.19885972672761232
+1407,Öckerö,Västra Götalands läns västra,Other,0.01032143910350929
+1407,Öckerö,Västra Götalands läns västra,Invalid,0.008453750122874274
+1407,Öckerö,Västra Götalands läns västra,No Vote,0.09249975425144992
+1415,Stenungsund,Västra Götalands läns västra,M,0.19301877708233028
+1415,Stenungsund,Västra Götalands läns västra,C,0.050361097737120844
+1415,Stenungsund,Västra Götalands läns västra,L,0.04246509388541165
+1415,Stenungsund,Västra Götalands läns västra,KD,0.05238324506499759
+1415,Stenungsund,Västra Götalands läns västra,S,0.24275397207510832
+1415,Stenungsund,Västra Götalands läns västra,V,0.03697640828117477
+1415,Stenungsund,Västra Götalands läns västra,MP,0.03505055368319692
+1415,Stenungsund,Västra Götalands läns västra,SD,0.20837746750120367
+1415,Stenungsund,Västra Götalands läns västra,Other,0.012662493981704381
+1415,Stenungsund,Västra Götalands läns västra,Invalid,0.009436687530091479
+1415,Stenungsund,Västra Götalands läns västra,No Vote,0.11651420317766009
+1419,Tjörn,Västra Götalands läns västra,M,0.1762820512820513
+1419,Tjörn,Västra Götalands läns västra,C,0.04893683552220138
+1419,Tjörn,Västra Götalands läns västra,L,0.05628517823639775
+1419,Tjörn,Västra Götalands läns västra,KD,0.08794559099437148
+1419,Tjörn,Västra Götalands läns västra,S,0.22451532207629768
+1419,Tjörn,Västra Götalands läns västra,V,0.032520325203252036
+1419,Tjörn,Västra Götalands läns västra,MP,0.0358036272670419
+1419,Tjörn,Västra Götalands läns västra,SD,0.21529080675422138
+1419,Tjörn,Västra Götalands läns västra,Other,0.00797373358348968
+1419,Tjörn,Västra Götalands läns västra,Invalid,0.00883364602876798
+1419,Tjörn,Västra Götalands läns västra,No Vote,0.10561288305190744
+1421,Orust,Västra Götalands läns norra,M,0.15588470776621297
+1421,Orust,Västra Götalands läns norra,C,0.056124899919935946
+1421,Orust,Västra Götalands läns norra,L,0.0377902321857486
+1421,Orust,Västra Götalands läns norra,KD,0.056285028022417936
+1421,Orust,Västra Götalands läns norra,S,0.24579663730984788
+1421,Orust,Västra Götalands läns norra,V,0.04043234587670136
+1421,Orust,Västra Götalands läns norra,MP,0.042514011208967174
+1421,Orust,Västra Götalands läns norra,SD,0.22377902321857485
+1421,Orust,Västra Götalands läns norra,Other,0.01088871096877502
+1421,Orust,Västra Götalands läns norra,Invalid,0.009527622097678143
+1421,Orust,Västra Götalands läns norra,No Vote,0.12097678142514011
+1427,Sotenäs,Västra Götalands läns norra,M,0.19273633145404484
+1427,Sotenäs,Västra Götalands läns norra,C,0.04890520519208077
+1427,Sotenäs,Västra Götalands läns norra,L,0.047987413137537696
+1427,Sotenäs,Västra Götalands läns norra,KD,0.06634325422839911
+1427,Sotenäs,Västra Götalands läns norra,S,0.2443949128097548
+1427,Sotenäs,Västra Götalands läns norra,V,0.02609151697915301
+1427,Sotenäs,Västra Götalands läns norra,MP,0.02832044054018618
+1427,Sotenäs,Västra Götalands läns norra,SD,0.21135439884620427
+1427,Sotenäs,Västra Götalands läns norra,Other,0.008129015340238625
+1427,Sotenäs,Västra Götalands läns norra,Invalid,0.009177920545430707
+1427,Sotenäs,Västra Götalands läns norra,No Vote,0.11655959092696998
+1430,Munkedal,Västra Götalands läns norra,M,0.12975864642946006
+1430,Munkedal,Västra Götalands läns norra,C,0.05013684996267728
+1430,Munkedal,Västra Götalands läns norra,L,0.02027867628763374
+1430,Munkedal,Västra Götalands läns norra,KD,0.06581239114207514
+1430,Munkedal,Västra Götalands läns norra,S,0.22617566558845484
+1430,Munkedal,Västra Götalands läns norra,V,0.036451853694948994
+1430,Munkedal,Västra Götalands läns norra,MP,0.019905449116695697
+1430,Munkedal,Västra Götalands läns norra,SD,0.2638716098531973
+1430,Munkedal,Västra Götalands läns norra,Other,0.01244090569793481
+1430,Munkedal,Västra Götalands läns norra,Invalid,0.012814132868872855
+1430,Munkedal,Västra Götalands läns norra,No Vote,0.16235381935804927
+1435,Tanum,Västra Götalands läns norra,M,0.18425150866264356
+1435,Tanum,Västra Götalands läns norra,C,0.07134514307961845
+1435,Tanum,Västra Götalands läns norra,L,0.037570566478489394
+1435,Tanum,Västra Götalands läns norra,KD,0.0634611641035624
+1435,Tanum,Västra Götalands läns norra,S,0.20790344559081175
+1435,Tanum,Västra Götalands läns norra,V,0.0349425734864707
+1435,Tanum,Västra Götalands läns norra,MP,0.03854389721627409
+1435,Tanum,Västra Götalands läns norra,SD,0.2051781195250146
+1435,Tanum,Västra Götalands läns norra,Other,0.009343975082733113
+1435,Tanum,Västra Götalands läns norra,Invalid,0.011485302705859452
+1435,Tanum,Västra Götalands läns norra,No Vote,0.13597430406852248
+1438,Dals-Ed,Västra Götalands läns norra,M,0.1372716894977169
+1438,Dals-Ed,Västra Götalands läns norra,C,0.07077625570776255
+1438,Dals-Ed,Västra Götalands läns norra,L,0.020833333333333332
+1438,Dals-Ed,Västra Götalands läns norra,KD,0.08904109589041095
+1438,Dals-Ed,Västra Götalands läns norra,S,0.1903538812785388
+1438,Dals-Ed,Västra Götalands läns norra,V,0.02454337899543379
+1438,Dals-Ed,Västra Götalands läns norra,MP,0.013127853881278538
+1438,Dals-Ed,Västra Götalands läns norra,SD,0.259703196347032
+1438,Dals-Ed,Västra Götalands läns norra,Other,0.014840182648401826
+1438,Dals-Ed,Västra Götalands läns norra,Invalid,0.01141552511415525
+1438,Dals-Ed,Västra Götalands läns norra,No Vote,0.16809360730593606
+1439,Färgelanda,Västra Götalands läns norra,M,0.10993825931089424
+1439,Färgelanda,Västra Götalands läns norra,C,0.057359091814379606
+1439,Färgelanda,Västra Götalands läns norra,L,0.023302131049591716
+1439,Färgelanda,Västra Götalands läns norra,KD,0.055566620195180244
+1439,Färgelanda,Västra Götalands läns norra,S,0.22644891455885283
+1439,Färgelanda,Västra Götalands läns norra,V,0.026687910774746068
+1439,Färgelanda,Västra Götalands läns norra,MP,0.014339772953594902
+1439,Färgelanda,Västra Götalands läns norra,SD,0.3240390360485959
+1439,Färgelanda,Västra Götalands läns norra,Other,0.009958175662218682
+1439,Färgelanda,Västra Götalands läns norra,Invalid,0.007767377016530572
+1439,Färgelanda,Västra Götalands läns norra,No Vote,0.14459271061541526
+1440,Ale,Västra Götalands läns västra,M,0.15387932893431663
+1440,Ale,Västra Götalands läns västra,C,0.04437831543537327
+1440,Ale,Västra Götalands läns västra,L,0.027946694268340018
+1440,Ale,Västra Götalands läns västra,KD,0.04744037607279941
+1440,Ale,Västra Götalands läns västra,S,0.25160650364428344
+1440,Ale,Västra Götalands läns västra,V,0.05610902660973822
+1440,Ale,Västra Götalands läns västra,MP,0.029930564540475265
+1440,Ale,Västra Götalands läns västra,SD,0.21628498727735368
+1440,Ale,Västra Götalands läns västra,Other,0.014145857592616553
+1440,Ale,Västra Götalands läns västra,Invalid,0.009186181912278431
+1440,Ale,Västra Götalands läns västra,No Vote,0.14909216371242506
+1441,Lerum,Västra Götalands läns västra,M,0.1945630696666454
+1441,Lerum,Västra Götalands läns västra,C,0.05797055261648289
+1441,Lerum,Västra Götalands läns västra,L,0.05580342915418446
+1441,Lerum,Västra Götalands läns västra,KD,0.05363630569188604
+1441,Lerum,Västra Götalands läns västra,S,0.2388616227930397
+1441,Lerum,Västra Götalands läns västra,V,0.04774045509592708
+1441,Lerum,Västra Götalands läns västra,MP,0.05596277646758876
+1441,Lerum,Västra Götalands läns västra,SD,0.17547326152081075
+1441,Lerum,Västra Götalands läns västra,Other,0.008541015998470266
+1441,Lerum,Västra Götalands läns västra,Invalid,0.009050927401364013
+1441,Lerum,Västra Götalands läns västra,No Vote,0.10239658359360061
+1442,Vårgårda,Västra Götalands läns södra,M,0.13336292022633972
+1442,Vårgårda,Västra Götalands läns södra,C,0.08310218573172085
+1442,Vårgårda,Västra Götalands läns södra,L,0.02984577832020415
+1442,Vårgårda,Västra Götalands läns södra,KD,0.09009208920448242
+1442,Vårgårda,Västra Götalands läns södra,S,0.23144347054254966
+1442,Vårgårda,Västra Götalands läns södra,V,0.037279485188061685
+1442,Vårgårda,Västra Götalands läns södra,MP,0.03517141906135582
+1442,Vårgårda,Västra Götalands läns södra,SD,0.21269277709974482
+1442,Vårgårda,Västra Götalands läns södra,Other,0.011871740818817264
+1442,Vårgårda,Västra Götalands läns södra,Invalid,0.009874625540885388
+1442,Vårgårda,Västra Götalands läns södra,No Vote,0.12526350826583824
+1443,Bollebygd,Västra Götalands läns södra,M,0.17745070813662872
+1443,Bollebygd,Västra Götalands läns södra,C,0.05720633157456262
+1443,Bollebygd,Västra Götalands läns södra,L,0.0358233823937795
+1443,Bollebygd,Västra Götalands läns södra,KD,0.0583171341294085
+1443,Bollebygd,Västra Götalands läns södra,S,0.22590946959178007
+1443,Bollebygd,Västra Götalands läns södra,V,0.03776728686475979
+1443,Bollebygd,Västra Götalands läns södra,MP,0.03443487920022216
+1443,Bollebygd,Västra Götalands läns södra,SD,0.24479311302415996
+1443,Bollebygd,Västra Götalands läns södra,Other,0.010830324909747292
+1443,Bollebygd,Västra Götalands läns södra,Invalid,0.008053318522632602
+1443,Bollebygd,Västra Götalands läns södra,No Vote,0.1094140516523188
+1444,Grästorp,Västra Götalands läns östra,M,0.17549668874172186
+1444,Grästorp,Västra Götalands läns östra,C,0.08123620309050773
+1444,Grästorp,Västra Götalands läns östra,L,0.02759381898454746
+1444,Grästorp,Västra Götalands läns östra,KD,0.05894039735099338
+1444,Grästorp,Västra Götalands läns östra,S,0.2163355408388521
+1444,Grästorp,Västra Götalands läns östra,V,0.022958057395143488
+1444,Grästorp,Västra Götalands läns östra,MP,0.02075055187637969
+1444,Grästorp,Västra Götalands läns östra,SD,0.25629139072847684
+1444,Grästorp,Västra Götalands läns östra,Other,0.010816777041942605
+1444,Grästorp,Västra Götalands läns östra,Invalid,0.012803532008830023
+1444,Grästorp,Västra Götalands läns östra,No Vote,0.11677704194260485
+1445,Essunga,Västra Götalands läns östra,M,0.17511415525114155
+1445,Essunga,Västra Götalands läns östra,C,0.07054794520547945
+1445,Essunga,Västra Götalands läns östra,L,0.016210045662100457
+1445,Essunga,Västra Götalands läns östra,KD,0.05136986301369863
+1445,Essunga,Västra Götalands läns östra,S,0.23310502283105022
+1445,Essunga,Västra Götalands läns östra,V,0.030593607305936073
+1445,Essunga,Västra Götalands läns östra,MP,0.021232876712328767
+1445,Essunga,Västra Götalands läns östra,SD,0.258675799086758
+1445,Essunga,Västra Götalands läns östra,Other,0.007990867579908675
+1445,Essunga,Västra Götalands läns östra,Invalid,0.009360730593607305
+1445,Essunga,Västra Götalands läns östra,No Vote,0.12579908675799087
+1446,Karlsborg,Västra Götalands läns östra,M,0.1463019614900126
+1446,Karlsborg,Västra Götalands läns östra,C,0.06046427928738528
+1446,Karlsborg,Västra Götalands läns östra,L,0.036350548857297105
+1446,Karlsborg,Västra Götalands läns östra,KD,0.07324095735108872
+1446,Karlsborg,Västra Götalands läns östra,S,0.267410473276948
+1446,Karlsborg,Västra Götalands läns östra,V,0.030592046068022315
+1446,Karlsborg,Västra Götalands läns östra,MP,0.021774338671945295
+1446,Karlsborg,Västra Götalands läns östra,SD,0.23429908223861795
+1446,Karlsborg,Västra Götalands läns östra,Other,0.008097894547417672
+1446,Karlsborg,Västra Götalands läns östra,Invalid,0.012956631275868274
+1446,Karlsborg,Västra Götalands läns östra,No Vote,0.1085117869353968
+1447,Gullspång,Västra Götalands läns östra,M,0.1164060560933234
+1447,Gullspång,Västra Götalands läns östra,C,0.04839910647803425
+1447,Gullspång,Västra Götalands läns östra,L,0.018366840407048897
+1447,Gullspång,Västra Götalands läns östra,KD,0.04070488955075701
+1447,Gullspång,Västra Götalands läns östra,S,0.28270042194092826
+1447,Gullspång,Västra Götalands läns östra,V,0.0379746835443038
+1447,Gullspång,Västra Götalands läns östra,MP,0.018366840407048897
+1447,Gullspång,Västra Götalands läns östra,SD,0.24100273020600646
+1447,Gullspång,Västra Götalands läns östra,Other,0.014892032762472078
+1447,Gullspång,Västra Götalands läns östra,Invalid,0.014892032762472078
+1447,Gullspång,Västra Götalands läns östra,No Vote,0.16629436584760487
+1452,Tranemo,Västra Götalands läns södra,M,0.1620086850016702
+1452,Tranemo,Västra Götalands läns södra,C,0.07382251419663735
+1452,Tranemo,Västra Götalands läns södra,L,0.024162120031176928
+1452,Tranemo,Västra Götalands läns södra,KD,0.05522770292840441
+1452,Tranemo,Västra Götalands läns södra,S,0.2538692795902461
+1452,Tranemo,Västra Götalands läns södra,V,0.034405968154993874
+1452,Tranemo,Västra Götalands läns södra,MP,0.025720966484801246
+1452,Tranemo,Västra Götalands läns södra,SD,0.20599042422892774
+1452,Tranemo,Västra Götalands läns södra,Other,0.011802694577441266
+1452,Tranemo,Västra Götalands läns södra,Invalid,0.012136733103217905
+1452,Tranemo,Västra Götalands läns södra,No Vote,0.140852911702483
+1460,Bengtsfors,Västra Götalands läns norra,M,0.11782178217821782
+1460,Bengtsfors,Västra Götalands läns norra,C,0.049080622347949084
+1460,Bengtsfors,Västra Götalands läns norra,L,0.019943422913719942
+1460,Bengtsfors,Västra Götalands läns norra,KD,0.05374823196605375
+1460,Bengtsfors,Västra Götalands läns norra,S,0.26916548797736917
+1460,Bengtsfors,Västra Götalands läns norra,V,0.036775106082036775
+1460,Bengtsfors,Västra Götalands läns norra,MP,0.027157001414427156
+1460,Bengtsfors,Västra Götalands läns norra,SD,0.2454031117397454
+1460,Bengtsfors,Västra Götalands läns norra,Other,0.006930693069306931
+1460,Bengtsfors,Västra Götalands läns norra,Invalid,0.009193776520509194
+1460,Bengtsfors,Västra Götalands läns norra,No Vote,0.16478076379066478
+1461,Mellerud,Västra Götalands läns norra,M,0.14351784940020235
+1461,Mellerud,Västra Götalands läns norra,C,0.06171412053764995
+1461,Mellerud,Västra Götalands läns norra,L,0.019366960543431132
+1461,Mellerud,Västra Götalands läns norra,KD,0.056511056511056514
+1461,Mellerud,Västra Götalands läns norra,S,0.21693886399768753
+1461,Mellerud,Västra Götalands läns norra,V,0.028183263477381124
+1461,Mellerud,Västra Götalands läns norra,MP,0.022113022113022112
+1461,Mellerud,Västra Götalands läns norra,SD,0.2696921520450932
+1461,Mellerud,Västra Götalands läns norra,Other,0.01532013296719179
+1461,Mellerud,Västra Götalands läns norra,Invalid,0.010984246278363925
+1461,Mellerud,Västra Götalands läns norra,No Vote,0.15565833212892036
+1462,Lilla Edet,Västra Götalands läns västra,M,0.10857466276766342
+1462,Lilla Edet,Västra Götalands läns västra,C,0.039901896047542684
+1462,Lilla Edet,Västra Götalands läns västra,L,0.02065842845014621
+1462,Lilla Edet,Västra Götalands läns västra,KD,0.04461843222337515
+1462,Lilla Edet,Västra Götalands läns västra,S,0.23601547023865674
+1462,Lilla Edet,Västra Götalands läns västra,V,0.04707103103480804
+1462,Lilla Edet,Västra Götalands läns västra,MP,0.018488821809263277
+1462,Lilla Edet,Västra Götalands läns västra,SD,0.2890293368550137
+1462,Lilla Edet,Västra Götalands läns västra,Other,0.01480992359211395
+1462,Lilla Edet,Västra Götalands läns västra,Invalid,0.01056504103386473
+1462,Lilla Edet,Västra Götalands läns västra,No Vote,0.17026695594755212
+1463,Mark,Västra Götalands läns södra,M,0.139812734082397
+1463,Mark,Västra Götalands läns södra,C,0.06415730337078651
+1463,Mark,Västra Götalands läns södra,L,0.02704119850187266
+1463,Mark,Västra Götalands läns södra,KD,0.05831460674157304
+1463,Mark,Västra Götalands läns södra,S,0.2587640449438202
+1463,Mark,Västra Götalands läns södra,V,0.045393258426966294
+1463,Mark,Västra Götalands läns södra,MP,0.028951310861423222
+1463,Mark,Västra Götalands läns södra,SD,0.210749063670412
+1463,Mark,Västra Götalands läns södra,Other,0.01445692883895131
+1463,Mark,Västra Götalands läns södra,Invalid,0.011797752808988765
+1463,Mark,Västra Götalands läns södra,No Vote,0.140561797752809
+1465,Svenljunga,Västra Götalands läns södra,M,0.1466830466830467
+1465,Svenljunga,Västra Götalands läns södra,C,0.055896805896805894
+1465,Svenljunga,Västra Götalands läns södra,L,0.025675675675675677
+1465,Svenljunga,Västra Götalands läns södra,KD,0.0656019656019656
+1465,Svenljunga,Västra Götalands läns södra,S,0.21142506142506143
+1465,Svenljunga,Västra Götalands läns södra,V,0.03058968058968059
+1465,Svenljunga,Västra Götalands läns södra,MP,0.022727272727272728
+1465,Svenljunga,Västra Götalands läns södra,SD,0.2633906633906634
+1465,Svenljunga,Västra Götalands läns södra,Other,0.00945945945945946
+1465,Svenljunga,Västra Götalands läns södra,Invalid,0.014864864864864866
+1465,Svenljunga,Västra Götalands läns södra,No Vote,0.15368550368550368
+1466,Herrljunga,Västra Götalands läns södra,M,0.14070832763571722
+1466,Herrljunga,Västra Götalands läns södra,C,0.07849035963352934
+1466,Herrljunga,Västra Götalands läns södra,L,0.031861069328592916
+1466,Herrljunga,Västra Götalands läns södra,KD,0.08095172979625324
+1466,Herrljunga,Västra Götalands läns södra,S,0.2239846848078764
+1466,Herrljunga,Västra Götalands läns södra,V,0.04020237932449063
+1466,Herrljunga,Västra Götalands läns södra,MP,0.0235197593326952
+1466,Herrljunga,Västra Götalands läns södra,SD,0.22753999726514426
+1466,Herrljunga,Västra Götalands läns södra,Other,0.014494735402707508
+1466,Herrljunga,Västra Götalands läns södra,Invalid,0.012580336387255572
+1466,Herrljunga,Västra Götalands läns södra,No Vote,0.12566662108573773
+1470,Vara,Västra Götalands läns östra,M,0.1863491284065799
+1470,Vara,Västra Götalands läns östra,C,0.06342581225959572
+1470,Vara,Västra Götalands läns östra,L,0.022342253866928553
+1470,Vara,Västra Götalands läns östra,KD,0.05442343890662084
+1470,Vara,Västra Götalands läns östra,S,0.21147393403715525
+1470,Vara,Västra Götalands läns östra,V,0.0321630247974466
+1470,Vara,Västra Götalands läns östra,MP,0.015467714215565921
+1470,Vara,Västra Götalands läns östra,SD,0.25272117194533106
+1470,Vara,Västra Götalands läns östra,Other,0.006956379409116949
+1470,Vara,Västra Götalands läns östra,Invalid,0.0105573287503069
+1470,Vara,Västra Götalands läns östra,No Vote,0.14411981340535232
+1471,Götene,Västra Götalands läns östra,M,0.1402433090024331
+1471,Götene,Västra Götalands läns östra,C,0.06530413625304136
+1471,Götene,Västra Götalands läns östra,L,0.027737226277372264
+1471,Götene,Västra Götalands läns östra,KD,0.0702676399026764
+1471,Götene,Västra Götalands läns östra,S,0.28068126520681264
+1471,Götene,Västra Götalands läns östra,V,0.03834549878345499
+1471,Götene,Västra Götalands läns östra,MP,0.034160583941605836
+1471,Götene,Västra Götalands läns östra,SD,0.2039902676399027
+1471,Götene,Västra Götalands läns östra,Other,0.010413625304136254
+1471,Götene,Västra Götalands läns östra,Invalid,0.009927007299270074
+1471,Götene,Västra Götalands läns östra,No Vote,0.1189294403892944
+1472,Tibro,Västra Götalands läns östra,M,0.13586390464066658
+1472,Tibro,Västra Götalands läns östra,C,0.052308760560120356
+1472,Tibro,Västra Götalands läns östra,L,0.03610693206804768
+1472,Tibro,Västra Götalands läns östra,KD,0.07198240944335146
+1472,Tibro,Västra Götalands läns östra,S,0.2647841684990163
+1472,Tibro,Västra Götalands läns östra,V,0.030783474134938087
+1472,Tibro,Västra Götalands läns östra,MP,0.020020830922346952
+1472,Tibro,Västra Götalands läns östra,SD,0.21363268140261543
+1472,Tibro,Västra Götalands läns östra,Other,0.010415461173475292
+1472,Tibro,Västra Götalands läns östra,Invalid,0.00948964240249971
+1472,Tibro,Västra Götalands läns östra,No Vote,0.15461173475292211
+1473,Töreboda,Västra Götalands läns östra,M,0.14443656980864636
+1473,Töreboda,Västra Götalands läns östra,C,0.054429482636428064
+1473,Töreboda,Västra Götalands läns östra,L,0.01998582565556343
+1473,Töreboda,Västra Götalands läns östra,KD,0.047058823529411764
+1473,Töreboda,Västra Götalands läns östra,S,0.24918497519489724
+1473,Töreboda,Västra Götalands läns östra,V,0.032317505315379164
+1473,Töreboda,Västra Götalands läns östra,MP,0.018710134656272148
+1473,Töreboda,Västra Götalands läns östra,SD,0.24861800141743445
+1473,Töreboda,Västra Götalands läns östra,Other,0.018143160878809354
+1473,Töreboda,Västra Götalands läns östra,Invalid,0.01403260099220411
+1473,Töreboda,Västra Götalands läns östra,No Vote,0.15308291991495393
+1480,Göteborg,Göteborgs kommun,M,0.14773425932535525
+1480,Göteborg,Göteborgs kommun,C,0.04684380562457256
+1480,Göteborg,Göteborgs kommun,L,0.04678393545074182
+1480,Göteborg,Göteborgs kommun,KD,0.034931943731247396
+1480,Göteborg,Göteborgs kommun,S,0.22101304939519612
+1480,Göteborg,Göteborgs kommun,V,0.10270498050765302
+1480,Göteborg,Göteborgs kommun,MP,0.06328968183608007
+1480,Göteborg,Göteborgs kommun,SD,0.11718204907972635
+1480,Göteborg,Göteborgs kommun,Other,0.018790023786880602
+1480,Göteborg,Göteborgs kommun,Invalid,0.007859111664782292
+1480,Göteborg,Göteborgs kommun,No Vote,0.19286715959776454
+1481,Mölndal,Västra Götalands läns västra,M,0.18212645571337222
+1481,Mölndal,Västra Götalands läns västra,C,0.06138702114054295
+1481,Mölndal,Västra Götalands läns västra,L,0.054740635960237954
+1481,Mölndal,Västra Götalands läns västra,KD,0.04171914662739551
+1481,Mölndal,Västra Götalands läns västra,S,0.24213769449880831
+1481,Mölndal,Västra Götalands läns västra,V,0.05981746662274497
+1481,Mölndal,Västra Götalands läns västra,MP,0.05286104598213421
+1481,Mölndal,Västra Götalands läns västra,SD,0.1515298312244463
+1481,Mölndal,Västra Götalands läns västra,Other,0.011839479140426686
+1481,Mölndal,Västra Götalands läns västra,Invalid,0.0084484662933323
+1481,Mölndal,Västra Götalands läns västra,No Vote,0.1333927567965586
+1482,Kungälv,Västra Götalands läns västra,M,0.1798093587521664
+1482,Kungälv,Västra Götalands läns västra,C,0.05491767764298094
+1482,Kungälv,Västra Götalands läns västra,L,0.044383665511265165
+1482,Kungälv,Västra Götalands läns västra,KD,0.05719237435008666
+1482,Kungälv,Västra Götalands läns västra,S,0.2463713171577123
+1482,Kungälv,Västra Götalands läns västra,V,0.04316507798960138
+1482,Kungälv,Västra Götalands läns västra,MP,0.03761373483535529
+1482,Kungälv,Västra Götalands läns västra,SD,0.19927967937608318
+1482,Kungälv,Västra Götalands läns västra,Other,0.013025346620450606
+1482,Kungälv,Västra Götalands läns västra,Invalid,0.0089092287694974
+1482,Kungälv,Västra Götalands läns västra,No Vote,0.1153325389948007
+1484,Lysekil,Västra Götalands läns norra,M,0.13802221047065044
+1484,Lysekil,Västra Götalands läns norra,C,0.03869205006169575
+1484,Lysekil,Västra Götalands läns norra,L,0.03710558787237793
+1484,Lysekil,Västra Götalands läns norra,KD,0.04424466772430813
+1484,Lysekil,Västra Götalands läns norra,S,0.28415300546448086
+1484,Lysekil,Västra Götalands läns norra,V,0.04283447911158118
+1484,Lysekil,Västra Götalands läns norra,MP,0.0370174510840825
+1484,Lysekil,Västra Götalands läns norra,SD,0.2142605323462013
+1484,Lysekil,Västra Götalands läns norra,Other,0.012339150361360832
+1484,Lysekil,Västra Götalands läns norra,Invalid,0.01110523532522475
+1484,Lysekil,Västra Götalands läns norra,No Vote,0.14022563017803633
+1485,Uddevalla,Västra Götalands läns norra,M,0.14562723514931958
+1485,Uddevalla,Västra Götalands läns norra,C,0.04196275138172867
+1485,Uddevalla,Västra Götalands läns norra,L,0.030281919093400212
+1485,Uddevalla,Västra Götalands läns norra,KD,0.05427058659607078
+1485,Uddevalla,Västra Götalands läns norra,S,0.25707119966559844
+1485,Uddevalla,Västra Götalands läns norra,V,0.04693233012865171
+1485,Uddevalla,Västra Götalands läns norra,MP,0.03332404440109609
+1485,Uddevalla,Västra Götalands läns norra,SD,0.20412428591333426
+1485,Uddevalla,Västra Götalands läns norra,Other,0.016720078027030794
+1485,Uddevalla,Västra Götalands läns norra,Invalid,0.00954437787376341
+1485,Uddevalla,Västra Götalands läns norra,No Vote,0.16014119177000605
+1486,Strömstad,Västra Götalands läns norra,M,0.1377113990775313
+1486,Strömstad,Västra Götalands läns norra,C,0.04601361739512409
+1486,Strömstad,Västra Götalands läns norra,L,0.0383263782121678
+1486,Strömstad,Västra Götalands läns norra,KD,0.05161432022842082
+1486,Strömstad,Västra Götalands läns norra,S,0.23204480562266638
+1486,Strömstad,Västra Götalands läns norra,V,0.03920491983307709
+1486,Strömstad,Västra Götalands läns norra,MP,0.03558093564682627
+1486,Strömstad,Västra Götalands läns norra,SD,0.2043707445640237
+1486,Strömstad,Västra Götalands läns norra,Other,0.011970129584889085
+1486,Strömstad,Västra Götalands läns norra,Invalid,0.011860311882275423
+1486,Strömstad,Västra Götalands läns norra,No Vote,0.19130243795299803
+1487,Vänersborg,Västra Götalands läns norra,M,0.1342235181074186
+1487,Vänersborg,Västra Götalands läns norra,C,0.04738080249163381
+1487,Vänersborg,Västra Götalands läns norra,L,0.03127795633014148
+1487,Vänersborg,Västra Götalands läns norra,KD,0.048971207050793546
+1487,Vänersborg,Västra Götalands läns norra,S,0.2760014578708459
+1487,Vänersborg,Västra Götalands läns norra,V,0.04751333620489712
+1487,Vänersborg,Västra Götalands läns norra,MP,0.02862728206487525
+1487,Vänersborg,Västra Götalands läns norra,SD,0.2179185580331997
+1487,Vänersborg,Västra Götalands läns norra,Other,0.010304496206222457
+1487,Vänersborg,Västra Götalands läns norra,Invalid,0.009476160498326763
+1487,Vänersborg,Västra Götalands läns norra,No Vote,0.1483052251416454
+1488,Trollhättan,Västra Götalands läns norra,M,0.15603014503312765
+1488,Trollhättan,Västra Götalands läns norra,C,0.043965301336490514
+1488,Trollhättan,Västra Götalands läns norra,L,0.02757223196193165
+1488,Trollhättan,Västra Götalands läns norra,KD,0.039161221283668404
+1488,Trollhättan,Västra Götalands läns norra,S,0.293071651374058
+1488,Trollhättan,Västra Götalands läns norra,V,0.050340383871041186
+1488,Trollhättan,Västra Götalands läns norra,MP,0.028756175861205345
+1488,Trollhättan,Västra Götalands läns norra,SD,0.17085221192595798
+1488,Trollhättan,Västra Götalands läns norra,Other,0.010974249220190796
+1488,Trollhättan,Västra Götalands läns norra,Invalid,0.009221101523189362
+1488,Trollhättan,Västra Götalands läns norra,No Vote,0.17005532660913913
+1489,Alingsås,Västra Götalands läns västra,M,0.15622352608954848
+1489,Alingsås,Västra Götalands läns västra,C,0.06055661886981896
+1489,Alingsås,Västra Götalands läns västra,L,0.044429104828841263
+1489,Alingsås,Västra Götalands läns västra,KD,0.06347463211069625
+1489,Alingsås,Västra Götalands läns västra,S,0.2590442722223965
+1489,Alingsås,Västra Götalands läns västra,V,0.056822816980954476
+1489,Alingsås,Västra Götalands läns västra,MP,0.05042201374290107
+1489,Alingsås,Västra Götalands läns västra,SD,0.16613849581123905
+1489,Alingsås,Västra Götalands läns västra,Other,0.013083994854256221
+1489,Alingsås,Västra Götalands läns västra,Invalid,0.008471651344482444
+1489,Alingsås,Västra Götalands läns västra,No Vote,0.12133287314486524
+1490,Borås,Västra Götalands läns södra,M,0.1641443677941422
+1490,Borås,Västra Götalands läns södra,C,0.048253884897238204
+1490,Borås,Västra Götalands läns södra,L,0.03448070083307474
+1490,Borås,Västra Götalands läns södra,KD,0.0513808989568663
+1490,Borås,Västra Götalands läns södra,S,0.24734442508294943
+1490,Borås,Västra Götalands läns södra,V,0.050091900794882196
+1490,Borås,Västra Götalands läns södra,MP,0.030589836010789392
+1490,Borås,Västra Götalands läns södra,SD,0.17487408397584323
+1490,Borås,Västra Götalands läns södra,Other,0.013808989568663022
+1490,Borås,Västra Götalands läns södra,Invalid,0.008843959611390924
+1490,Borås,Västra Götalands läns södra,No Vote,0.17618695247416036
+1491,Ulricehamn,Västra Götalands läns södra,M,0.16877503689647902
+1491,Ulricehamn,Västra Götalands läns södra,C,0.0766392578536791
+1491,Ulricehamn,Västra Götalands läns södra,L,0.03415559772296015
+1491,Ulricehamn,Västra Götalands läns södra,KD,0.060879190385831755
+1491,Ulricehamn,Västra Götalands läns södra,S,0.23007590132827324
+1491,Ulricehamn,Västra Götalands läns södra,V,0.03763440860215054
+1491,Ulricehamn,Västra Götalands läns södra,MP,0.029728020240354206
+1491,Ulricehamn,Västra Götalands läns södra,SD,0.20345772717689226
+1491,Ulricehamn,Västra Götalands läns södra,Other,0.010594560404807085
+1491,Ulricehamn,Västra Götalands läns södra,Invalid,0.011174362218005482
+1491,Ulricehamn,Västra Götalands läns södra,No Vote,0.13688593717056716
+1492,Åmål,Västra Götalands läns norra,M,0.12895148669796558
+1492,Åmål,Västra Götalands läns norra,C,0.040897235263432447
+1492,Åmål,Västra Götalands läns norra,L,0.023995826812728223
+1492,Åmål,Västra Götalands läns norra,KD,0.04715701617110068
+1492,Åmål,Västra Götalands läns norra,S,0.2718831507563902
+1492,Åmål,Västra Götalands läns norra,V,0.04308815858111633
+1492,Åmål,Västra Götalands läns norra,MP,0.02566510172143975
+1492,Åmål,Västra Götalands läns norra,SD,0.23244653103808033
+1492,Åmål,Västra Götalands läns norra,Other,0.009598330725091288
+1492,Åmål,Västra Götalands läns norra,Invalid,0.008555033907146584
+1492,Åmål,Västra Götalands läns norra,No Vote,0.1677621283255086
+1493,Mariestad,Västra Götalands läns östra,M,0.17261812747977534
+1493,Mariestad,Västra Götalands läns östra,C,0.04689029731540166
+1493,Mariestad,Västra Götalands läns östra,L,0.02055959189982996
+1493,Mariestad,Västra Götalands läns östra,KD,0.04905446488380481
+1493,Mariestad,Västra Götalands läns östra,S,0.2898438707682795
+1493,Mariestad,Västra Götalands läns östra,V,0.038645849435770596
+1493,Mariestad,Västra Götalands läns östra,MP,0.026845983408048644
+1493,Mariestad,Västra Götalands läns östra,SD,0.19431133096305456
+1493,Mariestad,Västra Götalands läns östra,Other,0.009532642860823413
+1493,Mariestad,Västra Götalands läns östra,Invalid,0.014530839387849746
+1493,Mariestad,Västra Götalands läns östra,No Vote,0.13716700159736178
+1494,Lidköping,Västra Götalands läns östra,M,0.1528698797474379
+1494,Lidköping,Västra Götalands läns östra,C,0.05577942063013612
+1494,Lidköping,Västra Götalands läns östra,L,0.033918202874639085
+1494,Lidköping,Västra Götalands läns östra,KD,0.05701684805025859
+1494,Lidköping,Västra Götalands läns östra,S,0.2958720690421043
+1494,Lidköping,Västra Götalands läns östra,V,0.04302439953041216
+1494,Lidköping,Västra Götalands läns östra,MP,0.033442269251515055
+1494,Lidköping,Västra Götalands läns östra,SD,0.18612177554970333
+1494,Lidköping,Västra Götalands läns östra,Other,0.010248437351270743
+1494,Lidköping,Västra Götalands läns östra,Invalid,0.009264841196814418
+1494,Lidköping,Västra Götalands läns östra,No Vote,0.12244185677570835
+1495,Skara,Västra Götalands läns östra,M,0.1573539760731879
+1495,Skara,Västra Götalands läns östra,C,0.05475017593244194
+1495,Skara,Västra Götalands läns östra,L,0.026389866291344124
+1495,Skara,Västra Götalands läns östra,KD,0.05010555946516538
+1495,Skara,Västra Götalands läns östra,S,0.26558761435608724
+1495,Skara,Västra Götalands läns östra,V,0.03891625615763547
+1495,Skara,Västra Götalands läns östra,MP,0.02927515833919775
+1495,Skara,Västra Götalands läns östra,SD,0.2052076002814919
+1495,Skara,Västra Götalands läns östra,Other,0.010133708655876143
+1495,Skara,Västra Götalands läns östra,Invalid,0.011048557353976073
+1495,Skara,Västra Götalands läns östra,No Vote,0.15123152709359605
+1496,Skövde,Västra Götalands läns östra,M,0.17543096540830108
+1496,Skövde,Västra Götalands läns östra,C,0.05437146585471944
+1496,Skövde,Västra Götalands läns östra,L,0.0332409972299169
+1496,Skövde,Västra Götalands läns östra,KD,0.05922483459627756
+1496,Skövde,Västra Götalands läns östra,S,0.26283738925390904
+1496,Skövde,Västra Götalands läns östra,V,0.03983425287882603
+1496,Skövde,Västra Götalands läns östra,MP,0.029990155903024198
+1496,Skövde,Västra Götalands läns östra,SD,0.1746297017009684
+1496,Skövde,Västra Götalands läns östra,Other,0.011721343375838465
+1496,Skövde,Västra Götalands läns östra,Invalid,0.010301961951420526
+1496,Skövde,Västra Götalands läns östra,No Vote,0.14841693184679838
+1497,Hjo,Västra Götalands läns östra,M,0.16190740227335737
+1497,Hjo,Västra Götalands läns östra,C,0.05752703077349598
+1497,Hjo,Västra Götalands läns östra,L,0.030080399223731635
+1497,Hjo,Västra Götalands läns östra,KD,0.08206265594677017
+1497,Hjo,Västra Götalands läns östra,S,0.25630718048239537
+1497,Hjo,Västra Götalands läns östra,V,0.034654837815359024
+1497,Hjo,Västra Götalands läns östra,MP,0.038536179650679236
+1497,Hjo,Västra Götalands läns östra,SD,0.19614638203493207
+1497,Hjo,Västra Götalands läns östra,Other,0.010812309398392015
+1497,Hjo,Västra Götalands läns östra,Invalid,0.00887163848073191
+1497,Hjo,Västra Götalands läns östra,No Vote,0.12309398392015525
+1498,Tidaholm,Västra Götalands läns östra,M,0.1177001806140879
+1498,Tidaholm,Västra Götalands läns östra,C,0.04515352197471403
+1498,Tidaholm,Västra Götalands läns östra,L,0.026289383905277946
+1498,Tidaholm,Västra Götalands läns östra,KD,0.06522175396347582
+1498,Tidaholm,Västra Götalands läns östra,S,0.30132450331125826
+1498,Tidaholm,Västra Götalands läns östra,V,0.03441701786072647
+1498,Tidaholm,Västra Götalands läns östra,MP,0.02197471402769416
+1498,Tidaholm,Västra Götalands läns östra,SD,0.23740718442705197
+1498,Tidaholm,Västra Götalands läns östra,Other,0.009331727874774232
+1498,Tidaholm,Västra Götalands läns östra,Invalid,0.012743327312863737
+1498,Tidaholm,Västra Götalands läns östra,No Vote,0.12843668472807546
+1499,Falköping,Västra Götalands läns östra,M,0.1457856023152056
+1499,Falköping,Västra Götalands läns östra,C,0.059930061497648617
+1499,Falköping,Västra Götalands läns östra,L,0.026608786526789663
+1499,Falköping,Västra Götalands läns östra,KD,0.06411029382209896
+1499,Falköping,Västra Götalands läns östra,S,0.2501708268017203
+1499,Falköping,Västra Götalands läns östra,V,0.041078821496040835
+1499,Falköping,Västra Götalands läns östra,MP,0.029060653563246112
+1499,Falköping,Västra Götalands läns östra,SD,0.21138309417581091
+1499,Falköping,Västra Götalands läns östra,Other,0.013264198721813577
+1499,Falköping,Västra Götalands läns östra,Invalid,0.010008440853732063
+1499,Falköping,Västra Götalands läns östra,No Vote,0.14859922022589334
+1715,Kil,Värmlands län,M,0.1426266537592772
+1715,Kil,Värmlands län,C,0.05646982897708938
+1715,Kil,Värmlands län,L,0.029364311068086478
+1715,Kil,Värmlands län,KD,0.04797246423577498
+1715,Kil,Värmlands län,S,0.2799827901473594
+1715,Kil,Värmlands län,V,0.03323652791222975
+1715,Kil,Värmlands län,MP,0.0292567494890825
+1715,Kil,Värmlands län,SD,0.24029256749489084
+1715,Kil,Värmlands län,Other,0.006346133161234807
+1715,Kil,Värmlands län,Invalid,0.010756157900397977
+1715,Kil,Värmlands län,No Vote,0.12369581585457674
+1730,Eda,Värmlands län,M,0.11121289849761817
+1730,Eda,Värmlands län,C,0.04891901795529498
+1730,Eda,Värmlands län,L,0.016855991205569805
+1730,Eda,Värmlands län,KD,0.07237083180652254
+1730,Eda,Värmlands län,S,0.2640161231220227
+1730,Eda,Värmlands län,V,0.0240014657383657
+1730,Eda,Värmlands län,MP,0.010809820447050202
+1730,Eda,Värmlands län,SD,0.23671674606082815
+1730,Eda,Värmlands län,Other,0.00659582264565775
+1730,Eda,Värmlands län,Invalid,0.012092341517039208
+1730,Eda,Värmlands län,No Vote,0.19640894100403078
+1737,Torsby,Värmlands län,M,0.1327857631759069
+1737,Torsby,Värmlands län,C,0.04836869723933379
+1737,Torsby,Värmlands län,L,0.019164955509924708
+1737,Torsby,Värmlands län,KD,0.05247547342003194
+1737,Torsby,Värmlands län,S,0.26853753137120695
+1737,Torsby,Värmlands län,V,0.03410905772302076
+1737,Torsby,Värmlands län,MP,0.016883413187314626
+1737,Torsby,Värmlands län,SD,0.23682409308692676
+1737,Torsby,Värmlands län,Other,0.009582477754962354
+1737,Torsby,Värmlands län,Invalid,0.013575176819530002
+1737,Torsby,Värmlands län,No Vote,0.1676933607118412
+1760,Storfors,Värmlands län,M,0.11804657179818888
+1760,Storfors,Värmlands län,C,0.03880983182406209
+1760,Storfors,Värmlands län,L,0.017141009055627425
+1760,Storfors,Värmlands län,KD,0.036545924967658475
+1760,Storfors,Värmlands län,S,0.30336351875808537
+1760,Storfors,Värmlands län,V,0.03622250970245795
+1760,Storfors,Värmlands län,MP,0.017464424320827943
+1760,Storfors,Värmlands län,SD,0.259379042690815
+1760,Storfors,Värmlands län,Other,0.0129366106080207
+1760,Storfors,Värmlands län,Invalid,0.010672703751617076
+1760,Storfors,Värmlands län,No Vote,0.14941785252263906
+1761,Hammarö,Värmlands län,M,0.18391829456107645
+1761,Hammarö,Värmlands län,C,0.06144119315879063
+1761,Hammarö,Värmlands län,L,0.04847207586933614
+1761,Hammarö,Värmlands län,KD,0.046931993191213425
+1761,Hammarö,Värmlands län,S,0.3334684283050985
+1761,Hammarö,Värmlands län,V,0.030153197697981683
+1761,Hammarö,Värmlands län,MP,0.03915052281754073
+1761,Hammarö,Värmlands län,SD,0.1439572019129448
+1761,Hammarö,Värmlands län,Other,0.008348869255086325
+1761,Hammarö,Värmlands län,Invalid,0.008592040204263598
+1761,Hammarö,Värmlands län,No Vote,0.09556618302666775
+1762,Munkfors,Värmlands län,M,0.08548268238761975
+1762,Munkfors,Värmlands län,C,0.04605747973470892
+1762,Munkfors,Värmlands län,L,0.020265291083271922
+1762,Munkfors,Värmlands län,KD,0.036477523949889464
+1762,Munkfors,Värmlands län,S,0.36514369933677226
+1762,Munkfors,Värmlands län,V,0.0423728813559322
+1762,Munkfors,Värmlands län,MP,0.017317612380250553
+1762,Munkfors,Värmlands län,SD,0.20633750921149593
+1762,Munkfors,Värmlands län,Other,0.009579955784819455
+1762,Munkfors,Värmlands län,Invalid,0.011422254974207811
+1762,Munkfors,Värmlands län,No Vote,0.15954310980103167
+1763,Forshaga,Värmlands län,M,0.12228014505893019
+1763,Forshaga,Värmlands län,C,0.042951042611060745
+1763,Forshaga,Värmlands län,L,0.020058930190389845
+1763,Forshaga,Värmlands län,KD,0.050770625566636446
+1763,Forshaga,Värmlands län,S,0.3242293744333635
+1763,Forshaga,Värmlands län,V,0.036491387126019945
+1763,Forshaga,Värmlands län,MP,0.023798730734360833
+1763,Forshaga,Värmlands län,SD,0.2292611060743427
+1763,Forshaga,Värmlands län,Other,0.009406165004533092
+1763,Forshaga,Värmlands län,Invalid,0.010199456029011787
+1763,Forshaga,Värmlands län,No Vote,0.13055303717135086
+1764,Grums,Värmlands län,M,0.11795166858457998
+1764,Grums,Värmlands län,C,0.042289988492520136
+1764,Grums,Värmlands län,L,0.014672036823935558
+1764,Grums,Värmlands län,KD,0.03610471806674338
+1764,Grums,Värmlands län,S,0.31329113924050633
+1764,Grums,Värmlands län,V,0.03567318757192175
+1764,Grums,Värmlands län,MP,0.014959723820483314
+1764,Grums,Värmlands län,SD,0.2435270425776755
+1764,Grums,Värmlands län,Other,0.008486766398158803
+1764,Grums,Värmlands län,Invalid,0.014384349827387802
+1764,Grums,Värmlands län,No Vote,0.15865937859608745
+1765,Årjäng,Värmlands län,M,0.1025232018561485
+1765,Årjäng,Värmlands län,C,0.0568445475638051
+1765,Årjäng,Värmlands län,L,0.02291183294663573
+1765,Årjäng,Värmlands län,KD,0.1447215777262181
+1765,Årjäng,Värmlands län,S,0.19446055684454758
+1765,Årjäng,Värmlands län,V,0.02044663573085847
+1765,Årjäng,Värmlands län,MP,0.015951276102088168
+1765,Årjäng,Värmlands län,SD,0.24854988399071926
+1765,Årjäng,Värmlands län,Other,0.006670533642691415
+1765,Årjäng,Värmlands län,Invalid,0.01131090487238979
+1765,Årjäng,Värmlands län,No Vote,0.1756090487238979
+1766,Sunne,Värmlands län,M,0.16578466275377657
+1766,Sunne,Värmlands län,C,0.08072741268161263
+1766,Sunne,Värmlands län,L,0.029731550081785817
+1766,Sunne,Värmlands län,KD,0.061868565380544596
+1766,Sunne,Värmlands län,S,0.23746752621957087
+1766,Sunne,Värmlands län,V,0.02838448956028096
+1766,Sunne,Värmlands län,MP,0.026171461560665833
+1766,Sunne,Värmlands län,SD,0.20687000865967478
+1766,Sunne,Värmlands län,Other,0.009429423650534013
+1766,Sunne,Värmlands län,Invalid,0.01481766573655345
+1766,Sunne,Värmlands län,No Vote,0.13874723371500047
+1780,Karlstad,Värmlands län,M,0.16583586138693251
+1780,Karlstad,Värmlands län,C,0.0550068825423978
+1780,Karlstad,Värmlands län,L,0.04007911582717468
+1780,Karlstad,Värmlands län,KD,0.04062704638699934
+1780,Karlstad,Värmlands län,S,0.2949069186256298
+1780,Karlstad,Värmlands län,V,0.05225386558327876
+1780,Karlstad,Värmlands län,MP,0.04333997086613121
+1780,Karlstad,Värmlands län,SD,0.14648455771312494
+1780,Karlstad,Värmlands län,Other,0.0093950044769936
+1780,Karlstad,Värmlands län,Invalid,0.010023119996792602
+1780,Karlstad,Värmlands län,No Vote,0.14204765659454474
+1781,Kristinehamn,Värmlands län,M,0.12462391132224862
+1781,Kristinehamn,Värmlands län,C,0.0498812351543943
+1781,Kristinehamn,Värmlands län,L,0.038532594352071785
+1781,Kristinehamn,Värmlands län,KD,0.0422275006598047
+1781,Kristinehamn,Värmlands län,S,0.3048825547637899
+1781,Kristinehamn,Värmlands län,V,0.04813935075217735
+1781,Kristinehamn,Värmlands län,MP,0.026920031670625493
+1781,Kristinehamn,Värmlands län,SD,0.19477434679334918
+1781,Kristinehamn,Värmlands län,Other,0.008762206386909475
+1781,Kristinehamn,Värmlands län,Invalid,0.01050409078912642
+1781,Kristinehamn,Värmlands län,No Vote,0.15075217735550278
+1782,Filipstad,Värmlands län,M,0.11477521576710034
+1782,Filipstad,Värmlands län,C,0.024217441710678862
+1782,Filipstad,Värmlands län,L,0.01932242689681824
+1782,Filipstad,Värmlands län,KD,0.03903130233157284
+1782,Filipstad,Värmlands län,S,0.2897075872729615
+1782,Filipstad,Värmlands län,V,0.0405770964833183
+1782,Filipstad,Värmlands län,MP,0.012881617931212161
+1782,Filipstad,Värmlands län,SD,0.23998454205848255
+1782,Filipstad,Värmlands län,Other,0.009403581089784877
+1782,Filipstad,Värmlands län,Invalid,0.014427412082957619
+1782,Filipstad,Värmlands län,No Vote,0.1956717763751127
+1783,Hagfors,Värmlands län,M,0.07659286037053774
+1783,Hagfors,Värmlands län,C,0.034681427925892454
+1783,Hagfors,Värmlands län,L,0.01717126073203796
+1783,Hagfors,Värmlands län,KD,0.04066877541798464
+1783,Hagfors,Värmlands län,S,0.3516719385449616
+1783,Hagfors,Värmlands län,V,0.0447356529597831
+1783,Hagfors,Värmlands län,MP,0.014347040216900135
+1783,Hagfors,Värmlands län,SD,0.22514685946678717
+1783,Hagfors,Värmlands län,Other,0.009489380930863081
+1783,Hagfors,Värmlands län,Invalid,0.01095797559873475
+1783,Hagfors,Värmlands län,No Vote,0.1745368278355174
+1784,Arvika,Värmlands län,M,0.14101081216997738
+1784,Arvika,Värmlands län,C,0.049836560221272315
+1784,Arvika,Värmlands län,L,0.024339954739753582
+1784,Arvika,Värmlands län,KD,0.04626602967060599
+1784,Arvika,Värmlands län,S,0.2914759869248177
+1784,Arvika,Värmlands län,V,0.0453105355795826
+1784,Arvika,Värmlands län,MP,0.03485038974101081
+1784,Arvika,Värmlands län,SD,0.19406587880311793
+1784,Arvika,Värmlands län,Other,0.007291928589388987
+1784,Arvika,Värmlands län,Invalid,0.01131506160422429
+1784,Arvika,Värmlands län,No Vote,0.15423686195624842
+1785,Säffle,Värmlands län,M,0.1399914273467638
+1785,Säffle,Värmlands län,C,0.07603943420488642
+1785,Säffle,Värmlands län,L,0.022803257608229748
+1785,Säffle,Värmlands län,KD,0.06300900128589798
+1785,Säffle,Värmlands län,S,0.2352336048006858
+1785,Säffle,Värmlands län,V,0.029832833261894558
+1785,Säffle,Värmlands län,MP,0.01740248606943849
+1785,Säffle,Värmlands län,SD,0.24594942134590655
+1785,Säffle,Värmlands län,Other,0.008658379768538362
+1785,Säffle,Värmlands län,Invalid,0.009429918559794257
+1785,Säffle,Värmlands län,No Vote,0.151650235747964
+1814,Lekeberg,Örebro län,M,0.1517534203491115
+1814,Lekeberg,Örebro län,C,0.08381821041044189
+1814,Lekeberg,Örebro län,L,0.03318131781726687
+1814,Lekeberg,Örebro län,KD,0.07092310111652776
+1814,Lekeberg,Örebro län,S,0.2229910363264664
+1814,Lekeberg,Örebro län,V,0.03129422865230382
+1814,Lekeberg,Örebro län,MP,0.029878911778581537
+1814,Lekeberg,Örebro län,SD,0.24217644283692405
+1814,Lekeberg,Örebro län,Other,0.014310426167636421
+1814,Lekeberg,Örebro län,Invalid,0.01273785186350055
+1814,Lekeberg,Örebro län,No Vote,0.10693505268123919
+1860,Laxå,Örebro län,M,0.10320037105751391
+1860,Laxå,Örebro län,C,0.04313543599257885
+1860,Laxå,Örebro län,L,0.024350649350649352
+1860,Laxå,Örebro län,KD,0.05264378478664193
+1860,Laxå,Örebro län,S,0.2905844155844156
+1860,Laxå,Örebro län,V,0.04012059369202226
+1860,Laxå,Örebro län,MP,0.017857142857142856
+1860,Laxå,Örebro län,SD,0.25858070500927643
+1860,Laxå,Örebro län,Other,0.012059369202226345
+1860,Laxå,Örebro län,Invalid,0.010899814471243042
+1860,Laxå,Örebro län,No Vote,0.14656771799628943
+1861,Hallsberg,Örebro län,M,0.12405699916177704
+1861,Hallsberg,Örebro län,C,0.051383067896060355
+1861,Hallsberg,Örebro län,L,0.024476110645431686
+1861,Hallsberg,Örebro län,KD,0.038977367979882646
+1861,Hallsberg,Örebro län,S,0.2996647108130763
+1861,Hallsberg,Örebro län,V,0.040234702430846606
+1861,Hallsberg,Örebro län,MP,0.024811399832355408
+1861,Hallsberg,Örebro län,SD,0.2300083822296731
+1861,Hallsberg,Örebro län,Other,0.010729253981559096
+1861,Hallsberg,Örebro län,Invalid,0.011232187761944677
+1861,Hallsberg,Örebro län,No Vote,0.14442581726739312
+1862,Degerfors,Örebro län,M,0.10059012875536481
+1862,Degerfors,Örebro län,C,0.03272532188841202
+1862,Degerfors,Örebro län,L,0.019179184549356222
+1862,Degerfors,Örebro län,KD,0.03487124463519313
+1862,Degerfors,Örebro län,S,0.3328862660944206
+1862,Degerfors,Örebro län,V,0.06504828326180258
+1862,Degerfors,Örebro län,MP,0.01984978540772532
+1862,Degerfors,Örebro län,SD,0.2234442060085837
+1862,Degerfors,Örebro län,Other,0.011131974248927038
+1862,Degerfors,Örebro län,Invalid,0.009522532188841202
+1862,Degerfors,Örebro län,No Vote,0.15075107296137338
+1863,Hällefors,Örebro län,M,0.10459081836327346
+1863,Hällefors,Örebro län,C,0.033932135728542916
+1863,Hällefors,Örebro län,L,0.016766467065868262
+1863,Hällefors,Örebro län,KD,0.025149700598802394
+1863,Hällefors,Örebro län,S,0.3067864271457086
+1863,Hällefors,Örebro län,V,0.04730538922155689
+1863,Hällefors,Örebro län,MP,0.021157684630738523
+1863,Hällefors,Örebro län,SD,0.23652694610778444
+1863,Hällefors,Örebro län,Other,0.0093812375249501
+1863,Hällefors,Örebro län,Invalid,0.014171656686626746
+1863,Hällefors,Örebro län,No Vote,0.18423153692614772
+1864,Ljusnarsberg,Örebro län,M,0.109304932735426
+1864,Ljusnarsberg,Örebro län,C,0.024103139013452915
+1864,Ljusnarsberg,Örebro län,L,0.014013452914798207
+1864,Ljusnarsberg,Örebro län,KD,0.033071748878923765
+1864,Ljusnarsberg,Örebro län,S,0.2617713004484305
+1864,Ljusnarsberg,Örebro län,V,0.04344170403587444
+1864,Ljusnarsberg,Örebro län,MP,0.015414798206278026
+1864,Ljusnarsberg,Örebro län,SD,0.27802690582959644
+1864,Ljusnarsberg,Örebro län,Other,0.01821748878923767
+1864,Ljusnarsberg,Örebro län,Invalid,0.012612107623318386
+1864,Ljusnarsberg,Örebro län,No Vote,0.19002242152466367
+1880,Örebro,Örebro län,M,0.14571816177717484
+1880,Örebro,Örebro län,C,0.05862302865863998
+1880,Örebro,Örebro län,L,0.04913515346786502
+1880,Örebro,Örebro län,KD,0.046769543835848734
+1880,Örebro,Örebro län,S,0.2710106833983381
+1880,Örebro,Örebro län,V,0.06100559606579617
+1880,Örebro,Örebro län,MP,0.04318297439375954
+1880,Örebro,Örebro län,SD,0.14188570459555705
+1880,Örebro,Örebro län,Other,0.014600644395455315
+1880,Örebro,Örebro län,Invalid,0.009233508563676445
+1880,Örebro,Örebro län,No Vote,0.15883500084788876
+1881,Kumla,Örebro län,M,0.1485172581429266
+1881,Kumla,Örebro län,C,0.04782450170150705
+1881,Kumla,Örebro län,L,0.04071463296062226
+1881,Kumla,Örebro län,KD,0.0478852698104035
+1881,Kumla,Örebro län,S,0.28561011181332036
+1881,Kumla,Örebro län,V,0.036582401555663585
+1881,Kumla,Örebro län,MP,0.021998055420515313
+1881,Kumla,Örebro län,SD,0.21985901798736024
+1881,Kumla,Örebro län,Other,0.010330578512396695
+1881,Kumla,Örebro län,Invalid,0.009722897423432183
+1881,Kumla,Örebro län,No Vote,0.13095527467185222
+1882,Askersund,Örebro län,M,0.13374890638670167
+1882,Askersund,Örebro län,C,0.055227471566054245
+1882,Askersund,Örebro län,L,0.023950131233595802
+1882,Askersund,Örebro län,KD,0.047900262467191604
+1882,Askersund,Örebro län,S,0.27384076990376205
+1882,Askersund,Örebro län,V,0.028652668416447945
+1882,Askersund,Örebro län,MP,0.02526246719160105
+1882,Askersund,Örebro län,SD,0.2533902012248469
+1882,Askersund,Örebro län,Other,0.012904636920384951
+1882,Askersund,Örebro län,Invalid,0.010608048993875765
+1882,Askersund,Örebro län,No Vote,0.13451443569553806
+1883,Karlskoga,Örebro län,M,0.15772924279765446
+1883,Karlskoga,Örebro län,C,0.033823404436134956
+1883,Karlskoga,Örebro län,L,0.025197586470638224
+1883,Karlskoga,Örebro län,KD,0.032803603297357015
+1883,Karlskoga,Örebro län,S,0.3118466898954704
+1883,Karlskoga,Örebro län,V,0.04189683011812696
+1883,Karlskoga,Örebro län,MP,0.02179824934137843
+1883,Karlskoga,Örebro län,SD,0.19737401206764682
+1883,Karlskoga,Örebro län,Other,0.010537945100705362
+1883,Karlskoga,Örebro län,Invalid,0.010240503101895131
+1883,Karlskoga,Örebro län,No Vote,0.15675193337299226
+1884,Nora,Örebro län,M,0.12709919052796906
+1884,Nora,Örebro län,C,0.05122628971849704
+1884,Nora,Örebro län,L,0.031533164189923885
+1884,Nora,Örebro län,KD,0.04784342152953969
+1884,Nora,Örebro län,S,0.27981152591518665
+1884,Nora,Örebro län,V,0.04011115138335145
+1884,Nora,Örebro län,MP,0.036969916636462485
+1884,Nora,Örebro län,SD,0.21916153195602273
+1884,Nora,Örebro län,Other,0.015706173734444846
+1884,Nora,Örebro län,Invalid,0.011477588498248158
+1884,Nora,Örebro län,No Vote,0.13906004591035398
+1885,Lindesberg,Örebro län,M,0.1295598181616587
+1885,Lindesberg,Örebro län,C,0.049950105333185495
+1885,Lindesberg,Örebro län,L,0.02245260006652622
+1885,Lindesberg,Örebro län,KD,0.044960638651735226
+1885,Lindesberg,Örebro län,S,0.25191262889455596
+1885,Lindesberg,Örebro län,V,0.04252134382969287
+1885,Lindesberg,Örebro län,MP,0.02710943563587981
+1885,Lindesberg,Örebro län,SD,0.25135824370772814
+1885,Lindesberg,Örebro län,Other,0.01469120745093691
+1885,Lindesberg,Örebro län,Invalid,0.010145248918948887
+1885,Lindesberg,Örebro län,No Vote,0.1553387293491518
+1904,Skinnskatteberg,Västmanlands län,M,0.0952101087275933
+1904,Skinnskatteberg,Västmanlands län,C,0.03349985307081987
+1904,Skinnskatteberg,Västmanlands län,L,0.034381428151630915
+1904,Skinnskatteberg,Västmanlands län,KD,0.04319717895974141
+1904,Skinnskatteberg,Västmanlands län,S,0.281516309138995
+1904,Skinnskatteberg,Västmanlands län,V,0.04260946223920071
+1904,Skinnskatteberg,Västmanlands län,MP,0.022627093740816926
+1904,Skinnskatteberg,Västmanlands län,SD,0.2574199235968263
+1904,Skinnskatteberg,Västmanlands län,Other,0.008521892447840141
+1904,Skinnskatteberg,Västmanlands län,Invalid,0.012929767851895386
+1904,Skinnskatteberg,Västmanlands län,No Vote,0.16808698207464
+1907,Surahammar,Västmanlands län,M,0.11460973982655104
+1907,Surahammar,Västmanlands län,C,0.02268178785857238
+1907,Surahammar,Västmanlands län,L,0.02068045363575717
+1907,Surahammar,Västmanlands län,KD,0.03655770513675784
+1907,Surahammar,Västmanlands län,S,0.2865910607071381
+1907,Surahammar,Västmanlands län,V,0.04162775183455637
+1907,Surahammar,Västmanlands län,MP,0.015877251501000667
+1907,Surahammar,Västmanlands län,SD,0.2783188792528352
+1907,Surahammar,Västmanlands län,Other,0.008272181454302868
+1907,Surahammar,Västmanlands län,Invalid,0.011741160773849233
+1907,Surahammar,Västmanlands län,No Vote,0.16304202801867912
+1960,Kungsör,Västmanlands län,M,0.1355620303634412
+1960,Kungsör,Västmanlands län,C,0.04339825180187088
+1960,Kungsör,Västmanlands län,L,0.030670142616163167
+1960,Kungsör,Västmanlands län,KD,0.049838981751265145
+1960,Kungsör,Västmanlands län,S,0.26790369575218526
+1960,Kungsör,Västmanlands län,V,0.037417573991719064
+1960,Kungsör,Västmanlands län,MP,0.02054899555282932
+1960,Kungsör,Västmanlands län,SD,0.242294126667689
+1960,Kungsör,Västmanlands län,Other,0.009047692071768134
+1960,Kungsör,Västmanlands län,Invalid,0.012268057046465266
+1960,Kungsör,Västmanlands län,No Vote,0.1510504523846036
+1961,Hallstahammar,Västmanlands län,M,0.12165015429592334
+1961,Hallstahammar,Västmanlands län,C,0.03548806236803638
+1961,Hallstahammar,Västmanlands län,L,0.0237940555465324
+1961,Hallstahammar,Västmanlands län,KD,0.03995452330680526
+1961,Hallstahammar,Västmanlands län,S,0.28674679226896216
+1961,Hallstahammar,Västmanlands län,V,0.04880623680363814
+1961,Hallstahammar,Västmanlands län,MP,0.021439012506090628
+1961,Hallstahammar,Västmanlands län,SD,0.2316063017703427
+1961,Hallstahammar,Västmanlands län,Other,0.012749715770667533
+1961,Hallstahammar,Västmanlands län,Invalid,0.009907422445996426
+1961,Hallstahammar,Västmanlands län,No Vote,0.16785772291700504
+1962,Norberg,Västmanlands län,M,0.11764705882352941
+1962,Norberg,Västmanlands län,C,0.02458639705882353
+1962,Norberg,Västmanlands län,L,0.025735294117647058
+1962,Norberg,Västmanlands län,KD,0.03791360294117647
+1962,Norberg,Västmanlands län,S,0.30422794117647056
+1962,Norberg,Västmanlands län,V,0.06341911764705882
+1962,Norberg,Västmanlands län,MP,0.02389705882352941
+1962,Norberg,Västmanlands län,SD,0.21254595588235295
+1962,Norberg,Västmanlands län,Other,0.014246323529411764
+1962,Norberg,Västmanlands län,Invalid,0.012178308823529412
+1962,Norberg,Västmanlands län,No Vote,0.1636029411764706
+1980,Västerås,Västmanlands län,M,0.18034852523936468
+1980,Västerås,Västmanlands län,C,0.04742720485500973
+1980,Västerås,Västmanlands län,L,0.04140130118375149
+1980,Västerås,Västmanlands län,KD,0.03861549934426511
+1980,Västerås,Västmanlands län,S,0.25238507495949875
+1980,Västerås,Västmanlands län,V,0.0520644934555086
+1980,Västerås,Västmanlands län,MP,0.02976093534368223
+1980,Västerås,Västmanlands län,SD,0.16254510856055476
+1980,Västerås,Västmanlands län,Other,0.010903199814851324
+1980,Västerås,Västmanlands län,Invalid,0.009231718711159494
+1980,Västerås,Västmanlands län,No Vote,0.17531693853235386
+1981,Sala,Västmanlands län,M,0.14214677640603565
+1981,Sala,Västmanlands län,C,0.06138545953360768
+1981,Sala,Västmanlands län,L,0.025148605395518976
+1981,Sala,Västmanlands län,KD,0.047325102880658436
+1981,Sala,Västmanlands län,S,0.25823045267489714
+1981,Sala,Västmanlands län,V,0.045153177869227255
+1981,Sala,Västmanlands län,MP,0.025205761316872428
+1981,Sala,Västmanlands län,SD,0.23010973936899862
+1981,Sala,Västmanlands län,Other,0.011488340192043896
+1981,Sala,Västmanlands län,Invalid,0.012174211248285322
+1981,Sala,Västmanlands län,No Vote,0.1416323731138546
+1982,Fagersta,Västmanlands län,M,0.11731029457687103
+1982,Fagersta,Västmanlands län,C,0.02623087332153638
+1982,Fagersta,Västmanlands län,L,0.019673154991152283
+1982,Fagersta,Västmanlands län,KD,0.03830540231081503
+1982,Fagersta,Västmanlands län,S,0.2826064328094098
+1982,Fagersta,Västmanlands län,V,0.061101280316435934
+1982,Fagersta,Västmanlands län,MP,0.019360882689705424
+1982,Fagersta,Västmanlands län,SD,0.2214010617258249
+1982,Fagersta,Västmanlands län,Other,0.008639533673363172
+1982,Fagersta,Västmanlands län,Invalid,0.013011345893619236
+1982,Fagersta,Västmanlands län,No Vote,0.1923597376912668
+1983,Köping,Västmanlands län,M,0.11948529411764706
+1983,Köping,Västmanlands län,C,0.03982843137254902
+1983,Köping,Västmanlands län,L,0.02246732026143791
+1983,Köping,Västmanlands län,KD,0.051879084967320264
+1983,Köping,Västmanlands län,S,0.265063316993464
+1983,Köping,Västmanlands län,V,0.05152165032679738
+1983,Köping,Västmanlands län,MP,0.017973856209150325
+1983,Köping,Västmanlands län,SD,0.23774509803921567
+1983,Köping,Västmanlands län,Other,0.008782679738562092
+1983,Köping,Västmanlands län,Invalid,0.009037990196078432
+1983,Köping,Västmanlands län,No Vote,0.1762152777777778
+1984,Arboga,Västmanlands län,M,0.14623891783200804
+1984,Arboga,Västmanlands län,C,0.04332327940773238
+1984,Arboga,Västmanlands län,L,0.029613380860981628
+1984,Arboga,Västmanlands län,KD,0.03966730646193218
+1984,Arboga,Västmanlands län,S,0.28050452426652045
+1984,Arboga,Västmanlands län,V,0.039941504432867196
+1984,Arboga,Västmanlands län,MP,0.02888218627182159
+1984,Arboga,Västmanlands län,SD,0.2124120281509917
+1984,Arboga,Västmanlands län,Other,0.009414130335435518
+1984,Arboga,Västmanlands län,Invalid,0.010419522895530574
+1984,Arboga,Västmanlands län,No Vote,0.15958321908417877
+2021,Vansbro,Dalarnas län,M,0.11649387370405279
+2021,Vansbro,Dalarnas län,C,0.06786050895381715
+2021,Vansbro,Dalarnas län,L,0.01583411875589067
+2021,Vansbro,Dalarnas län,KD,0.0882186616399623
+2021,Vansbro,Dalarnas län,S,0.23732327992459942
+2021,Vansbro,Dalarnas län,V,0.039773798303487276
+2021,Vansbro,Dalarnas län,MP,0.015457115928369463
+2021,Vansbro,Dalarnas län,SD,0.2341187558906692
+2021,Vansbro,Dalarnas län,Other,0.012441093308199811
+2021,Vansbro,Dalarnas län,Invalid,0.013383600377002827
+2021,Vansbro,Dalarnas län,No Vote,0.1590951932139491
+2023,Malung-Sälen,Dalarnas län,M,0.160340724038582
+2023,Malung-Sälen,Dalarnas län,C,0.04609795816109232
+2023,Malung-Sälen,Dalarnas län,L,0.027809094325441562
+2023,Malung-Sälen,Dalarnas län,KD,0.05511712388826256
+2023,Malung-Sälen,Dalarnas län,S,0.22259802079418764
+2023,Malung-Sälen,Dalarnas län,V,0.03494926719278467
+2023,Malung-Sälen,Dalarnas län,MP,0.0160340724038582
+2023,Malung-Sälen,Dalarnas län,SD,0.27308029562820996
+2023,Malung-Sälen,Dalarnas län,Other,0.014029813353375924
+2023,Malung-Sälen,Dalarnas län,Invalid,0.01377928097206564
+2023,Malung-Sälen,Dalarnas län,No Vote,0.13616434924213955
+2026,Gagnef,Dalarnas län,M,0.13252113376429636
+2026,Gagnef,Dalarnas län,C,0.07135753356539035
+2026,Gagnef,Dalarnas län,L,0.02486325211337643
+2026,Gagnef,Dalarnas län,KD,0.07794629537543511
+2026,Gagnef,Dalarnas län,S,0.23421183490800596
+2026,Gagnef,Dalarnas län,V,0.042143212332173045
+2026,Gagnef,Dalarnas län,MP,0.03393833913475883
+2026,Gagnef,Dalarnas län,SD,0.2408005967180507
+2026,Gagnef,Dalarnas län,Other,0.008453505718547987
+2026,Gagnef,Dalarnas län,Invalid,0.01268025857782198
+2026,Gagnef,Dalarnas län,No Vote,0.12108403779214322
+2029,Leksand,Dalarnas län,M,0.16093578269744072
+2029,Leksand,Dalarnas län,C,0.06869210237085885
+2029,Leksand,Dalarnas län,L,0.030852567121997174
+2029,Leksand,Dalarnas län,KD,0.06979117600879259
+2029,Leksand,Dalarnas län,S,0.25804678913487206
+2029,Leksand,Dalarnas län,V,0.044512482336316536
+2029,Leksand,Dalarnas län,MP,0.036740461610927935
+2029,Leksand,Dalarnas län,SD,0.18511540273198304
+2029,Leksand,Dalarnas län,Other,0.010284189040665725
+2029,Leksand,Dalarnas län,Invalid,0.012953367875647668
+2029,Leksand,Dalarnas län,No Vote,0.12207567907049773
+2031,Rättvik,Dalarnas län,M,0.14011473962930274
+2031,Rättvik,Dalarnas län,C,0.05825242718446602
+2031,Rättvik,Dalarnas län,L,0.022175639894086496
+2031,Rättvik,Dalarnas län,KD,0.06310679611650485
+2031,Rättvik,Dalarnas län,S,0.24282877316857898
+2031,Rättvik,Dalarnas län,V,0.031001765225066195
+2031,Rättvik,Dalarnas län,MP,0.031001765225066195
+2031,Rättvik,Dalarnas län,SD,0.24779346866725507
+2031,Rättvik,Dalarnas län,Other,0.011694616063548102
+2031,Rättvik,Dalarnas län,Invalid,0.011584289496910856
+2031,Rättvik,Dalarnas län,No Vote,0.14044571932921449
+2034,Orsa,Dalarnas län,M,0.11222444889779559
+2034,Orsa,Dalarnas län,C,0.054472581526689746
+2034,Orsa,Dalarnas län,L,0.023137183457824742
+2034,Orsa,Dalarnas län,KD,0.05538349426124977
+2034,Orsa,Dalarnas län,S,0.22444889779559118
+2034,Orsa,Dalarnas län,V,0.04463472399344143
+2034,Orsa,Dalarnas län,MP,0.030788850428128987
+2034,Orsa,Dalarnas län,SD,0.2754600109309528
+2034,Orsa,Dalarnas län,Other,0.017125159409728547
+2034,Orsa,Dalarnas län,Invalid,0.009473492439424303
+2034,Orsa,Dalarnas län,No Vote,0.1528511568591729
+2039,Älvdalen,Dalarnas län,M,0.08921729611384784
+2039,Älvdalen,Dalarnas län,C,0.055464331326400294
+2039,Älvdalen,Dalarnas län,L,0.015690567414705345
+2039,Älvdalen,Dalarnas län,KD,0.0675059295748951
+2039,Älvdalen,Dalarnas län,S,0.2413793103448276
+2039,Älvdalen,Dalarnas län,V,0.029556650246305417
+2039,Älvdalen,Dalarnas län,MP,0.017332603539500092
+2039,Älvdalen,Dalarnas län,SD,0.3023170954205437
+2039,Älvdalen,Dalarnas län,Other,0.02353585112205802
+2039,Älvdalen,Dalarnas län,Invalid,0.012588943623426382
+2039,Älvdalen,Dalarnas län,No Vote,0.14541142127349024
+2061,Smedjebacken,Dalarnas län,M,0.11978263383050064
+2061,Smedjebacken,Dalarnas län,C,0.0346860908775581
+2061,Smedjebacken,Dalarnas län,L,0.016533703318302694
+2061,Smedjebacken,Dalarnas län,KD,0.03503295178633368
+2061,Smedjebacken,Dalarnas län,S,0.30939993062781823
+2061,Smedjebacken,Dalarnas län,V,0.045438779049601107
+2061,Smedjebacken,Dalarnas län,MP,0.02081165452653486
+2061,Smedjebacken,Dalarnas län,SD,0.26003006127876055
+2061,Smedjebacken,Dalarnas län,Other,0.010174586657417042
+2061,Smedjebacken,Dalarnas län,Invalid,0.012371372412995721
+2061,Smedjebacken,Dalarnas län,No Vote,0.13573823563417736
+2062,Mora,Dalarnas län,M,0.13531758208039277
+2062,Mora,Dalarnas län,C,0.05989567351948451
+2062,Mora,Dalarnas län,L,0.02411782755446456
+2062,Mora,Dalarnas län,KD,0.05480208652961031
+2062,Mora,Dalarnas län,S,0.25007671064743786
+2062,Mora,Dalarnas län,V,0.036575636698373735
+2062,Mora,Dalarnas län,MP,0.0274317275237803
+2062,Mora,Dalarnas län,SD,0.24436943847806075
+2062,Mora,Dalarnas län,Other,0.011291807302853635
+2062,Mora,Dalarnas län,Invalid,0.009205277692543725
+2062,Mora,Dalarnas län,No Vote,0.14691623197299786
+2080,Falun,Dalarnas län,M,0.16042780748663102
+2080,Falun,Dalarnas län,C,0.06993174209816964
+2080,Falun,Dalarnas län,L,0.03406373635928873
+2080,Falun,Dalarnas län,KD,0.047932698578322684
+2080,Falun,Dalarnas län,S,0.27042302508586585
+2080,Falun,Dalarnas län,V,0.0519760010434329
+2080,Falun,Dalarnas län,MP,0.053193339420025215
+2080,Falun,Dalarnas län,SD,0.15981913829833486
+2080,Falun,Dalarnas län,Other,0.012934220251293422
+2080,Falun,Dalarnas län,Invalid,0.009673492456849703
+2080,Falun,Dalarnas län,No Vote,0.12962479892178602
+2081,Borlänge,Dalarnas län,M,0.13741559713416834
+2081,Borlänge,Dalarnas län,C,0.043219421679294885
+2081,Borlänge,Dalarnas län,L,0.028967578990773672
+2081,Borlänge,Dalarnas län,KD,0.03904437915571362
+2081,Borlänge,Dalarnas län,S,0.2791350961290655
+2081,Borlänge,Dalarnas län,V,0.04940466986237823
+2081,Borlänge,Dalarnas län,MP,0.030153084892531313
+2081,Borlänge,Dalarnas län,SD,0.20086593474563166
+2081,Borlänge,Dalarnas län,Other,0.012576671305602805
+2081,Borlänge,Dalarnas län,Invalid,0.01038606257409412
+2081,Borlänge,Dalarnas län,No Vote,0.16883150353074583
+2082,Säter,Dalarnas län,M,0.14290590510865855
+2082,Säter,Dalarnas län,C,0.06758448060075094
+2082,Säter,Dalarnas län,L,0.02230060302651041
+2082,Säter,Dalarnas län,KD,0.05620662191375583
+2082,Säter,Dalarnas län,S,0.2659005575150757
+2082,Säter,Dalarnas län,V,0.03913983388326317
+2082,Säter,Dalarnas län,MP,0.026055296393218796
+2082,Säter,Dalarnas län,SD,0.22949140971669132
+2082,Säter,Dalarnas län,Other,0.010922744339515303
+2082,Säter,Dalarnas län,Invalid,0.012401865968824668
+2082,Säter,Dalarnas län,No Vote,0.12709068153373534
+2083,Hedemora,Dalarnas län,M,0.13260135135135134
+2083,Hedemora,Dalarnas län,C,0.051351351351351354
+2083,Hedemora,Dalarnas län,L,0.01706081081081081
+2083,Hedemora,Dalarnas län,KD,0.051351351351351354
+2083,Hedemora,Dalarnas län,S,0.24383445945945945
+2083,Hedemora,Dalarnas län,V,0.04636824324324324
+2083,Hedemora,Dalarnas län,MP,0.028800675675675676
+2083,Hedemora,Dalarnas län,SD,0.23733108108108109
+2083,Hedemora,Dalarnas län,Other,0.01418918918918919
+2083,Hedemora,Dalarnas län,Invalid,0.010472972972972974
+2083,Hedemora,Dalarnas län,No Vote,0.16663851351351353
+2084,Avesta,Dalarnas län,M,0.12728221178925403
+2084,Avesta,Dalarnas län,C,0.0403987712281922
+2084,Avesta,Dalarnas län,L,0.021503506636526983
+2084,Avesta,Dalarnas län,KD,0.044861763171622326
+2084,Avesta,Dalarnas län,S,0.2968759056395989
+2084,Avesta,Dalarnas län,V,0.03808033385498174
+2084,Avesta,Dalarnas län,MP,0.018315655248362605
+2084,Avesta,Dalarnas län,SD,0.23219150292702717
+2084,Avesta,Dalarnas län,Other,0.011881991537703588
+2084,Avesta,Dalarnas län,Invalid,0.009273749492841824
+2084,Avesta,Dalarnas län,No Vote,0.1593346084738886
+2085,Ludvika,Dalarnas län,M,0.1172870984191739
+2085,Ludvika,Dalarnas län,C,0.038449770525242226
+2085,Ludvika,Dalarnas län,L,0.024324324324324326
+2085,Ludvika,Dalarnas län,KD,0.0392146863844977
+2085,Ludvika,Dalarnas län,S,0.2931667516573177
+2085,Ludvika,Dalarnas län,V,0.05130035696073432
+2085,Ludvika,Dalarnas län,MP,0.02350841407445181
+2085,Ludvika,Dalarnas län,SD,0.23401325854156044
+2085,Ludvika,Dalarnas län,Other,0.011320754716981131
+2085,Ludvika,Dalarnas län,Invalid,0.010657827638959715
+2085,Ludvika,Dalarnas län,No Vote,0.15675675675675677
+2101,Ockelbo,Gävleborgs län,M,0.10244009672455484
+2101,Ockelbo,Gävleborgs län,C,0.06067267531325566
+2101,Ockelbo,Gävleborgs län,L,0.015607825895801276
+2101,Ockelbo,Gävleborgs län,KD,0.04176742141129919
+2101,Ockelbo,Gävleborgs län,S,0.2769839525170367
+2101,Ockelbo,Gävleborgs län,V,0.043745878214992304
+2101,Ockelbo,Gävleborgs län,MP,0.02857770938667839
+2101,Ockelbo,Gävleborgs län,SD,0.25719938448010554
+2101,Ockelbo,Gävleborgs län,Other,0.008353484282259837
+2101,Ockelbo,Gävleborgs län,Invalid,0.011431083754671357
+2101,Ockelbo,Gävleborgs län,No Vote,0.1532204880193449
+2104,Hofors,Gävleborgs län,M,0.1103728813559322
+2104,Hofors,Gävleborgs län,C,0.032
+2104,Hofors,Gävleborgs län,L,0.018847457627118643
+2104,Hofors,Gävleborgs län,KD,0.03593220338983051
+2104,Hofors,Gävleborgs län,S,0.2966779661016949
+2104,Hofors,Gävleborgs län,V,0.06766101694915254
+2104,Hofors,Gävleborgs län,MP,0.017491525423728813
+2104,Hofors,Gävleborgs län,SD,0.22657627118644066
+2104,Hofors,Gävleborgs län,Other,0.008813559322033898
+2104,Hofors,Gävleborgs län,Invalid,0.008542372881355932
+2104,Hofors,Gävleborgs län,No Vote,0.17708474576271185
+2121,Ovanåker,Gävleborgs län,M,0.11569606211869107
+2121,Ovanåker,Gävleborgs län,C,0.08286189683860233
+2121,Ovanåker,Gävleborgs län,L,0.017082640044370493
+2121,Ovanåker,Gävleborgs län,KD,0.09584026622296173
+2121,Ovanåker,Gävleborgs län,S,0.26211869107043817
+2121,Ovanåker,Gävleborgs län,V,0.030061009428729895
+2121,Ovanåker,Gävleborgs län,MP,0.020521353300055462
+2121,Ovanåker,Gävleborgs län,SD,0.201885745978924
+2121,Ovanåker,Gävleborgs län,Other,0.006988352745424293
+2121,Ovanåker,Gävleborgs län,Invalid,0.010427066001109262
+2121,Ovanåker,Gävleborgs län,No Vote,0.15651691625069328
+2132,Nordanstig,Gävleborgs län,M,0.10645204923576355
+2132,Nordanstig,Gävleborgs län,C,0.05775733802245367
+2132,Nordanstig,Gävleborgs län,L,0.01798999053158393
+2132,Nordanstig,Gävleborgs län,KD,0.05275260381441905
+2132,Nordanstig,Gävleborgs län,S,0.25727039091032056
+2132,Nordanstig,Gävleborgs län,V,0.05045313134045719
+2132,Nordanstig,Gävleborgs län,MP,0.023671040173136752
+2132,Nordanstig,Gävleborgs län,SD,0.23616934938455295
+2132,Nordanstig,Gävleborgs län,Other,0.01136209928310564
+2132,Nordanstig,Gävleborgs län,Invalid,0.01149736236980928
+2132,Nordanstig,Gävleborgs län,No Vote,0.17462464493439742
+2161,Ljusdal,Gävleborgs län,M,0.13014671083767157
+2161,Ljusdal,Gävleborgs län,C,0.06476911635453993
+2161,Ljusdal,Gävleborgs län,L,0.02454195118653235
+2161,Ljusdal,Gävleborgs län,KD,0.04543303360151443
+2161,Ljusdal,Gävleborgs län,S,0.2610371171658441
+2161,Ljusdal,Gävleborgs län,V,0.03738760056791292
+2161,Ljusdal,Gävleborgs län,MP,0.028598472043810424
+2161,Ljusdal,Gävleborgs län,SD,0.21337299709282673
+2161,Ljusdal,Gävleborgs län,Other,0.008924345886011764
+2161,Ljusdal,Gävleborgs län,Invalid,0.01358934487188155
+2161,Ljusdal,Gävleborgs län,No Vote,0.17219931039145425
+2180,Gävle,Gävleborgs län,M,0.15925343612111376
+2180,Gävle,Gävleborgs län,C,0.04167723284475326
+2180,Gävle,Gävleborgs län,L,0.031242075366435057
+2180,Gävle,Gävleborgs län,KD,0.035578434853172386
+2180,Gävle,Gävleborgs län,S,0.27718466298118377
+2180,Gävle,Gävleborgs län,V,0.05390018765532282
+2180,Gävle,Gävleborgs län,MP,0.03330881980017244
+2180,Gävle,Gävleborgs län,SD,0.18757924633564943
+2180,Gävle,Gävleborgs län,Other,0.01151290764315058
+2180,Gävle,Gävleborgs län,Invalid,0.008596642491251204
+2180,Gävle,Gävleborgs län,No Vote,0.1601663539077953
+2181,Sandviken,Gävleborgs län,M,0.12825881399432662
+2181,Sandviken,Gävleborgs län,C,0.03940969877076861
+2181,Sandviken,Gävleborgs län,L,0.024382007294340133
+2181,Sandviken,Gävleborgs län,KD,0.03377009320545725
+2181,Sandviken,Gävleborgs län,S,0.3050790220181008
+2181,Sandviken,Gävleborgs län,V,0.04771714169931109
+2181,Sandviken,Gävleborgs län,MP,0.021173848439821695
+2181,Sandviken,Gävleborgs län,SD,0.21386600027016076
+2181,Sandviken,Gävleborgs län,Other,0.009455626097528029
+2181,Sandviken,Gävleborgs län,Invalid,0.009286775631500743
+2181,Sandviken,Gävleborgs län,No Vote,0.1676009725786843
+2182,Söderhamn,Gävleborgs län,M,0.11961722488038277
+2182,Söderhamn,Gävleborgs län,C,0.0509518477043673
+2182,Söderhamn,Gävleborgs län,L,0.018935152193830806
+2182,Söderhamn,Gävleborgs län,KD,0.03944823373714751
+2182,Söderhamn,Gävleborgs län,S,0.30331874172859613
+2182,Söderhamn,Gävleborgs län,V,0.04133156876717907
+2182,Söderhamn,Gävleborgs län,MP,0.02321083172147002
+2182,Söderhamn,Gävleborgs län,SD,0.2016695510536496
+2182,Söderhamn,Gävleborgs län,Other,0.010791000712613255
+2182,Söderhamn,Gävleborgs län,Invalid,0.00799144864094472
+2182,Söderhamn,Gävleborgs län,No Vote,0.1827343988598188
+2183,Bollnäs,Gävleborgs län,M,0.11454942919601652
+2183,Bollnäs,Gävleborgs län,C,0.06140393490405635
+2183,Bollnäs,Gävleborgs län,L,0.02152052465387418
+2183,Bollnäs,Gävleborgs län,KD,0.05086227835802769
+2183,Bollnäs,Gävleborgs län,S,0.2963322807869808
+2183,Bollnäs,Gävleborgs län,V,0.04226378430896284
+2183,Bollnäs,Gävleborgs län,MP,0.02487247996113675
+2183,Bollnäs,Gävleborgs län,SD,0.20257469030847705
+2183,Bollnäs,Gävleborgs län,Other,0.008501335924216662
+2183,Bollnäs,Gävleborgs län,Invalid,0.011027447170269614
+2183,Bollnäs,Gävleborgs län,No Vote,0.16609181442798154
+2184,Hudiksvall,Gävleborgs län,M,0.12042894354047563
+2184,Hudiksvall,Gävleborgs län,C,0.06907750076113799
+2184,Hudiksvall,Gävleborgs län,L,0.020330841311187037
+2184,Hudiksvall,Gävleborgs län,KD,0.04377389127566726
+2184,Hudiksvall,Gävleborgs län,S,0.3006325902371368
+2184,Hudiksvall,Gävleborgs län,V,0.052163323297588035
+2184,Hudiksvall,Gävleborgs län,MP,0.035316802543892294
+2184,Hudiksvall,Gävleborgs län,SD,0.17496025168296067
+2184,Hudiksvall,Gävleborgs län,Other,0.010114678123202868
+2184,Hudiksvall,Gävleborgs län,Invalid,0.011873752579412063
+2184,Hudiksvall,Gävleborgs län,No Vote,0.1613274246473394
+2260,Ånge,Västernorrlands län,M,0.10298957761930883
+2260,Ånge,Västernorrlands län,C,0.04594075699396599
+2260,Ånge,Västernorrlands län,L,0.014536478332419089
+2260,Ånge,Västernorrlands län,KD,0.050329127811300056
+2260,Ånge,Västernorrlands län,S,0.31061437191442676
+2260,Ånge,Västernorrlands län,V,0.04004388370817334
+2260,Ånge,Västernorrlands län,MP,0.012479429511793746
+2260,Ånge,Västernorrlands län,SD,0.24904004388370818
+2260,Ånge,Västernorrlands län,Other,0.009188151398793198
+2260,Ånge,Västernorrlands län,Invalid,0.009599561162918267
+2260,Ånge,Västernorrlands län,No Vote,0.15523861766319255
+2262,Timrå,Västernorrlands län,M,0.10686365918381983
+2262,Timrå,Västernorrlands län,C,0.04231514021372732
+2262,Timrå,Västernorrlands län,L,0.01836046761815965
+2262,Timrå,Västernorrlands län,KD,0.04138277271749265
+2262,Timrå,Västernorrlands län,S,0.34734275263573117
+2262,Timrå,Västernorrlands län,V,0.04331922828659542
+2262,Timrå,Västernorrlands län,MP,0.01757154127519185
+2262,Timrå,Västernorrlands län,SD,0.22254894929355232
+2262,Timrå,Västernorrlands län,Other,0.007315498816610486
+2262,Timrå,Västernorrlands län,Invalid,0.007817542853044538
+2262,Timrå,Västernorrlands län,No Vote,0.14516244710607473
+2280,Härnösand,Västernorrlands län,M,0.10244464220279537
+2280,Härnösand,Västernorrlands län,C,0.06355022771292468
+2280,Härnösand,Västernorrlands län,L,0.021357901900225094
+2280,Härnösand,Västernorrlands län,KD,0.0388944144898707
+2280,Härnösand,Västernorrlands län,S,0.3307333926608386
+2280,Härnösand,Västernorrlands län,V,0.053237711354237556
+2280,Härnösand,Västernorrlands län,MP,0.04988745223263362
+2280,Härnösand,Västernorrlands län,SD,0.16458147934879339
+2280,Härnösand,Västernorrlands län,Other,0.010260168559912056
+2280,Härnösand,Västernorrlands län,Invalid,0.009160864785635764
+2280,Härnösand,Västernorrlands län,No Vote,0.15589174475213316
+2281,Sundsvall,Västernorrlands län,M,0.14080740885671428
+2281,Sundsvall,Västernorrlands län,C,0.05376638622578752
+2281,Sundsvall,Västernorrlands län,L,0.030757190373703776
+2281,Sundsvall,Västernorrlands län,KD,0.04189656296876019
+2281,Sundsvall,Västernorrlands län,S,0.3194156394704233
+2281,Sundsvall,Västernorrlands län,V,0.04776625578816931
+2281,Sundsvall,Västernorrlands län,MP,0.032126785364899234
+2281,Sundsvall,Västernorrlands län,SD,0.1693602034826844
+2281,Sundsvall,Västernorrlands län,Other,0.008948020609143677
+2281,Sundsvall,Västernorrlands län,Invalid,0.00936542098741277
+2281,Sundsvall,Västernorrlands län,No Vote,0.14579012587230158
+2282,Kramfors,Västernorrlands län,M,0.0783824263604593
+2282,Kramfors,Västernorrlands län,C,0.06861136866129378
+2282,Kramfors,Västernorrlands län,L,0.012980529206190713
+2282,Kramfors,Västernorrlands län,KD,0.0382283717281221
+2282,Kramfors,Västernorrlands län,S,0.3428428785393339
+2282,Kramfors,Västernorrlands län,V,0.0654018971542686
+2282,Kramfors,Västernorrlands län,MP,0.0254618072890664
+2282,Kramfors,Västernorrlands län,SD,0.18037229869481491
+2282,Kramfors,Västernorrlands län,Other,0.011482775836245632
+2282,Kramfors,Västernorrlands län,Invalid,0.012766564439055703
+2282,Kramfors,Västernorrlands län,No Vote,0.163469082091149
+2283,Sollefteå,Västernorrlands län,M,0.061356891434881634
+2283,Sollefteå,Västernorrlands län,C,0.07288287666505625
+2283,Sollefteå,Västernorrlands län,L,0.012354199737732073
+2283,Sollefteå,Västernorrlands län,KD,0.04962385257781766
+2283,Sollefteå,Västernorrlands län,S,0.32307267582303817
+2283,Sollefteå,Västernorrlands län,V,0.06874180412726896
+2283,Sollefteå,Västernorrlands län,MP,0.01904893367382152
+2283,Sollefteå,Västernorrlands län,SD,0.20753675201877286
+2283,Sollefteå,Västernorrlands län,Other,0.012285181862102285
+2283,Sollefteå,Västernorrlands län,Invalid,0.013665539374698046
+2283,Sollefteå,Västernorrlands län,No Vote,0.15943129270481055
+2284,Örnsköldsvik,Västernorrlands län,M,0.12073252922447651
+2284,Örnsköldsvik,Västernorrlands län,C,0.08233981733249669
+2284,Örnsköldsvik,Västernorrlands län,L,0.01996328057821469
+2284,Örnsköldsvik,Västernorrlands län,KD,0.05663622208278138
+2284,Örnsköldsvik,Västernorrlands län,S,0.35232052801598923
+2284,Örnsköldsvik,Västernorrlands län,V,0.037997629505682216
+2284,Örnsköldsvik,Västernorrlands län,MP,0.024448627669711124
+2284,Örnsköldsvik,Västernorrlands län,SD,0.1451579167538172
+2284,Örnsköldsvik,Västernorrlands län,Other,0.010341862464849288
+2284,Örnsköldsvik,Västernorrlands län,Invalid,0.00901717446373376
+2284,Örnsköldsvik,Västernorrlands län,No Vote,0.14104441190824793
+2303,Ragunda,Jämtlands län,M,0.0773286467486819
+2303,Ragunda,Jämtlands län,C,0.07230730605071554
+2303,Ragunda,Jämtlands län,L,0.009540547326136078
+2303,Ragunda,Jämtlands län,KD,0.048958071805171983
+2303,Ragunda,Jämtlands län,S,0.32262113984433843
+2303,Ragunda,Jämtlands län,V,0.04519206628169721
+2303,Ragunda,Jämtlands län,MP,0.020587496861662065
+2303,Ragunda,Jämtlands län,SD,0.2264624654782827
+2303,Ragunda,Jämtlands län,Other,0.011549083605322622
+2303,Ragunda,Jämtlands län,Invalid,0.013055485814712529
+2303,Ragunda,Jämtlands län,No Vote,0.15239769018327892
+2305,Bräcke,Jämtlands län,M,0.10705394190871369
+2305,Bräcke,Jämtlands län,C,0.06639004149377593
+2305,Bräcke,Jämtlands län,L,0.00995850622406639
+2305,Bräcke,Jämtlands län,KD,0.03879668049792531
+2305,Bräcke,Jämtlands län,S,0.3
+2305,Bräcke,Jämtlands län,V,0.03755186721991701
+2305,Bräcke,Jämtlands län,MP,0.02053941908713693
+2305,Bräcke,Jämtlands län,SD,0.22531120331950208
+2305,Bräcke,Jämtlands län,Other,0.00975103734439834
+2305,Bräcke,Jämtlands län,Invalid,0.012033195020746889
+2305,Bräcke,Jämtlands län,No Vote,0.17261410788381742
+2309,Krokom,Jämtlands län,M,0.13408411050501495
+2309,Krokom,Jämtlands län,C,0.09246876649656871
+2309,Krokom,Jämtlands län,L,0.01715643146225585
+2309,Krokom,Jämtlands län,KD,0.05226112968502551
+2309,Krokom,Jämtlands län,S,0.2842688720746085
+2309,Krokom,Jämtlands län,V,0.04583846559915537
+2309,Krokom,Jämtlands län,MP,0.04363892310399437
+2309,Krokom,Jämtlands län,SD,0.1833538623966215
+2309,Krokom,Jämtlands län,Other,0.009590005278901989
+2309,Krokom,Jämtlands län,Invalid,0.010029913777934189
+2309,Krokom,Jämtlands län,No Vote,0.12730951961991907
+2313,Strömsund,Jämtlands län,M,0.09783716453402785
+2313,Strömsund,Jämtlands län,C,0.05605254218095346
+2313,Strömsund,Jämtlands län,L,0.012116408107802061
+2313,Strömsund,Jämtlands län,KD,0.0460876457932284
+2313,Strömsund,Jämtlands län,S,0.3104971124447967
+2313,Strömsund,Jämtlands län,V,0.04325670931944287
+2313,Strömsund,Jämtlands län,MP,0.015626769335296116
+2313,Strömsund,Jämtlands län,SD,0.22375721888800815
+2313,Strömsund,Jämtlands län,Other,0.009511946551919375
+2313,Strömsund,Jämtlands län,Invalid,0.011323745895142113
+2313,Strömsund,Jämtlands län,No Vote,0.17393273694938285
+2321,Åre,Jämtlands län,M,0.13563243719700308
+2321,Åre,Jämtlands län,C,0.10136624063464081
+2321,Åre,Jämtlands län,L,0.030960775672102248
+2321,Åre,Jämtlands län,KD,0.04186866460996033
+2321,Åre,Jämtlands län,S,0.2751211987659762
+2321,Åre,Jämtlands län,V,0.04682679594535037
+2321,Åre,Jämtlands län,MP,0.07304980167474659
+2321,Åre,Jämtlands län,SD,0.14213309828118115
+2321,Åre,Jämtlands län,Other,0.010136624063464082
+2321,Åre,Jämtlands län,Invalid,0.01112825033054209
+2321,Åre,Jämtlands län,No Vote,0.13177611282503304
+2326,Berg,Jämtlands län,M,0.14257282431698934
+2326,Berg,Jämtlands län,C,0.07852361136240275
+2326,Berg,Jämtlands län,L,0.011398588746155238
+2326,Berg,Jämtlands län,KD,0.04704179482540257
+2326,Berg,Jämtlands län,S,0.2670526506242084
+2326,Berg,Jämtlands län,V,0.035824136059345035
+2326,Berg,Jämtlands län,MP,0.027682286954948433
+2326,Berg,Jämtlands län,SD,0.20173692780893795
+2326,Berg,Jämtlands län,Other,0.012122308666546046
+2326,Berg,Jämtlands län,Invalid,0.012846028586936856
+2326,Berg,Jämtlands län,No Vote,0.16319884204812737
+2361,Härjedalen,Jämtlands län,M,0.1104
+2361,Härjedalen,Jämtlands län,C,0.06584615384615385
+2361,Härjedalen,Jämtlands län,L,0.024861538461538463
+2361,Härjedalen,Jämtlands län,KD,0.055630769230769234
+2361,Härjedalen,Jämtlands län,S,0.2748307692307692
+2361,Härjedalen,Jämtlands län,V,0.04553846153846154
+2361,Härjedalen,Jämtlands län,MP,0.024984615384615383
+2361,Härjedalen,Jämtlands län,SD,0.2102153846153846
+2361,Härjedalen,Jämtlands län,Other,0.01083076923076923
+2361,Härjedalen,Jämtlands län,Invalid,0.011076923076923076
+2361,Härjedalen,Jämtlands län,No Vote,0.1657846153846154
+2380,Östersund,Jämtlands län,M,0.12986803666767402
+2380,Östersund,Jämtlands län,C,0.07510829052080185
+2380,Östersund,Jämtlands län,L,0.02639266646519593
+2380,Östersund,Jämtlands län,KD,0.04228870756522615
+2380,Östersund,Jämtlands län,S,0.31743729223330314
+2380,Östersund,Jämtlands län,V,0.05020650750478493
+2380,Östersund,Jämtlands län,MP,0.04905812430744434
+2380,Östersund,Jämtlands län,SD,0.13974010275007556
+2380,Östersund,Jämtlands län,Other,0.011020449279742118
+2380,Östersund,Jämtlands län,Invalid,0.010234713407877506
+2380,Östersund,Jämtlands län,No Vote,0.14864510929787447
+2401,Nordmaling,Västerbottens län,M,0.11370631902951295
+2401,Nordmaling,Västerbottens län,C,0.07713199348180337
+2401,Nordmaling,Västerbottens län,L,0.022089444142676082
+2401,Nordmaling,Västerbottens län,KD,0.051059206952743075
+2401,Nordmaling,Västerbottens län,S,0.3121491942784718
+2401,Nordmaling,Västerbottens län,V,0.047619047619047616
+2401,Nordmaling,Västerbottens län,MP,0.021365200072424408
+2401,Nordmaling,Västerbottens län,SD,0.17997465145754118
+2401,Nordmaling,Västerbottens län,Other,0.008690928843020097
+2401,Nordmaling,Västerbottens län,Invalid,0.00977729494839761
+2401,Nordmaling,Västerbottens län,No Vote,0.15643671917436175
+2403,Bjurholm,Västerbottens län,M,0.16430131004366813
+2403,Bjurholm,Västerbottens län,C,0.06604803493449782
+2403,Bjurholm,Västerbottens län,L,0.024563318777292575
+2403,Bjurholm,Västerbottens län,KD,0.07478165938864628
+2403,Bjurholm,Västerbottens län,S,0.24399563318777293
+2403,Bjurholm,Västerbottens län,V,0.02292576419213974
+2403,Bjurholm,Västerbottens län,MP,0.015829694323144104
+2403,Bjurholm,Västerbottens län,SD,0.19868995633187772
+2403,Bjurholm,Västerbottens län,Other,0.007641921397379912
+2403,Bjurholm,Västerbottens län,Invalid,0.009825327510917031
+2403,Bjurholm,Västerbottens län,No Vote,0.17139737991266377
+2404,Vindeln,Västerbottens län,M,0.13786360303104375
+2404,Vindeln,Västerbottens län,C,0.07968711806404302
+2404,Vindeln,Västerbottens län,L,0.02102175507210951
+2404,Vindeln,Västerbottens län,KD,0.051821070642874605
+2404,Vindeln,Västerbottens län,S,0.2815937423612809
+2404,Vindeln,Västerbottens län,V,0.04375458323148374
+2404,Vindeln,Västerbottens län,MP,0.023710584209239795
+2404,Vindeln,Västerbottens län,SD,0.17966267416279638
+2404,Vindeln,Västerbottens län,Other,0.009288682473722807
+2404,Vindeln,Västerbottens län,Invalid,0.010021999511121975
+2404,Vindeln,Västerbottens län,No Vote,0.16157418724028355
+2409,Robertsfors,Västerbottens län,M,0.10962877030162413
+2409,Robertsfors,Västerbottens län,C,0.10750193348801237
+2409,Robertsfors,Västerbottens län,L,0.01740139211136891
+2409,Robertsfors,Västerbottens län,KD,0.04234338747099768
+2409,Robertsfors,Västerbottens län,S,0.32927300850734725
+2409,Robertsfors,Västerbottens län,V,0.05259087393658159
+2409,Robertsfors,Västerbottens län,MP,0.03557617942768755
+2409,Robertsfors,Västerbottens län,SD,0.12780355761794276
+2409,Robertsfors,Västerbottens län,Other,0.009667440061871617
+2409,Robertsfors,Västerbottens län,Invalid,0.011020881670533642
+2409,Robertsfors,Västerbottens län,No Vote,0.1571925754060325
+2417,Norsjö,Västerbottens län,M,0.10990813648293964
+2417,Norsjö,Västerbottens län,C,0.05019685039370079
+2417,Norsjö,Västerbottens län,L,0.029855643044619424
+2417,Norsjö,Västerbottens län,KD,0.07020997375328084
+2417,Norsjö,Västerbottens län,S,0.339238845144357
+2417,Norsjö,Västerbottens län,V,0.05249343832020997
+2417,Norsjö,Västerbottens län,MP,0.00984251968503937
+2417,Norsjö,Västerbottens län,SD,0.151246719160105
+2417,Norsjö,Västerbottens län,Other,0.00853018372703412
+2417,Norsjö,Västerbottens län,Invalid,0.009514435695538058
+2417,Norsjö,Västerbottens län,No Vote,0.16896325459317585
+2418,Malå,Västerbottens län,M,0.07569721115537849
+2418,Malå,Västerbottens län,C,0.03497122620628597
+2418,Malå,Västerbottens län,L,0.038069942452412575
+2418,Malå,Västerbottens län,KD,0.04648074369189907
+2418,Malå,Västerbottens län,S,0.32049579459938027
+2418,Malå,Västerbottens län,V,0.07215582115980522
+2418,Malå,Västerbottens län,MP,0.011509517485613104
+2418,Malå,Västerbottens län,SD,0.1952191235059761
+2418,Malå,Västerbottens län,Other,0.005312084993359893
+2418,Malå,Västerbottens län,Invalid,0.02036299247454626
+2418,Malå,Västerbottens län,No Vote,0.17972554227534307
+2421,Storuman,Västerbottens län,M,0.10498338870431893
+2421,Storuman,Västerbottens län,C,0.051384274640088594
+2421,Storuman,Västerbottens län,L,0.03145071982281285
+2421,Storuman,Västerbottens län,KD,0.06378737541528239
+2421,Storuman,Västerbottens län,S,0.2764119601328904
+2421,Storuman,Västerbottens län,V,0.05736434108527132
+2421,Storuman,Västerbottens län,MP,0.02547065337763012
+2421,Storuman,Västerbottens län,SD,0.18516057585825027
+2421,Storuman,Västerbottens län,Other,0.006644518272425249
+2421,Storuman,Västerbottens län,Invalid,0.013510520487264673
+2421,Storuman,Västerbottens län,No Vote,0.18383167220376523
+2422,Sorsele,Västerbottens län,M,0.09007053716766142
+2422,Sorsele,Västerbottens län,C,0.061313076505697235
+2422,Sorsele,Västerbottens län,L,0.017362995116657624
+2422,Sorsele,Västerbottens län,KD,0.05588714053174173
+2422,Sorsele,Västerbottens län,S,0.3098209441128595
+2422,Sorsele,Västerbottens län,V,0.05805751492132393
+2422,Sorsele,Västerbottens län,MP,0.017905588714053174
+2422,Sorsele,Västerbottens län,SD,0.17200217037438958
+2422,Sorsele,Västerbottens län,Other,0.008138903960933261
+2422,Sorsele,Västerbottens län,Invalid,0.02278893109061313
+2422,Sorsele,Västerbottens län,No Vote,0.18665219750406944
+2425,Dorotea,Västerbottens län,M,0.053691275167785234
+2425,Dorotea,Västerbottens län,C,0.059886422302529684
+2425,Dorotea,Västerbottens län,L,0.029943211151264842
+2425,Dorotea,Västerbottens län,KD,0.040268456375838924
+2425,Dorotea,Västerbottens län,S,0.33092410944759937
+2425,Dorotea,Västerbottens län,V,0.06763035622096025
+2425,Dorotea,Västerbottens län,MP,0.013422818791946308
+2425,Dorotea,Västerbottens län,SD,0.18120805369127516
+2425,Dorotea,Västerbottens län,Other,0.009292720702116675
+2425,Dorotea,Västerbottens län,Invalid,0.02219927723283428
+2425,Dorotea,Västerbottens län,No Vote,0.19153329891584925
+2460,Vännäs,Västerbottens län,M,0.1250932975070906
+2460,Vännäs,Västerbottens län,C,0.07598148977459322
+2460,Vännäs,Västerbottens län,L,0.018360949395432154
+2460,Vännäs,Västerbottens län,KD,0.04075235109717868
+2460,Vännäs,Västerbottens län,S,0.3058665472458576
+2460,Vännäs,Västerbottens län,V,0.06672637707120466
+2460,Vännäs,Västerbottens län,MP,0.03731900283624422
+2460,Vännäs,Västerbottens län,SD,0.1536050156739812
+2460,Vännäs,Västerbottens län,Other,0.011344976862218241
+2460,Vännäs,Västerbottens län,Invalid,0.008359456635318705
+2460,Vännäs,Västerbottens län,No Vote,0.15659053590088073
+2462,Vilhelmina,Västerbottens län,M,0.08442960926762223
+2462,Vilhelmina,Västerbottens län,C,0.05203220106027882
+2462,Vilhelmina,Västerbottens län,L,0.011584527783231886
+2462,Vilhelmina,Västerbottens län,KD,0.07147064598468486
+2462,Vilhelmina,Västerbottens län,S,0.2823483212252111
+2462,Vilhelmina,Västerbottens län,V,0.06263498920086392
+2462,Vilhelmina,Västerbottens län,MP,0.016296878067936383
+2462,Vilhelmina,Västerbottens län,SD,0.20636167288435106
+2462,Vilhelmina,Västerbottens län,Other,0.013940702925584135
+2462,Vilhelmina,Västerbottens län,Invalid,0.01610053013940703
+2462,Vilhelmina,Västerbottens län,No Vote,0.1827999214608286
+2463,Åsele,Västerbottens län,M,0.10442144873000941
+2463,Åsele,Västerbottens län,C,0.08137347130761995
+2463,Åsele,Västerbottens län,L,0.025870178739416744
+2463,Åsele,Västerbottens län,KD,0.043273753527751646
+2463,Åsele,Västerbottens län,S,0.30620884289746003
+2463,Åsele,Västerbottens län,V,0.04374412041392286
+2463,Åsele,Västerbottens län,MP,0.014111006585136407
+2463,Åsele,Västerbottens län,SD,0.18156161806208843
+2463,Åsele,Västerbottens län,Other,0.010818438381937912
+2463,Åsele,Västerbottens län,Invalid,0.008466603951081843
+2463,Åsele,Västerbottens län,No Vote,0.1801505174035748
+2480,Umeå,Västerbottens län,M,0.12924032007739908
+2480,Umeå,Västerbottens län,C,0.06879245359079274
+2480,Umeå,Västerbottens län,L,0.030969705520730455
+2480,Umeå,Västerbottens län,KD,0.03126196762945196
+2480,Umeå,Västerbottens län,S,0.3450003023401125
+2480,Umeå,Västerbottens län,V,0.09144780601858384
+2480,Umeå,Västerbottens län,MP,0.06617217261604821
+2480,Umeå,Västerbottens län,SD,0.09400761897083426
+2480,Umeå,Västerbottens län,Other,0.009755507629048837
+2480,Umeå,Västerbottens län,Invalid,0.008032168987966864
+2480,Umeå,Västerbottens län,No Vote,0.1253199766190313
+2481,Lycksele,Västerbottens län,M,0.12032925376367377
+2481,Lycksele,Västerbottens län,C,0.04288963500487382
+2481,Lycksele,Västerbottens län,L,0.023394346366294814
+2481,Lycksele,Västerbottens län,KD,0.08404635546409618
+2481,Lycksele,Västerbottens län,S,0.3307700639012239
+2481,Lycksele,Västerbottens län,V,0.043756092277699554
+2481,Lycksele,Västerbottens län,MP,0.017654066933824326
+2481,Lycksele,Västerbottens län,SD,0.14881403660781978
+2481,Lycksele,Västerbottens län,Other,0.00660673670529622
+2481,Lycksele,Västerbottens län,Invalid,0.01223870897866349
+2481,Lycksele,Västerbottens län,No Vote,0.16950070399653416
+2482,Skellefteå,Västerbottens län,M,0.11225566024469133
+2482,Skellefteå,Västerbottens län,C,0.062157221206581355
+2482,Skellefteå,Västerbottens län,L,0.022254253972718324
+2482,Skellefteå,Västerbottens län,KD,0.0373189424834763
+2482,Skellefteå,Västerbottens län,S,0.38055477429334833
+2482,Skellefteå,Västerbottens län,V,0.05596962452538321
+2482,Skellefteå,Västerbottens län,MP,0.033451694557727465
+2482,Skellefteå,Västerbottens län,SD,0.1289902967233863
+2482,Skellefteå,Västerbottens län,Other,0.008771621431584869
+2482,Skellefteå,Västerbottens län,Invalid,0.012515820559696245
+2482,Skellefteå,Västerbottens län,No Vote,0.14576009000140627
+2505,Arvidsjaur,Norrbottens län,M,0.09031852472757754
+2505,Arvidsjaur,Norrbottens län,C,0.04735959765297569
+2505,Arvidsjaur,Norrbottens län,L,0.027242246437552388
+2505,Arvidsjaur,Norrbottens län,KD,0.04253981559094719
+2505,Arvidsjaur,Norrbottens län,S,0.3522632020117351
+2505,Arvidsjaur,Norrbottens län,V,0.05972338642078793
+2505,Arvidsjaur,Norrbottens län,MP,0.01068734283319363
+2505,Arvidsjaur,Norrbottens län,SD,0.20117351215423301
+2505,Arvidsjaur,Norrbottens län,Other,0.007334450963956412
+2505,Arvidsjaur,Norrbottens län,Invalid,0.010896898575020955
+2505,Arvidsjaur,Norrbottens län,No Vote,0.15046102263202013
+2506,Arjeplog,Norrbottens län,M,0.0729068673565381
+2506,Arjeplog,Norrbottens län,C,0.03621825023518344
+2506,Arjeplog,Norrbottens län,L,0.02398871119473189
+2506,Arjeplog,Norrbottens län,KD,0.07102539981185324
+2506,Arjeplog,Norrbottens län,S,0.30620884289746003
+2506,Arjeplog,Norrbottens län,V,0.06302916274694262
+2506,Arjeplog,Norrbottens län,MP,0.027751646284101598
+2506,Arjeplog,Norrbottens län,SD,0.20037629350893696
+2506,Arjeplog,Norrbottens län,Other,0.0061147695202257765
+2506,Arjeplog,Norrbottens län,Invalid,0.013640639698965193
+2506,Arjeplog,Norrbottens län,No Vote,0.17873941674506114
+2510,Jokkmokk,Norrbottens län,M,0.0795123244102836
+2510,Jokkmokk,Norrbottens län,C,0.035515504903260005
+2510,Jokkmokk,Norrbottens län,L,0.015902464882056717
+2510,Jokkmokk,Norrbottens län,KD,0.03578054598462762
+2510,Jokkmokk,Norrbottens län,S,0.2743175192154784
+2510,Jokkmokk,Norrbottens län,V,0.07368142062019613
+2510,Jokkmokk,Norrbottens län,MP,0.09461966604823747
+2510,Jokkmokk,Norrbottens län,SD,0.18075801749271136
+2510,Jokkmokk,Norrbottens län,Other,0.01192684866154254
+2510,Jokkmokk,Norrbottens län,Invalid,0.013782136231115823
+2510,Jokkmokk,Norrbottens län,No Vote,0.1842035515504903
+2513,Överkalix,Norrbottens län,M,0.08158508158508158
+2513,Överkalix,Norrbottens län,C,0.04700854700854701
+2513,Överkalix,Norrbottens län,L,0.014763014763014764
+2513,Överkalix,Norrbottens län,KD,0.04623154623154623
+2513,Överkalix,Norrbottens län,S,0.34615384615384615
+2513,Överkalix,Norrbottens län,V,0.06254856254856254
+2513,Överkalix,Norrbottens län,MP,0.012043512043512044
+2513,Överkalix,Norrbottens län,SD,0.18803418803418803
+2513,Överkalix,Norrbottens län,Other,0.008547008547008548
+2513,Överkalix,Norrbottens län,Invalid,0.006216006216006216
+2513,Överkalix,Norrbottens län,No Vote,0.18686868686868688
+2514,Kalix,Norrbottens län,M,0.1044428376315578
+2514,Kalix,Norrbottens län,C,0.04193781634128706
+2514,Kalix,Norrbottens län,L,0.01695187595404515
+2514,Kalix,Norrbottens län,KD,0.037117377681369
+2514,Kalix,Norrbottens län,S,0.36490720655579656
+2514,Kalix,Norrbottens län,V,0.036474652526713267
+2514,Kalix,Norrbottens län,MP,0.021852655258295172
+2514,Kalix,Norrbottens län,SD,0.20109263276291475
+2514,Kalix,Norrbottens län,Other,0.007150317345545111
+2514,Kalix,Norrbottens län,Invalid,0.010685305696151682
+2514,Kalix,Norrbottens län,No Vote,0.15738732224632443
+2518,Övertorneå,Norrbottens län,M,0.0815814245371823
+2518,Övertorneå,Norrbottens län,C,0.09475996234703483
+2518,Övertorneå,Norrbottens län,L,0.013178537809852526
+2518,Övertorneå,Norrbottens län,KD,0.06871666143708817
+2518,Övertorneå,Norrbottens län,S,0.29055538123627234
+2518,Övertorneå,Norrbottens län,V,0.0530279259491685
+2518,Övertorneå,Norrbottens län,MP,0.012550988390335738
+2518,Övertorneå,Norrbottens län,SD,0.1537496077816128
+2518,Övertorneå,Norrbottens län,Other,0.007844367743959836
+2518,Övertorneå,Norrbottens län,Invalid,0.005961719485409476
+2518,Övertorneå,Norrbottens län,No Vote,0.21807342328208346
+2521,Pajala,Norrbottens län,M,0.07537041013528023
+2521,Pajala,Norrbottens län,C,0.027270775177152675
+2521,Pajala,Norrbottens län,L,0.01181017822632596
+2521,Pajala,Norrbottens län,KD,0.06570753704101352
+2521,Pajala,Norrbottens län,S,0.2780760146016749
+2521,Pajala,Norrbottens län,V,0.1187459738028774
+2521,Pajala,Norrbottens län,MP,0.016748980030062272
+2521,Pajala,Norrbottens län,SD,0.18359458879106721
+2521,Pajala,Norrbottens län,Other,0.010521795147090401
+2521,Pajala,Norrbottens län,Invalid,0.00751556796220743
+2521,Pajala,Norrbottens län,No Vote,0.204638179085248
+2523,Gällivare,Norrbottens län,M,0.10408731321418108
+2523,Gällivare,Norrbottens län,C,0.02219455024904776
+2523,Gällivare,Norrbottens län,L,0.011060650454145912
+2523,Gällivare,Norrbottens län,KD,0.03472018751831234
+2523,Gällivare,Norrbottens län,S,0.30903896864928215
+2523,Gällivare,Norrbottens län,V,0.06548491063580428
+2523,Gällivare,Norrbottens län,MP,0.02886024025783768
+2523,Gällivare,Norrbottens län,SD,0.21813653677116907
+2523,Gällivare,Norrbottens län,Other,0.00915616759449165
+2523,Gällivare,Norrbottens län,Invalid,0.00710518605332552
+2523,Gällivare,Norrbottens län,No Vote,0.19015528860240258
+2560,Älvsbyn,Norrbottens län,M,0.10978366160800775
+2560,Älvsbyn,Norrbottens län,C,0.054568937681627384
+2560,Älvsbyn,Norrbottens län,L,0.01856635453664837
+2560,Älvsbyn,Norrbottens län,KD,0.044559250887956085
+2560,Älvsbyn,Norrbottens län,S,0.35663545366483695
+2560,Älvsbyn,Norrbottens län,V,0.050532773651921215
+2560,Älvsbyn,Norrbottens län,MP,0.012754278333871489
+2560,Älvsbyn,Norrbottens län,SD,0.16887310300290603
+2560,Älvsbyn,Norrbottens län,Other,0.00871811430416532
+2560,Älvsbyn,Norrbottens län,Invalid,0.008395221181788828
+2560,Älvsbyn,Norrbottens län,No Vote,0.16661285114627059
+2580,Luleå,Norrbottens län,M,0.13500507414803417
+2580,Luleå,Norrbottens län,C,0.050676007463908074
+2580,Luleå,Norrbottens län,L,0.031115985203129602
+2580,Luleå,Norrbottens län,KD,0.045487281893475624
+2580,Luleå,Norrbottens län,S,0.33947687170589586
+2580,Luleå,Norrbottens län,V,0.06180639670016696
+2580,Luleå,Norrbottens län,MP,0.037270435722002164
+2580,Luleå,Norrbottens län,SD,0.1493600026189151
+2580,Luleå,Norrbottens län,Other,0.009526303728680394
+2580,Luleå,Norrbottens län,Invalid,0.009559040167610567
+2580,Luleå,Norrbottens län,No Vote,0.1307166006481815
+2581,Piteå,Norrbottens län,M,0.11168986678640921
+2581,Piteå,Norrbottens län,C,0.05205807513845233
+2581,Piteå,Norrbottens län,L,0.01763209100434067
+2581,Piteå,Norrbottens län,KD,0.03481514743301901
+2581,Piteå,Norrbottens län,S,0.4178117048346056
+2581,Piteå,Norrbottens län,V,0.06026044005388415
+2581,Piteå,Norrbottens län,MP,0.025954198473282442
+2581,Piteå,Norrbottens län,SD,0.14030833707528814
+2581,Piteå,Norrbottens län,Other,0.00916030534351145
+2581,Piteå,Norrbottens län,Invalid,0.0074839095943721
+2581,Piteå,Norrbottens län,No Vote,0.12282592426283491
+2582,Boden,Norrbottens län,M,0.12410316955771501
+2582,Boden,Norrbottens län,C,0.040686586141131596
+2582,Boden,Norrbottens län,L,0.01979838343474707
+2582,Boden,Norrbottens län,KD,0.037871219689401506
+2582,Boden,Norrbottens län,S,0.3555989465080374
+2582,Boden,Norrbottens län,V,0.04427390791027155
+2582,Boden,Norrbottens län,MP,0.020888202706384525
+2582,Boden,Norrbottens län,SD,0.1913086913086913
+2582,Boden,Norrbottens län,Other,0.008900190718372537
+2582,Boden,Norrbottens län,Invalid,0.010444101353192263
+2582,Boden,Norrbottens län,No Vote,0.1461266006720552
+2583,Haparanda,Norrbottens län,M,0.09212649241690868
+2583,Haparanda,Norrbottens län,C,0.041949015811552116
+2583,Haparanda,Norrbottens län,L,0.011777992900935785
+2583,Haparanda,Norrbottens län,KD,0.035011293965795415
+2583,Haparanda,Norrbottens län,S,0.24427234591803806
+2583,Haparanda,Norrbottens län,V,0.025814778960955145
+2583,Haparanda,Norrbottens län,MP,0.013068731848983543
+2583,Haparanda,Norrbottens län,SD,0.21022910616327847
+2583,Haparanda,Norrbottens län,Other,0.006615037108744756
+2583,Haparanda,Norrbottens län,Invalid,0.00984188447886415
+2583,Haparanda,Norrbottens län,No Vote,0.3092933204259439
+2584,Kiruna,Norrbottens län,M,0.09024246008279124
+2584,Kiruna,Norrbottens län,C,0.023181549379065643
+2584,Kiruna,Norrbottens län,L,0.014311058545239503
+2584,Kiruna,Norrbottens län,KD,0.05487876995860438
+2584,Kiruna,Norrbottens län,S,0.3396806623299823
+2584,Kiruna,Norrbottens län,V,0.0657599053814311
+2584,Kiruna,Norrbottens län,MP,0.030455351862803074
+2584,Kiruna,Norrbottens län,SD,0.1790656416321703
+2584,Kiruna,Norrbottens län,Other,0.012477823772915436
+2584,Kiruna,Norrbottens län,Invalid,0.010408042578356003
+2584,Kiruna,Norrbottens län,No Vote,0.17953873447664104

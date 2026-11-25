@@ -8,9 +8,9 @@ survey responses both refer to the preceding parliamentary election on
 
 | File | What each row describes | Modeling columns |
 | --- | --- | --- |
-| `frame.csv` | A population cell | `municipality`, `gender`, `age_group`, `education`, `N` |
-| `election_results.csv` | A 2022 election outcome in an area | `vote_choice_2022`, `municipality`, `pop_pct` |
-| `auxiliary_survey.csv` | One survey respondent | `municipality`, `gender`, `age_group`, `education`, `vote_choice_2022` |
+| `frame.csv` | A population cell | `municipality`, `gender`, `age_group`, `education`, `N`, `constituency_code`, `constituency` |
+| `election_results.csv` | A 2022 election outcome in an area | `municipality_code`, `municipality`, `constituency`, `vote_choice_2022`, `share_eligible` |
+| `auxiliary_survey.csv` | One survey respondent | `municipality`, `gender`, `age_group`, `education`, `vote_choice_2022`, `constituency_code`, `constituency` |
 
 ## Rebuild the inputs
 
@@ -95,17 +95,23 @@ named parties, groups other parties into `Other - Left` or `Other - Right`
 where mapped, and counts valid votes for independent candidates under
 `Other`. The grouped counts must sum to FVKOM's valid vote total.
 
-FVKOM reports two blank-ballot counts under the English label `Blanks`.
-Add codes `1` (polling station) and `15` (advance voting) to get the
-`Blank vote` count. Include these ballots in modeled turnout because the
-survey offers an explicit blank-vote choice.
+The denominator is the official 2022 electoral-roll count
+(`VAELG`) from FVKOM. Divide each party or party group's valid vote
+count by that denominator for `share_eligible`. `Invalid` uses FVKOM's
+total invalid ballots, including blanks. `No Vote` is the number on
+the electoral roll minus all valid and invalid ballots cast. The
+shares sum to one in every municipality and use the same schema as
+Sweden's election results. The calibration applies these shares to
+the population in the Denmark frame.
 
-For each municipality, sum `N` across the 2026 Q1 frame. Divide each party's
-2022 valid vote count and the blank-ballot count by that population to get
-`pop_pct`. Subtract both the valid and blank ballots from the frame population
-and divide the remainder by the same population to get `Did not vote`.
-Other invalid ballots contribute to that remainder. This is a frame-based
-past-vote measure that uses counts from two reference years.
+Each municipality maps to one of the ten parliamentary multi-member
+constituencies (*storkredse*). The frame and survey carry both the
+2022 Statistics Denmark constituency code and the constituency name.
+The election results carry the constituency name and the municipality
+code as in the Sweden results. Survey rows with unavailable municipality
+also have unavailable constituency.
+[2022 constituency schedule](https://www.retsinformation.dk/eli/lta/2022/294)
+
 [Statistics Denmark FVKOM](https://www.statbank.dk/FVKOM) ·
 [Official 2022 results](https://www.dst.dk/valg/Valg1968094/valgopg/valgopg.htm)
 
@@ -123,8 +129,8 @@ past vote for estimating their relationship with the shared covariates.
   the school education response (`Q90`). Map the response to a shared
   education label.
 - Use `Q17` for the reported 2022 vote. Map code `32` (`Stemte blankt`)
-  to `Blank vote`, codes `30` (another party) and `31` (an independent
-  candidate) to `Other`, and code `33` to `Did not vote`. Use `Q16`
+  to `Invalid`, codes `30` (another party) and `31` (an independent
+  candidate) to `Other`, and code `33` to `No Vote`. Use `Q16`
   codes `2`, `3`, and `4` to identify respondents who said they did not
   vote, including those who considered voting.
 

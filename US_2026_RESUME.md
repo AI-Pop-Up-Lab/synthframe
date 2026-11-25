@@ -6,7 +6,7 @@
 | Model | Saved stages | Complete model |
 | --- | ---: | --- |
 | Presidential | 3 of 3 | [Ready](data/output/us-2026-national-b0bb47d/pres_fit.rds) |
-| House | 0 of 3 | Pending |
+| House | 1 of 3 | Pending |
 <!-- end checkpoint status -->
 
 Run from the VoteFrame repository root with the same code as commit

@@ -396,6 +396,7 @@ singular value for each direction. The condition index is the largest
 singular value divided by the singular value for that direction. A
 larger index means a weaker direction.
 
+
 |Model        |Stage      |Condition index        |Affected coefficients and their individual variance shares                                                     |
 |:------------|:----------|:----------------------|:--------------------------------------------------------------------------------------------------------------|
 |Presidential |No Vote    |110.40                 |(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%)                           |

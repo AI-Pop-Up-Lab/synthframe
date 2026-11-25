@@ -93,12 +93,16 @@ def main():
     print("Building frame.csv", flush=True)
     frame = process.build_frame(population, attainment, metadata["HFUDD11"]["HFUDD"])
 
-    # Use the frame from this run as the denominator for past-vote shares.
+    geography = process.municipality_geography(areas)
+    process.add_constituencies(frame, geography)
+
+    # Compute past-vote shares on the official 2022 electoral roll.
     print("Building election_results.csv", flush=True)
-    election_results = process.build_election(election, frame, metadata["FVKOM"]["VALRES"])
+    election_results = process.build_election(election, geography, metadata["FVKOM"]["VALRES"])
 
     print("Building auxiliary_survey.csv", flush=True)
     auxiliary_survey = process.build_survey(survey, areas, metadata["HFUDD11"]["HFUDD"])
+    process.add_constituencies(auxiliary_survey, geography)
     process.validate_input_labels(frame, election_results, auxiliary_survey)
 
     outputs = {
@@ -110,7 +114,7 @@ def main():
         if not rows:
             raise ValueError(f"{name} produced no rows")
         with (output / name).open("w", encoding="utf-8", newline="") as stream:
-            writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+            writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator="\n")
             writer.writeheader()
             writer.writerows(rows)
         print(f"Wrote {len(rows):,} rows to {output / name}", flush=True)

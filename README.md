@@ -18,13 +18,21 @@ The folder contains three modeling inputs and two subfolders.
 | `raw/` | Downloaded source extracts and metadata |
 | `processing/` | Recoding code, intermediate files, and candidate rebuilds |
 
+## Sweden 2026
+
+The [Sweden 2026 input guide](data/input/sweden%202026/README.md) documents
+the population frame, municipal Riksdag returns, and the auxiliary survey
+from the Swedish National Election Study 2022 CSES edition, University of
+Gothenburg. [Study citation](https://doi.org/10.5878/2ty4-tk98)
+
 ## Turnout and past vote
 
-For each area, turnout is the sum of votes for the modeled vote choices
-divided by that area's total population in the frame. The `Did not vote` share
-is the remaining frame population divided by the same total. Include valid
-votes and any separately recorded blank ballots when the auxiliary survey
-offers a blank-vote choice. Other invalid ballots contribute to `Did not vote`.
+Denmark and Sweden use 2022 municipal shares of the official electoral
+roll as covariates and calibration targets. `No Vote` counts people
+who cast no ballot. `Invalid` includes blank and other rejected ballots
+in the official returns. The surveys record reported blank ballots
+under `Invalid`. In vignette comparisons, party shares are conditional
+on casting a ballot and `No Vote` uses the full denominator.
 
 ## Denmark 2026
 
@@ -37,12 +45,12 @@ includes the source selections, recoding rules, and rebuild instructions.
 The [Denmark 2026 vignette](vignettes/vignette_denmark_2026.md) shows the R code,
 captured results, diagnostic plots, and a preview of the final raked frame.
 Edit the [R Markdown source](vignettes/vignette_denmark_2026.Rmd) and regenerate the
-GitHub view from the repository root with `knitr`. This uses the captured
-results and existing figures.
+GitHub view from the repository root with `knitr`. The chunks execute
+the fit, prediction, raking, and diagnostics in order.
 
 ```r
 knitr::opts_knit$set(root.dir = getwd())
-knitr::opts_chunk$set(eval = FALSE)
+knitr::opts_chunk$set(error = FALSE)
 knitr::knit("vignettes/vignette_denmark_2026.Rmd", output = "vignettes/vignette_denmark_2026.md")
 ```
 
@@ -149,7 +157,7 @@ area_covariates <- process_area_covariates(
   file.path(country, "election_results.csv"),
   area_variable = "municipality",
   outcome_variable = "vote_choice_2022",
-  value_variable = "pop_pct"
+  value_variable = "share_eligible"
 )
 
 fit <- fit_sequential_logit(
@@ -157,13 +165,14 @@ fit <- fit_sequential_logit(
   extension_variable = "vote_choice_2022",
   area_variable = "municipality",
   area_covariates = area_covariates,
-  no_vote = "Did not vote",
-  depth = 2,
+  no_vote = "No Vote",
+  depth = 4,
+  predictors = c("municipality", "gender", "age_group", "education"),
   frame = frame
 )
 
 fit$outcome_order
-fit$stages[["Did not vote"]]$formula
+fit$stages[["No Vote"]]$formula
 ```
 
 By default the fitter uses every survey column except the outcome. Supply
