@@ -543,9 +543,13 @@ columns enter the candidate set.
 The **110.40** in the first row comes from $s_1/s_p$. To calculate
 the **94%**, pick the House-share coefficient. For each singular
 direction, square the House-share loading and multiply it by that
-direction's squared condition index. Add those contributions across
-all directions, then divide the weakest direction's contribution by
-that total.
+direction's squared condition index. The product is that direction's
+contribution to the House-share coefficient's estimation variance, on
+a common scale. The squared condition index measures how much the
+direction amplifies noise variance, and the squared loading measures
+how strongly that amplified noise carries into the House-share
+estimate. Add those contributions across all directions, then divide
+the weakest direction's contribution by that total.
 
 In general, with condition index $\kappa_k=s_1/s_k$, the share of
 coefficient $j$'s estimation variance attributable to direction $k$ is
