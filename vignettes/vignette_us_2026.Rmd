@@ -492,28 +492,47 @@ table(audit_table("diagnostic"))
 before and after backward pruning. The column counts describe that fixed
 design alone. Random effects and spline bases are outside this check.*
 
-Each row in Table 8 is a weak principal component (PC) of the weighted,
-scaled fixed design before pruning. Its condition index is the square
-root of the ratio of the strongest PC's sum of squared scores to that
-PC's sum of squared scores. A larger index means a weaker PC.
+Each row in Table 8 describes a weak direction in the weighted, scaled
+fixed design before pruning. The singular value decomposition gives a
+singular value for each direction. The condition index is the largest
+singular value divided by the singular value for that direction. A
+larger index means a weaker direction.
 
 ```{r prefit-condition-components, echo=FALSE}
 table(audit_table("components"))
 ```
 
 *Table 8. Share of each coefficient's estimation variance accounted for
-by a weak PC. In the first row (Presidential, No Vote), the weakest PC
-has a condition index of 110.40. It accounts for 94% of the estimation
-variance of the House-share coefficient and 99% of the estimation
-variance of the interaction coefficient. Each percentage is a share of
-that coefficient's own variance. The design is held fixed while outcome
-noise varies in a hypothetical linear regression. The table shows PCs
-with a condition index of at least 30. **Table display cutoff:** a
-coefficient appears if the PC accounts for at least **10% of its
-estimation variance**. A dash means no coefficient reached 10%.
-**Pruning candidate cutoff:** a column is eligible for removal if its
-absolute loading on the weakest PC is at least **1% of the largest
-absolute loading** on that PC. The intercept is always kept.*
+by a weak direction. In the first row (Presidential, No Vote), the
+weakest direction has a condition index of 110.40. It accounts for 94%
+of the House-share coefficient's estimation variance and 99% of the
+interaction coefficient's estimation variance. Each percentage is a
+share of that coefficient's own variance. The design is held fixed
+while outcome noise varies in a hypothetical linear regression. The
+table shows directions with a condition index of at least 30. The
+**table display cutoff** is **10% of a coefficient's estimation
+variance**. A dash means no coefficient reached 10%. The **pruning
+candidate cutoff** is **1% of the largest absolute entry** in the
+right singular vector for the weakest direction. The intercept is
+always kept.*
+
+Let $X$ be the weighted, column-scaled design matrix. The program
+computes $X=U\,\mathrm{diag}(s_1,\ldots,s_p)V^\top$, with the singular
+values ordered largest to smallest.
+
+**The loading of column $j$ on direction $k$ is $V_{jk}$.** For pruning,
+the program uses the last column of $V$, which describes the weakest
+direction. Column $j$ qualifies as a removal candidate when
+
+$$
+|V_{jp}| \;\ge\; 0.01\,\max_i |V_{ip}|.
+$$
+
+The intercept participates in this calculation and is always kept. The
+**110.40** in the first row comes from $s_1/s_p$. The **94%** uses a
+different formula. Divide the House-share coefficient's contribution
+$V_{jp}^2/s_p^2$ by the sum of its contributions across all directions,
+$\sum_k V_{jk}^2/s_k^2$.
 
 ### How to read the figures
 
