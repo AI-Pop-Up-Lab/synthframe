@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--refresh", action="store_true", help="Download fresh source extracts.")
     args = parser.parse_args()
-    country = Path(__file__).resolve().parent / "denmark 2026"
+    country = Path(__file__).resolve().parent
     raw = country / "raw"
     raw.mkdir(exist_ok=True)
 
