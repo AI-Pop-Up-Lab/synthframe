@@ -54,6 +54,22 @@ knitr::opts_chunk$set(error = FALSE)
 knitr::knit("vignettes/vignette_denmark_2026.Rmd", output = "vignettes/vignette_denmark_2026.md")
 ```
 
+## Sweden 2026
+
+The [Sweden 2026 vignette](vignettes/vignette_sweden_2026.md) extends the
+population frame with 2022 Riksdag vote choice. Its
+[R Markdown source](vignettes/vignette_sweden_2026.Rmd) runs the sequential
+fits, municipal checks, raking, and the raking-impact plot. The
+[Sweden input guide](data/input/sweden%202026/README.md) documents the
+population frame, election results, and Swedish National Election Study
+auxiliary survey.
+
+```r
+knitr::opts_knit$set(root.dir = getwd())
+knitr::opts_chunk$set(error = FALSE)
+knitr::knit("vignettes/vignette_sweden_2026.Rmd", output = "vignettes/vignette_sweden_2026.md")
+```
+
 ## US 2026
 
 The [US 2026 inputs](data/input/us%202026/README.md) cover 2024 House and

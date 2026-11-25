@@ -79,9 +79,11 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
       )
       if (!identical(dim(logits), c(as.integer(n_draws), length(rows))) ||
           any(!is.finite(logits))) stop("Invalid posterior draws for ", sQuote(outcome), ".")
-      conditional <- stats::plogis(t(as.matrix(logits)))
+      logits <- t(as.matrix(logits))
+      conditional <- stats::plogis(logits)
       draws[rows, i, ] <- remaining[rows, , drop = FALSE] * conditional
-      remaining[rows, ] <- remaining[rows, , drop = FALSE] * (1 - conditional)
+      # The opposite tail stays positive when the conditional rounds to one.
+      remaining[rows, ] <- remaining[rows, , drop = FALSE] * stats::plogis(-logits)
     }
   }
   # The last outcome has no fitted stage. It receives the remaining probability.

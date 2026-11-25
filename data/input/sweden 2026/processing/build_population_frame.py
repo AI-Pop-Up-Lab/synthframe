@@ -155,7 +155,7 @@ def build_frame():
             estimate = citizens * count / education_total if education_total else 0.0
             totals[key].append(estimate)
             rows.append(dict(municipality=name, constituency=constituency,
-                             age_group="95+" if age == 95 else str(age), sex=sex,
+                             age=age, sex=sex,
                              education=level, N=estimate))
     for key, estimates in totals.items():
         code, sex, band = key

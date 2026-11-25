@@ -1,4 +1,4 @@
-municipality,constituency,age_group,sex,education,vote_choice_2022
+municipality,constituency,age,sex,education,vote_choice_2022
 Upplands Väsby,Stockholms län,80,Women,"Post-secondary, 3 years or more",V
 Upplands Väsby,Stockholms län,71,Men,,
 Upplands Väsby,Stockholms län,36,Women,"Upper secondary, up to 2 years",No Vote
@@ -238,7 +238,7 @@ Stockholm,Stockholms kommun,76,Men,"Post-secondary, 3 years or more",S
 Stockholm,Stockholms kommun,64,Women,"Post-secondary, 3 years or more",
 Stockholm,Stockholms kommun,77,Women,"Post-secondary, 3 years or more",M
 Stockholm,Stockholms kommun,51,Women,"Post-secondary, under 3 years",M
-Stockholm,Stockholms kommun,95+,Women,"Post-secondary, 3 years or more",S
+Stockholm,Stockholms kommun,95,Women,"Post-secondary, 3 years or more",S
 Stockholm,Stockholms kommun,80,Women,"Post-secondary, 3 years or more",M
 Stockholm,Stockholms kommun,79,Men,"Post-secondary, 3 years or more",S
 Stockholm,Stockholms kommun,81,Women,"Post-secondary, 3 years or more",S
@@ -877,7 +877,7 @@ Linköping,Östergötlands län,37,Men,"Post-secondary, 3 years or more",V
 Linköping,Östergötlands län,91,Women,,
 Linköping,Östergötlands län,73,Women,"Post-secondary, under 3 years",S
 Linköping,Östergötlands län,61,Women,"Upper secondary, up to 2 years",No Vote
-Linköping,Östergötlands län,95+,Men,"Compulsory education, 9 or 10 years",S
+Linköping,Östergötlands län,95,Men,"Compulsory education, 9 or 10 years",S
 Norrköping,Östergötlands län,65,Women,"Post-secondary, 3 years or more",M
 Norrköping,Östergötlands län,57,Women,"Upper secondary, up to 2 years",M
 Norrköping,Östergötlands län,32,Men,"Post-secondary, 3 years or more",MP
@@ -2005,7 +2005,7 @@ Kungälv,Västra Götalands läns västra,46,Men,"Post-secondary, 3 years or mor
 Kungälv,Västra Götalands läns västra,68,Men,"Post-secondary, 3 years or more",MP
 Kungälv,Västra Götalands läns västra,31,Men,"Upper secondary, 3 years",SD
 Kungälv,Västra Götalands läns västra,80,Women,"Post-secondary, 3 years or more",
-Kungälv,Västra Götalands läns västra,95+,Women,"Compulsory education, under 9 years",No Vote
+Kungälv,Västra Götalands läns västra,95,Women,"Compulsory education, under 9 years",No Vote
 Kungälv,Västra Götalands läns västra,66,Women,"Post-secondary, under 3 years",S
 Kungälv,Västra Götalands läns västra,83,Men,"Compulsory education, under 9 years",S
 Kungälv,Västra Götalands läns västra,49,Women,"Upper secondary, 3 years",S
@@ -2108,7 +2108,7 @@ Ulricehamn,Västra Götalands läns södra,43,Men,"Upper secondary, 3 years",S
 Ulricehamn,Västra Götalands läns södra,80,Men,"Compulsory education, under 9 years",S
 Ulricehamn,Västra Götalands läns södra,55,Women,"Post-secondary, 3 years or more",MP
 Ulricehamn,Västra Götalands läns södra,76,Women,"Post-secondary, 3 years or more",S
-Ulricehamn,Västra Götalands läns södra,95+,Women,"Compulsory education, under 9 years",M
+Ulricehamn,Västra Götalands läns södra,95,Women,"Compulsory education, under 9 years",M
 Ulricehamn,Västra Götalands läns södra,41,Women,"Post-secondary, under 3 years",MP
 Ulricehamn,Västra Götalands läns södra,84,Men,"Compulsory education, under 9 years",S
 Ulricehamn,Västra Götalands läns södra,50,Men,"Upper secondary, 3 years",C

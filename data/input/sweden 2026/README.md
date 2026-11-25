@@ -110,7 +110,7 @@ at age 18. The table shows the levels with positive resident counts.
 | --- | --- |
 | `municipality` | Swedish municipality name, as spelled in the election results. |
 | `constituency` | Riksdag constituency name, as spelled in the election results. |
-| `age_group` | Single year from 18 to 94, or `95+`. |
+| `age` | Numeric age in years. The integer 95 represents ages 95 and older. |
 | `sex` | SCB's recorded sex category, translated as `Men` or `Women`. |
 | `education` | SCB education level translated into English, including `Unknown`. |
 | `N` | Estimated resident Swedish citizens in the cell. |
@@ -138,14 +138,14 @@ The script uses the Python standard library and writes `frame.csv`.
 
 [auxiliary_survey.csv](auxiliary_survey.csv) has one row per respondent
 to the 2022 Swedish National Election Study CSES edition. Its columns
-are `municipality`, `constituency`, `age_group`, `sex`, `education`, and
+are `municipality`, `constituency`, `age`, `sex`, `education`, and
 `vote_choice_2022`. The geography and demographic labels match the population
 frame, and the vote choice labels match the election results.
 
 The respondent and municipality source files were joined on `lopnr`.
 The extract omits that key. Constituency names come from the municipality
 mapping in the official 2022 election results. Sex and age come from
-registers. Ages 95 and older are grouped as `95+`. Self-reported
+registers. Age is numeric and is capped at 95 to match the frame. Self-reported
 education (`v7301`) is recoded to approximate the frame categories.
 Reported party choice (`v7000`) and register turnout (`v7020`) identify
 party choice and nonvoting. Self-reported blank ballots map to

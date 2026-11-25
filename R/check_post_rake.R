@@ -9,7 +9,13 @@ check_post_rake <- function(raked_frame, frame, targets, by, extension_variable,
     plot_file = outcome_plot_file, outcome_order = outcome_order,
     coverage_tolerance = share_tolerance, no_vote = no_vote
   )
+  joint <- post_rake_cell_comparison(raked_frame, frame, extension_variable, count_variable)
+  joint_metrics <- plot_post_rake_cells(joint, joint_plot_file, count_tolerance)
+  invisible(list(outcome = margins, joint = list(comparison = joint,
+                 metrics = joint_metrics, plot_file = joint_plot_file)))
+}
 
+post_rake_cell_comparison <- function(raked_frame, frame, extension_variable, count_variable = "N") {
   cell_columns <- setdiff(names(frame), count_variable)
   validate_prediction_frame(frame, cell_columns, count_variable)
   if (!all(cell_columns %in% names(raked_frame))) {
@@ -34,6 +40,10 @@ check_post_rake <- function(raked_frame, frame, targets, by, extension_variable,
     joint$lower_90 <- intervals[, 1L]
     joint$upper_90 <- intervals[, 2L]
   }
+  joint
+}
+
+plot_post_rake_cells <- function(joint, joint_plot_file = NULL, count_tolerance = 1e-8) {
   panels <- list(joint)
   titles <- "All original cells"
   joint_metrics <- frame_target_metrics(panels, titles, "target_population",
@@ -42,6 +52,5 @@ check_post_rake <- function(raked_frame, frame, targets, by, extension_variable,
                            "Original stratification joint", joint_plot_file,
                            count_scale = TRUE)
   names(joint_metrics)[1:2] <- c("bias_count", "RMSE_count")
-  invisible(list(outcome = margins, joint = list(comparison = joint,
-                 metrics = joint_metrics, plot_file = joint_plot_file)))
+  invisible(joint_metrics)
 }
