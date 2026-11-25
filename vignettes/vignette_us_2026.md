@@ -395,33 +395,33 @@ scaled fixed design before pruning. Its condition index is the square
 root of the ratio of the strongest PC's sum of squared scores to that
 PC's sum of squared scores. A larger index means a weaker PC.
 
-|Model        |Stage      |Condition index        |Affected coefficients and their individual variance shares                           |
-|:------------|:----------|:----------------------|:------------------------------------------------------------------------------------|
-|Presidential |No Vote    |110.40                 |(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%) |
-|Presidential |Democratic |36.07                  |—                                                                                    |
-|Presidential |Democratic |94.18                  |house_share:pres_share (73%)                                                         |
-|Presidential |Democratic |155.25                 |(Intercept) (60%), pres_share (63%), on_ballot (87%), pres_share:on_ballot (89%)     |
-|Presidential |Democratic |20,453,431             |house_share (100%), house_share:on_ballot (100%)                                     |
-|Presidential |Democratic |140,868,925,592,265    |incumbent (100%), incumbent:on_ballot (100%)                                         |
-|Presidential |Republican |33.78                  |house_share:incumbent (89%)                                                          |
-|Presidential |Republican |47.43                  |pres_share:incumbent (50%)                                                           |
-|Presidential |Republican |132.54                 |house_share:pres_share (83%)                                                         |
-|Presidential |Republican |239.09                 |(Intercept) (81%), pres_share (82%), on_ballot (95%), pres_share:on_ballot (98%)     |
-|Presidential |Republican |387,072,888,929,741    |incumbent (100%), incumbent:on_ballot (100%)                                         |
-|Presidential |Republican |1,144,378,722,009,732  |house_share (100%), house_share:on_ballot (100%)                                     |
-|House        |No Vote    |110.14                 |(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%) |
-|House        |Democratic |36.19                  |—                                                                                    |
-|House        |Democratic |97.05                  |house_share:pres_share (80%)                                                         |
-|House        |Democratic |169.10                 |(Intercept) (68%), pres_share (71%), on_ballot (87%), pres_share:on_ballot (89%)     |
-|House        |Democratic |25,243,827             |house_share (100%), house_share:on_ballot (100%)                                     |
-|House        |Democratic |17,815,865,119,032,030 |incumbent (100%), incumbent:on_ballot (100%)                                         |
-|House        |Republican |30.41                  |—                                                                                    |
-|House        |Republican |36.62                  |house_share:incumbent (62%)                                                          |
-|House        |Republican |49.63                  |pres_share:incumbent (50%)                                                           |
-|House        |Republican |139.03                 |house_share:pres_share (92%)                                                         |
-|House        |Republican |303.19                 |(Intercept) (89%), pres_share (91%), on_ballot (95%), pres_share:on_ballot (97%)     |
-|House        |Republican |558,850,570,096,225    |house_share (100%), house_share:on_ballot (100%)                                     |
-|House        |Republican |893,841,368,873,835    |incumbent (100%), incumbent:on_ballot (100%)                                         |
+|Model        |Stage      |Condition index        |Affected coefficients and their individual variance shares                                                     |
+|:------------|:----------|:----------------------|:--------------------------------------------------------------------------------------------------------------|
+|Presidential |No Vote    |110.40                 |(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%)                           |
+|Presidential |Democratic |36.07                  |house_share:incumbent (42%), pres_share:incumbent (49%)                                                        |
+|Presidential |Democratic |94.18                  |(Intercept) (21%), pres_share (22%), house_share:pres_share (73%), pres_share:incumbent (38%)                  |
+|Presidential |Democratic |155.25                 |(Intercept) (60%), pres_share (63%), on_ballot (87%), house_share:pres_share (26%), pres_share:on_ballot (89%) |
+|Presidential |Democratic |20,453,431             |(Intercept) (15%), house_share (100%), pres_share (11%), house_share:on_ballot (100%)                          |
+|Presidential |Democratic |140,868,925,592,265    |incumbent (100%), incumbent:on_ballot (100%)                                                                   |
+|Presidential |Republican |33.78                  |house_share:incumbent (89%)                                                                                    |
+|Presidential |Republican |47.43                  |pres_share:incumbent (50%)                                                                                     |
+|Presidential |Republican |132.54                 |(Intercept) (15%), pres_share (16%), house_share:pres_share (83%), pres_share:incumbent (43%)                  |
+|Presidential |Republican |239.09                 |(Intercept) (81%), pres_share (82%), on_ballot (95%), house_share:pres_share (16%), pres_share:on_ballot (98%) |
+|Presidential |Republican |387,072,888,929,741    |incumbent (100%), incumbent:on_ballot (100%)                                                                   |
+|Presidential |Republican |1,144,378,722,009,732  |house_share (100%), house_share:on_ballot (100%)                                                               |
+|House        |No Vote    |110.14                 |(Intercept) (98%), house_share (94%), pres_share (93%), house_share:pres_share (99%)                           |
+|House        |Democratic |36.19                  |house_share:incumbent (42%), pres_share:incumbent (49%)                                                        |
+|House        |Democratic |97.05                  |(Intercept) (16%), pres_share (17%), house_share:pres_share (80%), pres_share:incumbent (40%)                  |
+|House        |Democratic |169.10                 |(Intercept) (68%), pres_share (71%), on_ballot (87%), house_share:pres_share (19%), pres_share:on_ballot (89%) |
+|House        |Democratic |25,243,827             |(Intercept) (13%), house_share (100%), house_share:on_ballot (100%)                                            |
+|House        |Democratic |17,815,865,119,032,030 |incumbent (100%), incumbent:on_ballot (100%)                                                                   |
+|House        |Republican |30.41                  |house_share:incumbent (30%)                                                                                    |
+|House        |Republican |36.62                  |house_share:incumbent (62%)                                                                                    |
+|House        |Republican |49.63                  |pres_share:incumbent (50%)                                                                                     |
+|House        |Republican |139.03                 |house_share:pres_share (92%), pres_share:incumbent (46%)                                                       |
+|House        |Republican |303.19                 |(Intercept) (89%), pres_share (91%), on_ballot (95%), pres_share:on_ballot (97%)                               |
+|House        |Republican |558,850,570,096,225    |house_share (100%), house_share:on_ballot (100%)                                                               |
+|House        |Republican |893,841,368,873,835    |incumbent (100%), incumbent:on_ballot (100%)                                                                   |
 
 *Table 8. Share of each coefficient's estimation variance accounted for
 by a weak PC. In the first row (Presidential, No Vote), the weakest PC
@@ -430,8 +430,12 @@ variance of the House-share coefficient and 99% of the estimation
 variance of the interaction coefficient. Each percentage is a share of
 that coefficient's own variance. The design is held fixed while outcome
 noise varies in a hypothetical linear regression. The table shows PCs
-with a condition index of at least 30 and lists coefficients whose
-variance share is at least 50%. A dash means no coefficient reached 50%.*
+with a condition index of at least 30. **Table display cutoff:** a
+coefficient appears if the PC accounts for at least **10% of its
+estimation variance**. A dash means no coefficient reached 10%.
+**Pruning candidate cutoff:** a column is eligible for removal if its
+absolute loading on the weakest PC is at least **1% of the largest
+absolute loading** on that PC. The intercept is always kept.*
 
 ### How to read the figures
 
