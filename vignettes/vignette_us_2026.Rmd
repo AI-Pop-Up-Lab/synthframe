@@ -520,15 +520,16 @@ Let $X$ be the supported fixed design with each row weighted by the
 square root of its trial count and each column scaled to unit length.
 For Table 8, $X$ is the design before pruning. At each pruning step, $X$
 contains the columns still retained after enforcing hierarchy. The
-program computes $X=U\,\mathrm{diag}(s_1,\ldots,s_p)V^\top$, with the singular
+program computes $X=U\cdot\mathrm{diag}(s_1,\ldots,s_p)\cdot V^\top$, with the singular
 values ordered largest to smallest.
 
-**The loading of column $j$ on direction $k$ is $V_{jk}$.** For pruning,
-the program uses the last column of $V$, which describes the weakest
+**The loading of design column $j$ on direction $k$ is $V_{jk}$.**
+This is the entry in row $j$ and column $k$ of $V$. For pruning, the
+program uses the last column of $V$, which describes the weakest
 direction. A non-intercept column $j$ enters the candidate set when
 
 $$
-|V_{jp}| \;\ge\; 0.01\,\max_i |V_{ip}|.
+|V_{jp}| \;\ge\; 0.01\cdot\max_i |V_{ip}|.
 $$
 
 The rule asks, “Is this column’s absolute loading at least 1/100 as
@@ -555,7 +556,7 @@ In general, with condition index $\kappa_k=s_1/s_k$, the share of
 coefficient $j$'s estimation variance attributable to direction $k$ is
 
 $$
-\frac{V_{jk}^2\,\kappa_k^2}{\sum_\ell V_{j\ell}^2\,\kappa_\ell^2}.
+\frac{V_{jk}^2\cdot\kappa_k^2}{\sum_\ell \left(V_{j\ell}^2\cdot\kappa_\ell^2\right)}.
 $$
 
 The code uses $V_{jk}^2/s_k^2$ for each contribution. Since
