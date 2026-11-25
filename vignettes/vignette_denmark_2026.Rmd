@@ -21,7 +21,7 @@ outcome <- "vote_choice_2022"
 no_vote <- "No Vote"
 predictors <- c(area, "gender", "age_group", "education")
 out <- Sys.getenv("VOTEFRAME_DENMARK_OUTPUT_DIR",
-                  unset = file.path("data", "output", "denmark-2026-sequential"))
+                  unset = file.path("data", "output", basename(country)))
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 figure_dir <- file.path("vignettes", "assets", "denmark-2026")
 dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
@@ -86,12 +86,16 @@ saveRDS(fit, file.path(out, "fit.rds"))
 ```
 
 ```{r design-and-fit-log}
-fields <- c("outcome", "observations", "fitted_depth", "estimated_retained_parameters",
+fields <- c("outcome", "observations", "fitted_depth", "retained_order",
+            "estimated_retained_parameters",
             "dropped_fixed", "dropped_scalar_random", "dropped_correlated_random",
             "dropped_smooth", "fixed_condition_after", "iterations_used",
             "max_parameter_change", "status")
 knitr::kable(fit$fit_log[fields])
 ```
+
+The Invalid stage accepted candidate depth 4. Its largest retained terms
+combine gender and 2022 vote share, so its retained order is 2.
 
 In this run, the No Vote stage reached the 100-iteration cap with a
 maximum parameter change of 0.02414 against the 0.01 threshold. The
@@ -147,6 +151,10 @@ raked <- rake_extended_frame(
 )
 saveRDS(raked, file.path(out, "raked_frame.rds"))
 ```
+
+By default, the final raked frame is saved to
+`data/output/denmark 2026/raked_frame.rds`. The pre-raking frame is
+`extended_frame.rds` in the same folder.
 
 ## Check both margins after raking
 

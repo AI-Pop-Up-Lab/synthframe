@@ -140,7 +140,8 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     fit_log <- rbind(fit_log, data.frame(
       stage = i, outcome = outcome, observations = observations,
       cells = sum(at_risk), omitted_survey_rows = survey$omitted, requested_depth = depth,
-      fitted_depth = candidate, downgraded = candidate < depth,
+      fitted_depth = candidate, retained_order = prepared$retained_order,
+      downgraded = candidate < depth,
       estimated_parameters = design$parameter_count,
       fixed_coefficients = design$fixed_coefficients,
       retained_fixed_coefficients = design$retained_fixed_coefficients,

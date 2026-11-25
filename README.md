@@ -363,6 +363,12 @@ The CSV records nominal and retained estimates for each attempted depth, the sel
 respondent and cell totals, and fit status. The returned object exposes the
 log as `fit$fit_log` and its path as `fit$log_file`.
 
+`fitted_depth` records the accepted candidate depth, including fractional
+values. `retained_order` counts the predictors in the largest term that
+survives screening. An overall intercept has order 0, a main effect or
+area random intercept has order 1, and a two-predictor interaction has
+order 2.
+
 ## Predicting and extending the frame
 
 ```r

@@ -158,7 +158,10 @@ prepare_sequential_fit <- function(design) {
   dropped["smooth"] <- sum(design$candidate_smooth_width[removed_smooth]) + removed_smooth_columns
   formula <- stats::reformulate(c("1", design$fixed_terms, random, smooth[keep_smooth]),
                                 "cbind(.success, .failure)", env = formula_env)
+  # Every retained smooth has a corresponding term in retained_keys.
+  retained_order <- max(c(0L, lengths(strsplit(retained_keys, ":", fixed = TRUE))))
   list(formula = formula, data = data, random_prediction = prediction,
+       retained_order = retained_order,
        screened_smooth_groups = screened_smooth_groups,
        dropped_smooth_level_columns = removed_smooth_columns,
        hierarchical = length(random) + sum(keep_smooth) > 0L,

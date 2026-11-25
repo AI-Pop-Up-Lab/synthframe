@@ -22,7 +22,7 @@ outcome <- "vote_choice_2022"
 no_vote <- "No Vote"
 predictors <- c(area, "gender", "age_group", "education")
 out <- Sys.getenv("VOTEFRAME_DENMARK_OUTPUT_DIR",
-                  unset = file.path("data", "output", "denmark-2026-sequential"))
+                  unset = file.path("data", "output", basename(country)))
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 figure_dir <- file.path("vignettes", "assets", "denmark-2026")
 dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
@@ -113,7 +113,8 @@ saveRDS(fit, file.path(out, "fit.rds"))
 
 
 ``` r
-fields <- c("outcome", "observations", "fitted_depth", "estimated_retained_parameters",
+fields <- c("outcome", "observations", "fitted_depth", "retained_order",
+            "estimated_retained_parameters",
             "dropped_fixed", "dropped_scalar_random", "dropped_correlated_random",
             "dropped_smooth", "fixed_condition_after", "iterations_used",
             "max_parameter_change", "status")
@@ -122,18 +123,21 @@ knitr::kable(fit$fit_log[fields])
 
 
 
-|outcome                         | observations| fitted_depth| estimated_retained_parameters| dropped_fixed| dropped_scalar_random| dropped_correlated_random| dropped_smooth| fixed_condition_after| iterations_used| max_parameter_change|status   |
-|:-------------------------------|------------:|------------:|-----------------------------:|-------------:|---------------------:|-------------------------:|--------------:|---------------------:|---------------:|--------------------:|:--------|
-|No Vote                         |         2602|            2|                          1145|             0|                  1720|                       107|           2185|             12.714249|             100|            0.0241435|returned |
-|A: Socialdemokratiet            |         2503|            2|                          1134|             0|                  1698|                       109|           2185|              9.259361|              16|            0.0053718|returned |
-|Other - Left                    |         1840|            2|                          1032|             0|                  1544|                       124|           2185|              3.207179|              17|            0.0056380|returned |
-|V: Venstre                      |         1456|            2|                           991|             0|                  1473|                       127|           2185|              6.870647|              11|            0.0080692|returned |
-|F: SF - Socialistisk Folkeparti |         1129|            2|                           942|             0|                  1326|                       143|           2185|              6.710431|              25|            0.0037753|returned |
-|Other - Right                   |          855|            1|                            81|             0|                    66|                         0|              0|              8.067551|              10|            0.0098956|returned |
-|M: Moderaterne                  |          599|            1|                            69|             0|                    76|                         0|              0|              8.153983|               7|            0.0009223|returned |
-|I: Liberal Alliance             |          349|            1|                            55|             0|                    82|                         0|              0|              7.643608|              10|            0.0041993|returned |
-|Æ: Danmarksdemokraterne         |          190|            1|                            39|             0|                    81|                         0|              0|              4.407712|              16|            0.0086571|returned |
-|Invalid                         |           39|            4|                            28|             0|                    39|                       741|           2688|             16.719593|              11|            0.0075036|returned |
+|outcome                         | observations| fitted_depth| retained_order| estimated_retained_parameters| dropped_fixed| dropped_scalar_random| dropped_correlated_random| dropped_smooth| fixed_condition_after| iterations_used| max_parameter_change|status   |
+|:-------------------------------|------------:|------------:|--------------:|-----------------------------:|-------------:|---------------------:|-------------------------:|--------------:|---------------------:|---------------:|--------------------:|:--------|
+|No Vote                         |         2602|            2|              2|                          1145|             0|                  1720|                       107|           2185|             12.714249|             100|            0.0241435|returned |
+|A: Socialdemokratiet            |         2503|            2|              2|                          1134|             0|                  1698|                       109|           2185|              9.259361|              16|            0.0053718|returned |
+|Other - Left                    |         1840|            2|              2|                          1032|             0|                  1544|                       124|           2185|              3.207179|              17|            0.0056380|returned |
+|V: Venstre                      |         1456|            2|              2|                           991|             0|                  1473|                       127|           2185|              6.870647|              11|            0.0080692|returned |
+|F: SF - Socialistisk Folkeparti |         1129|            2|              2|                           942|             0|                  1326|                       143|           2185|              6.710431|              25|            0.0037753|returned |
+|Other - Right                   |          855|            1|              1|                            81|             0|                    66|                         0|              0|              8.067551|              10|            0.0098956|returned |
+|M: Moderaterne                  |          599|            1|              1|                            69|             0|                    76|                         0|              0|              8.153983|               7|            0.0009223|returned |
+|I: Liberal Alliance             |          349|            1|              1|                            55|             0|                    82|                         0|              0|              7.643608|              10|            0.0041993|returned |
+|Æ: Danmarksdemokraterne         |          190|            1|              1|                            39|             0|                    81|                         0|              0|              4.407712|              16|            0.0086571|returned |
+|Invalid                         |           39|            4|              2|                            28|             0|                    39|                       741|           2688|             16.719593|              11|            0.0075036|returned |
+
+The Invalid stage accepted candidate depth 4. Its largest retained terms
+combine gender and 2022 vote share, so its retained order is 2.
 
 In this run, the No Vote stage reached the 100-iteration cap with a
 maximum parameter change of 0.02414 against the 0.01 threshold. The
@@ -214,6 +218,10 @@ raked <- rake_extended_frame(
 )
 saveRDS(raked, file.path(out, "raked_frame.rds"))
 ```
+
+By default, the final raked frame is saved to
+`data/output/denmark 2026/raked_frame.rds`. The pre-raking frame is
+`extended_frame.rds` in the same folder.
 
 ## Check both margins after raking
 

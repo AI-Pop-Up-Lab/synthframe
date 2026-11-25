@@ -685,7 +685,7 @@ House totals per draw and calculate intervals from those totals.
 
 ```{r presidential-fit}
 out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
-                  unset = file.path("data", "output", "us-2026-fit"))
+                  unset = file.path("data", "output", basename(country)))
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 requested_depth <- 2L
 max_iterations <- 100L
