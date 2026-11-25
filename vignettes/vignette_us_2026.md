@@ -438,20 +438,31 @@ candidate cutoff** is **1% of the largest absolute entry** in the
 right singular vector for the weakest direction. The intercept is
 always kept.*
 
-Let $X$ be the weighted, column-scaled design matrix. The program
-computes $X=U\,\mathrm{diag}(s_1,\ldots,s_p)V^\top$, with the singular
+Let $X$ be the supported fixed design with each row weighted by the
+square root of its trial count and each column scaled to unit length.
+For Table 8, $X$ is the design before pruning. At each pruning step, $X$
+contains the columns still retained after enforcing hierarchy. The
+program computes $X=U\,\mathrm{diag}(s_1,\ldots,s_p)V^\top$, with the singular
 values ordered largest to smallest.
 
 **The loading of column $j$ on direction $k$ is $V_{jk}$.** For pruning,
 the program uses the last column of $V$, which describes the weakest
-direction. Column $j$ qualifies as a removal candidate when
+direction. A non-intercept column $j$ enters the candidate set when
 
 $$
 |V_{jp}| \;\ge\; 0.01\,\max_i |V_{ip}|.
 $$
 
-The intercept participates in this calculation and is always kept. The
-**110.40** in the first row comes from $s_1/s_p$. The **94%** uses a
+The rule asks, “Is this column’s absolute loading at least 1/100 as
+large as the biggest absolute loading in this direction?”
+Using the largest loading as the reference lets the cutoff adapt to how
+concentrated or spread out the loadings are in that direction.
+
+The intercept participates in this calculation and is always kept. If
+the cutoff yields an empty candidate set, all remaining non-intercept
+columns enter the candidate set.
+
+The **110.40** in the first row comes from $s_1/s_p$. The **94%** uses a
 different formula. Divide the House-share coefficient's contribution
 $V_{jp}^2/s_p^2$ by the sum of its contributions across all directions,
 $\sum_k V_{jk}^2/s_k^2$.
