@@ -168,38 +168,22 @@ knitr::include_graphics(sub("^vignettes/", "", figure("original-cell-totals")), 
 
 ## Measure how raking changes the estimates
 
-The municipal outcomes are constrained by the rake. Vote shares for
-age, sex, and education groups are free to move. Compare those margins
-before and after raking, using the full group population for nonvoting
-and the number of voters for the other choices. The table gives mean
-absolute and maximum absolute changes in percentage points across the
-groups for each outcome. It uses the posterior mean count column.
+`plot_raking_changes()` shows how calibration changed vote shares on
+demographic margins. Each row shows a grouping, such as age group or
+municipality × education. In the outcome panels, dots are subgroup
+changes in percentage points and squares are population-weighted
+averages. Green marks increases and red marks decreases. Shares use
+the number of voters for ballot choices and the full group population
+for No Vote. The total variation panel summarizes changes across the
+whole distribution among voters. Its dots are posterior draws and its
+square uses the mean counts.
 
 ```{r raking-changes}
-shares_by <- function(data, variable) {
-  keys <- c(variable, outcome)
-  totals <- aggregate(data$N, data[keys], sum)
-  group <- totals[[variable]]
-  population <- tapply(totals$x, group, sum)
-  voters <- totals[[outcome]] != no_vote
-  turnout <- tapply(totals$x[voters], group[voters], sum)
-  denominator <- unname(population[group])
-  denominator[voters] <- turnout[group[voters]]
-  totals$share <- ifelse(denominator > 0, totals$x / denominator, NA_real_)
-  totals[c(keys, "share")]
-}
-changes <- do.call(rbind, lapply(c(area, "gender", "age_group", "education"), function(variable) {
-  paired <- merge(shares_by(extended, variable), shares_by(raked, variable),
-                  by = c(variable, outcome), suffixes = c("_before", "_after"))
-  absolute_change <- 100 * abs(paired$share_after - paired$share_before)
-  measured <- is.finite(absolute_change)
-  by_outcome <- split(absolute_change[measured], paired[[outcome]][measured])
-  data.frame(grouping = variable, outcome = names(by_outcome),
-             mean_change_pp = vapply(by_outcome, mean, numeric(1)),
-             max_change_pp = vapply(by_outcome, max, numeric(1)), row.names = NULL)
-}))
-write.csv(changes, file.path(out, "raking_changes.csv"), row.names = FALSE)
-knitr::kable(changes, digits = 3)
+change_plot <- plot_raking_changes(
+  extended, raked, frame[c(predictors, "N")], area = area, outcome = outcome,
+  plot_file = figure("raking-changes"), no_vote = no_vote
+)
+knitr::include_graphics(sub("^vignettes/", "", change_plot), error = FALSE)
 ```
 
 ## Inspect the extended frame

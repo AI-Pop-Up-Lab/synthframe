@@ -263,89 +263,26 @@ knitr::include_graphics(sub("^vignettes/", "", figure("original-cell-totals")), 
 
 ## Measure how raking changes the estimates
 
-The municipal outcomes are constrained by the rake. Vote shares for
-age, sex, and education groups are free to move. Compare those margins
-before and after raking, using the full group population for nonvoting
-and the number of voters for the other choices. The table gives mean
-absolute and maximum absolute changes in percentage points across the
-groups for each outcome. It uses the posterior mean count column.
+`plot_raking_changes()` shows how calibration changed vote shares on
+demographic margins. Each row shows a grouping, such as age group or
+municipality × education. In the outcome panels, dots are subgroup
+changes in percentage points and squares are population-weighted
+averages. Green marks increases and red marks decreases. Shares use
+the number of voters for ballot choices and the full group population
+for No Vote. The total variation panel summarizes changes across the
+whole distribution among voters. Its dots are posterior draws and its
+square uses the mean counts.
 
 
 ``` r
-shares_by <- function(data, variable) {
-  keys <- c(variable, outcome)
-  totals <- aggregate(data$N, data[keys], sum)
-  group <- totals[[variable]]
-  population <- tapply(totals$x, group, sum)
-  voters <- totals[[outcome]] != no_vote
-  turnout <- tapply(totals$x[voters], group[voters], sum)
-  denominator <- unname(population[group])
-  denominator[voters] <- turnout[group[voters]]
-  totals$share <- ifelse(denominator > 0, totals$x / denominator, NA_real_)
-  totals[c(keys, "share")]
-}
-changes <- do.call(rbind, lapply(c(area, "gender", "age_group", "education"), function(variable) {
-  paired <- merge(shares_by(extended, variable), shares_by(raked, variable),
-                  by = c(variable, outcome), suffixes = c("_before", "_after"))
-  absolute_change <- 100 * abs(paired$share_after - paired$share_before)
-  measured <- is.finite(absolute_change)
-  by_outcome <- split(absolute_change[measured], paired[[outcome]][measured])
-  data.frame(grouping = variable, outcome = names(by_outcome),
-             mean_change_pp = vapply(by_outcome, mean, numeric(1)),
-             max_change_pp = vapply(by_outcome, max, numeric(1)), row.names = NULL)
-}))
-write.csv(changes, file.path(out, "raking_changes.csv"), row.names = FALSE)
-knitr::kable(changes, digits = 3)
+change_plot <- plot_raking_changes(
+  extended, raked, frame[c(predictors, "N")], area = area, outcome = outcome,
+  plot_file = figure("raking-changes"), no_vote = no_vote
+)
+knitr::include_graphics(sub("^vignettes/", "", change_plot), error = FALSE)
 ```
 
-
-
-|grouping     |outcome                         | mean_change_pp| max_change_pp|
-|:------------|:-------------------------------|--------------:|-------------:|
-|municipality |A: Socialdemokratiet            |          1.940|         6.721|
-|municipality |Æ: Danmarksdemokraterne         |          3.281|        11.812|
-|municipality |F: SF - Socialistisk Folkeparti |          2.057|         5.077|
-|municipality |I: Liberal Alliance             |          1.891|        11.804|
-|municipality |Invalid                         |          0.271|         1.328|
-|municipality |M: Moderaterne                  |          0.907|         5.619|
-|municipality |No Vote                         |         11.499|        14.689|
-|municipality |Other                           |          0.356|         0.794|
-|municipality |Other - Left                    |          1.750|         5.343|
-|municipality |Other - Right                   |          2.447|         7.234|
-|municipality |V: Venstre                      |          1.267|         2.856|
-|gender       |A: Socialdemokratiet            |          0.372|         0.742|
-|gender       |Æ: Danmarksdemokraterne         |          2.246|         2.569|
-|gender       |F: SF - Socialistisk Folkeparti |          2.162|         2.662|
-|gender       |I: Liberal Alliance             |          0.662|         0.770|
-|gender       |Invalid                         |          0.073|         0.115|
-|gender       |M: Moderaterne                  |          0.770|         1.031|
-|gender       |No Vote                         |         11.696|        11.900|
-|gender       |Other                           |          0.349|         0.361|
-|gender       |Other - Left                    |          1.072|         1.209|
-|gender       |Other - Right                   |          2.044|         2.154|
-|gender       |V: Venstre                      |          0.898|         1.117|
-|age_group    |A: Socialdemokratiet            |          0.371|         0.875|
-|age_group    |Æ: Danmarksdemokraterne         |          2.237|         3.108|
-|age_group    |F: SF - Socialistisk Folkeparti |          2.129|         2.581|
-|age_group    |I: Liberal Alliance             |          0.723|         1.989|
-|age_group    |Invalid                         |          0.067|         0.140|
-|age_group    |M: Moderaterne                  |          0.727|         0.965|
-|age_group    |No Vote                         |         11.517|        15.883|
-|age_group    |Other                           |          0.358|         0.621|
-|age_group    |Other - Left                    |          0.979|         1.667|
-|age_group    |Other - Right                   |          2.076|         2.564|
-|age_group    |V: Venstre                      |          0.908|         1.238|
-|education    |A: Socialdemokratiet            |          0.775|         1.713|
-|education    |Æ: Danmarksdemokraterne         |          1.832|         3.673|
-|education    |F: SF - Socialistisk Folkeparti |          2.241|         3.951|
-|education    |I: Liberal Alliance             |          0.956|         2.322|
-|education    |Invalid                         |          0.082|         0.165|
-|education    |M: Moderaterne                  |          0.834|         1.279|
-|education    |No Vote                         |         13.154|        21.546|
-|education    |Other                           |          0.398|         0.583|
-|education    |Other - Left                    |          1.242|         1.961|
-|education    |Other - Right                   |          2.099|         2.608|
-|education    |V: Venstre                      |          0.807|         1.551|
+![plot of chunk raking-changes](assets/denmark-2026/raking-changes.png)
 
 ## Inspect the extended frame
 

@@ -1,6 +1,6 @@
 # Draw changes on outcome margins left unconstrained by the rake.
 plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file,
-                                 count_variable = "N", constrained_by = area) {
+                                 count_variable = "N", constrained_by = area, no_vote = NULL) {
   cell_columns <- setdiff(names(frame), count_variable)
   row_keys <- c(cell_columns, outcome)
   stopifnot(identical(extended[row_keys], raked[row_keys]),
@@ -21,7 +21,13 @@ plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file
   outcomes <- unique(extended[[outcome]])
   outcome_index <- match(extended[[outcome]], outcomes)
   count_columns <- c(count_variable, draws)
-  count_delta <- as.data.frame(Map("-", raked[count_columns], extended[count_columns]))
+  if (!is.null(no_vote) &&
+      (length(no_vote) != 1L || !no_vote %in% outcomes || length(outcomes) < 2L)) {
+    stop("Identify the nonvoting outcome when plotting changes conditional on turnout.")
+  }
+  if (is.null(no_vote)) {
+    count_delta <- as.data.frame(Map("-", raked[count_columns], extended[count_columns]))
+  }
   full_population <- sum(frame[[count_variable]])
   if (full_population <= 0) stop("The original frame must have positive population.")
 
@@ -32,8 +38,38 @@ plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file
     group <- match(frame_cell_keys(extended[by], frame[by]), unique(frame_keys))
     joint <- group + (outcome_index - 1L) * length(population)
     first <- !duplicated(joint)
-    changes <- rowsum(count_delta, joint, reorder = FALSE)
     row_group <- group[first]
+    if (!is.null(no_vote)) {
+      voted <- outcomes[outcome_index[first]] != no_vote
+      conditional_shares <- function(counts) {
+        totals <- as.matrix(rowsum(counts[count_columns], joint, reorder = FALSE))
+        turnout <- matrix(0, length(population), ncol(totals))
+        by_group <- rowsum(totals[voted, , drop = FALSE], row_group[voted])
+        turnout[as.integer(rownames(by_group)), ] <- by_group
+        denominator <- matrix(population[row_group], nrow(totals), ncol(totals))
+        denominator[voted, ] <- turnout[row_group[voted], , drop = FALSE]
+        totals[denominator <= 0] <- NA_real_
+        totals / denominator
+      }
+      delta <- conditional_shares(raked) - conditional_shares(extended)
+      variation <- vapply(seq_len(ncol(delta)), function(column) {
+        valid <- voted & is.finite(delta[, column])
+        weights <- population[row_group[valid]]
+        if (!length(weights)) return(NA_real_)
+        50 * sum(abs(delta[valid, column]) * weights) /
+          sum(population[unique(row_group[valid])])
+      }, numeric(1))
+      outcome_rows <- lapply(seq_along(outcomes), function(i) {
+        which(outcome_index[first] == i & is.finite(delta[, 1L]))
+      })
+      points <- lapply(outcome_rows, function(rows) 100 * delta[rows, 1L])
+      means <- vapply(outcome_rows, function(rows) {
+        stats::weighted.mean(100 * delta[rows, 1L], population[row_group[rows]])
+      }, numeric(1))
+      return(list(points = c(list(variation[-1L]), points),
+                  squares = c(variation[1L], means)))
+    }
+    changes <- rowsum(count_delta, joint, reorder = FALSE)
     tv <- 50 * vapply(changes, function(x) sum(abs(x)), numeric(1)) / full_population
     outcome_points <- lapply(seq_along(outcomes), function(i) {
       rows <- outcome_index[first] == i & population[row_group] > 0
@@ -47,11 +83,12 @@ plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file
          squares = c(tv[[count_variable]], outcome_means))
   })
 
-  draw_raking_change_panels(summary, labels, outcomes, plot_file)
+  variation_title <- if (is.null(no_vote)) "Total variation" else "Total variation among voters"
+  draw_raking_change_panels(summary, labels, outcomes, plot_file, variation_title)
   invisible(plot_file)
 }
 
-draw_raking_change_panels <- function(summary, labels, outcomes, plot_file) {
+draw_raking_change_panels <- function(summary, labels, outcomes, plot_file, variation_title = "Total variation") {
   n_columns <- min(4L, length(outcomes) + 1L)
   n_rows <- ceiling((length(outcomes) + 1L) / n_columns)
   grDevices::png(plot_file, width = 1950, height = 505 * n_rows + 120,
@@ -62,7 +99,7 @@ draw_raking_change_panels <- function(summary, labels, outcomes, plot_file) {
   graphics::par(oma = c(0.65, 0.8, 2.8, 0.8), cex = 1)
   y <- rev(seq_along(labels))
   y_limits <- c(0.5, length(y) + 0.5)
-  panel_titles <- c("Total variation", outcomes)
+  panel_titles <- c(variation_title, outcomes)
 
   for (panel_row in seq_len(n_rows)) {
     graphics::par(mar = c(1.85, 0.15, 2.2, 0.15))
@@ -78,7 +115,7 @@ draw_raking_change_panels <- function(summary, labels, outcomes, plot_file) {
       graphics::par(mar = c(1.85, 0.38, 2.2, 0.38), mgp = c(1.25, 0.36, 0))
       point_values <- lapply(summary, function(x) x$points[[panel]])
       square_values <- vapply(summary, function(x) x$squares[panel], numeric(1))
-      limits <- range(c(0, square_values, unlist(point_values, use.names = FALSE)))
+      limits <- range(c(0, square_values, unlist(point_values, use.names = FALSE)), finite = TRUE)
       if (diff(limits) == 0) limits <- limits + c(-0.1, 0.1)
       graphics::plot(square_values, y, type = "n", xlim = limits, ylim = y_limits,
                      yaxs = "i", axes = FALSE, xlab = "", ylab = "")
@@ -87,7 +124,7 @@ draw_raking_change_panels <- function(summary, labels, outcomes, plot_file) {
       graphics::abline(h = y, col = "#E8EFF0")
       graphics::abline(v = 0, col = "#788B91", lty = 2)
       for (i in seq_along(point_values)) {
-        values <- point_values[[i]]
+        values <- point_values[[i]][is.finite(point_values[[i]])]
         n <- length(values)
         if (!n) next
         # Spread coincident points without changing the RNG state.
