@@ -29,6 +29,17 @@ main <- function() {
   fit <- do.call(fit_sequential_logit, c(list(auxiliary_survey = survey,
     extension_variable = "vote", predictors = c("area", "age"), frame = frame,
     log_file = file.path(scratch, "standalone-fit.csv")), fit_options))
+  # The same stage cache can span batches, but cannot supply another fit or draw count.
+  stage <- fit$stages[[1L]]
+  stage_data <- prepare_prediction_stage(fit, stage, choices[1L], frame)
+  state <- new.env(parent = emptyenv())
+  sample_stage <- function(model, n) predict_vglmer_levels(model, stage_data, n, draw_state = state)
+  first_draw <- sample_stage(stage$fit, 1L)
+  stopifnot(identical(sample_stage(stage$fit, 1), first_draw))
+  for (request in list(list(stage$fit, 2L), list(fit$stages[[2L]]$fit, 1L))) {
+    error <- tryCatch(do.call(sample_stage, request), error = conditionMessage)
+    stopifnot(is.character(error), grepl("same fit, draw count", error, fixed = TRUE))
+  }
   posterior <- predict_sequential_logit(fit, frame, write_files = FALSE, batch_size = 2L)
   extended <- aggregate_extended_frame(frame, posterior, by = c("area", "age"))
   collapsed <- collapse_extended_frame(frame, posterior)
@@ -109,6 +120,15 @@ main <- function() {
     check <- check_extended_frame(full$frame, table, "area", outcome, draw_plot = FALSE)
     stopifnot(max(abs(check$comparison$estimate - check$comparison$target)) < 1e-8)
   }
+  source("tests/area_covariates.R", local = TRUE)
+  source("tests/stage_screening.R", local = TRUE)
+  source("tests/prediction_design.R", local = TRUE)
+  source("tests/stage_log.R", local = TRUE)
+  check_area_covariates()
+  check_stage_screening()
+  check_prediction_design(scratch)
+  check_stage_log()
+
   cat("VoteFrame integration checks passed.\n")
 }
 main()

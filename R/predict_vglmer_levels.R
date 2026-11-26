@@ -23,6 +23,11 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
     stop("Supply complete prediction rows.")
   }
 
+  if (!is.null(draw_state)) {
+    bind_prediction_draw_state(draw_state, fit, n_draws, new_fixed_sd)
+    if (is.null(draw_state$fixed)) draw_state$fixed <- new.env(parent = emptyenv())
+  }
+
   # Use fitted coefficient names to line up the design and the draws.
   fixed_names <- rownames(fit$beta$mean)
   random_names <- rownames(fit$alpha$mean)
@@ -32,6 +37,7 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
   } else if (n_draws == 0) {
     t(as.matrix(rbind(fit$beta$mean, fit$alpha$mean)))
   } else if (inherits(fit, "voteframe_fixed_logit")) {
+    # Models saved by earlier versions can contain a fitted fixed-only stage.
     draws <- mvtnorm::rmvnorm(n_draws, as.vector(fit$beta$mean), fit$beta$covariance)
     colnames(draws) <- fixed_names
     draws
@@ -137,6 +143,20 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
     logits <- logits + as.matrix(block[, as.vector(new_levels), drop = FALSE] %*% new_coefficients)
   }
   t(logits)
+}
+
+# Draws may be shared across batches of one model with the same sampling settings.
+bind_prediction_draw_state <- function(state, fit, n_draws, new_fixed_sd) {
+  if (!is.environment(state)) stop("draw_state must be an environment.")
+  if (is.null(state$fit)) {
+    if (length(ls(state, all.names = TRUE))) stop("Start with an empty draw_state environment.")
+    state$fit <- fit
+    state$n_draws <- as.integer(n_draws)
+    state$new_fixed_sd <- new_fixed_sd
+  } else if (!identical(state$fit, fit) || !isTRUE(state$n_draws == n_draws) ||
+             !isTRUE(all.equal(state$new_fixed_sd, new_fixed_sd, tolerance = 0))) {
+    stop("Reuse draw_state only with the same fit, draw count, and fixed-effect prior.")
+  }
 }
 
 # Reuse an effect whenever its level appears in another prediction batch.

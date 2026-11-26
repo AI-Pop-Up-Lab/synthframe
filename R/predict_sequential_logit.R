@@ -28,24 +28,13 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   cell_columns <- setdiff(names(frame), c(count_variable, count_draws))
   validate_prediction_frame(frame, cell_columns, count_variable)
   frame <- as.data.frame(frame)
-  if (!all(fit$predictors %in% cell_columns)) stop("The frame is missing survey predictors.")
+  cells <- frame[, cell_columns, drop = FALSE]
   outcomes <- fit$outcome_order
   if (is.null(draw_state) && batch_size < nrow(frame)) draw_state <- new.env(parent = emptyenv())
   if (!is.null(draw_state)) {
-    if (!is.environment(draw_state)) stop("draw_state must be an environment.")
+    bind_prediction_draw_state(draw_state, fit, n_draws, new_fixed_sd)
     if (is.null(draw_state$stages)) {
-      draw_state$fit <- fit
-      draw_state$n_draws <- n_draws
-      draw_state$new_fixed_sd <- new_fixed_sd
-      draw_state$stages <- lapply(fit$stages, function(stage) {
-        state <- new.env(parent = emptyenv())
-        state$fixed <- new.env(parent = emptyenv())
-        state$random <- list()
-        state
-      })
-    } else if (!identical(draw_state$fit, fit) || !identical(draw_state$n_draws, n_draws) ||
-               !identical(draw_state$new_fixed_sd, new_fixed_sd)) {
-      stop("Reuse draw_state only with the same fit, draw count, and fixed-effect prior.")
+      draw_state$stages <- lapply(fit$stages, function(stage) new.env(parent = emptyenv()))
     }
   }
   draw_names <- paste0(count_variable, "_draw_", seq_len(n_draws))
@@ -68,7 +57,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   for (i in seq_along(fit$stages)) {
     outcome <- outcomes[i]
     stage <- fit$stages[[outcome]]
-    newdata <- prepare_prediction_stage(fit, stage, outcome, frame)
+    newdata <- prepare_prediction_stage(fit, stage, outcome, cells)
     # Each draw combines fitted coefficients with any frame-only effects.
     for (batch in seq_along(starts)) {
       start <- starts[batch]
@@ -104,7 +93,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
                        c("posterior_probabilities.rds", "extended_frame.csv"))
   }
   # Save the cell keys alongside the draws so later calls can match by value.
-  posterior <- structure(list(cells = frame[, cell_columns, drop = FALSE],
+  posterior <- structure(list(cells = cells,
                               draws = draws, extension_variable = fit$extension_variable,
                               count_variable = count_variable,
                               paired_population_draws = length(count_draws) > 0L,
@@ -140,22 +129,45 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   posterior
 }
 
-prepare_prediction_stage <- function(fit, stage, outcome, frame) {
-  # A shallower stage may have dropped predictors, including area covariates.
-  formula_columns <- all.vars(stage$formula[[3L]])
-  # Crossed terms need their original columns to rebuild the group labels.
-  group_columns <- unlist(stage$grouping_columns, use.names = FALSE)
-  contrast_columns <- vapply(stage$fixed_contrasts, function(x) x$predictor, character(1))
-  needed <- stage$predictor_names %in% c(formula_columns, group_columns, contrast_columns)
-  # Keep the area ID available for the join even if the formula omits it.
-  predictors <- unique(c(fit$area_variable, names(stage$predictor_names)[needed]))
-  # Start with survey predictors carried over to the population frame.
-  survey_columns <- intersect(predictors, fit$predictors)
+# Trace the solver's input columns back through VoteFrame's generated terms.
+stage_prediction_columns <- function(stage) {
+  model <- stage$fit
+  required <- c(model$formula$interpret_gam$pred.names, names(model$reduced_fixed_levels),
+                unname(model$screened_smooth_groups))
+  for (term in model$screened_random) {
+    required <- c(required, term$group, all.vars(stats::reformulate(term$slopes)))
+  }
+  # Older saved fits can contain random terms that are drawn only at prediction.
+  for (group in names(model$prior_random)) {
+    required <- c(required, group, all.vars(stats::reformulate(model$prior_random[[group]])))
+  }
+  groups <- intersect(names(stage$grouping_columns), required)
+  contrasts <- intersect(names(stage$fixed_contrasts), required)
+  required <- c(required, unlist(stage$grouping_columns[groups], use.names = FALSE),
+                vapply(stage$fixed_contrasts[contrasts], function(x) x$predictor, character(1)))
+  list(predictors = names(stage$predictor_names)[stage$predictor_names %in% required],
+       groups = groups, contrasts = contrasts)
+}
+
+prepare_prediction_stage <- function(fit, stage, outcome, frame, unique_rows = FALSE) {
+  columns <- stage$prediction_columns
+  if (is.null(columns)) columns <- stage_prediction_columns(stage)
+  survey_columns <- intersect(columns$predictors, fit$predictors)
+  area_columns <- setdiff(columns$predictors, survey_columns)
+  if (length(area_columns)) survey_columns <- union(survey_columns, fit$area_variable)
+  missing <- setdiff(survey_columns, names(frame))
+  if (length(missing)) {
+    stop("Frame is missing predictors for ", sQuote(outcome), ": ", paste(missing, collapse = ", "), ".")
+  }
   newdata <- frame[, survey_columns, drop = FALSE]
-  # The remaining predictors come from this outcome's area covariate matrix.
-  area_columns <- setdiff(predictors, survey_columns)
+  if (anyNA(newdata)) stop("Frame predictors for ", sQuote(outcome), " must be complete.")
+  if (unique_rows) newdata <- unique(newdata)
   if (length(area_columns)) {
     covariates <- fit$area_covariates[[outcome]]
+    missing <- setdiff(area_columns, colnames(covariates))
+    if (length(missing)) {
+      stop("Missing area covariates for ", sQuote(outcome), ": ", paste(missing, collapse = ", "), ".")
+    }
     newdata <- join_stage_covariates(newdata, fit$area_variable,
                                      covariates[, area_columns, drop = FALSE])
   }
@@ -170,10 +182,10 @@ prepare_prediction_stage <- function(fit, stage, outcome, frame) {
     }
   }
   # Rebuild crossed group labels in the same way as during fitting.
-  for (group in names(stage$grouping_columns)) {
+  for (group in columns$groups) {
     newdata[[group]] <- sequential_group(newdata, stage$grouping_columns[[group]])
   }
-  for (column in names(stage$fixed_contrasts)) {
+  for (column in columns$contrasts) {
     contrast <- stage$fixed_contrasts[[column]]
     values <- unname(contrast$values[as.character(newdata[[contrast$predictor]])])
     if (anyNA(values) && is.null(contrast$baseline)) {

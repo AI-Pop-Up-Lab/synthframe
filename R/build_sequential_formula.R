@@ -125,7 +125,9 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
   # Include the global intercept. Count columns as built, before shrinkage.
   supported_random_levels <- lapply(names(group_slopes), function(group) {
     counts <- rowsum(trials, data[[group]])
-    rownames(counts)[counts[, 1L] >= minimum_support]
+    supported <- rownames(counts)[counts[, 1L] >= minimum_support]
+    # A between-level variance needs at least two supported levels.
+    if (length(supported) >= 2L) supported else character()
   })
   fixed_design <- independent_sequential_fixed_effects(fixed, data, trials, minimum_support)
   fixed <- fixed_design$terms
@@ -176,7 +178,6 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
        fixed_coefficients = fixed_design$nominal_rank, retained_fixed_coefficients = fixed_width,
        random_coefficients = random_width,
        spline_coefficients = spline_width,
-       hierarchical = length(random) + length(smooth) > 0L,
        joint_smooth = any(grepl('type = "gKRLS"', smooth, fixed = TRUE)))
 }
 

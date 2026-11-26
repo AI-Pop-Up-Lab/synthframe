@@ -27,7 +27,28 @@ process_area_covariates <- function(area_data, area_variable,
   }
   # The fitter can supply the outcome order later.
   if (is.null(outcome_order)) return(totals)
-  conditional_area_shares(totals, outcome_order)
+  shares <- conditional_area_shares(totals, outcome_order)
+  # Preserve the denominators' source if fitting later changes the stage order.
+  attr(shares, "voteframe_share_source") <- list(order = as.character(outcome_order),
+                                                 totals = totals)
+  shares
+}
+
+resolve_stage_area_covariates <- function(area_covariates, outcomes) {
+  if (inherits(area_covariates, c("voteframe_area_covariate", "voteframe_area_covariate_list"))) {
+    return(conditional_area_shares(area_covariates, outcomes))
+  }
+  source <- attr(area_covariates, "voteframe_share_source", exact = TRUE)
+  if (is.null(source)) return(area_covariates)
+  attr(area_covariates, "voteframe_share_source") <- NULL
+  if (identical(source$order, outcomes)) return(area_covariates)
+
+  if (!identical(area_covariates, conditional_area_shares(source$totals, source$order))) {
+    stop("Reordering would discard edits to the historical stage predictors. ",
+         "Prepare the shares in the fitted outcome order before applying edits: ",
+         paste(outcomes, collapse = ", "), ".")
+  }
+  conditional_area_shares(source$totals, outcomes)
 }
 
 # Put one dataset into a table with areas as rows and outcomes as columns.

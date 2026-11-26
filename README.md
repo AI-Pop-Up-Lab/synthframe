@@ -28,6 +28,11 @@ and any upstream steps needed to rebuild those inputs.
 | Sweden 2026 | [Vignette](vignettes/vignette_sweden_2026.md) | [R Markdown](vignettes/vignette_sweden_2026.Rmd) | [Sweden inputs](data/input/sweden%202026/README.md) |
 | US 2026 | [Vignette](vignettes/vignette_us_2026.md) | [R Markdown](vignettes/vignette_us_2026.Rmd) | [US inputs](data/input/us%202026/README.md) |
 
+The published Nordic results predate the two-supported-level rule for random
+effects. With the checked-in inputs, current screening drops the education
+intercept for Denmark's Invalid stage, the municipality intercept for Sweden's
+KD stage, and the sex intercept for Sweden's Other stage.
+
 Install the R packages in your own R library. The figures use Cairo PNG
 support, which you can check with `capabilities("cairo")`.
 
@@ -288,8 +293,11 @@ x_{ak}=\frac{v_{ak}}{\sum_{j\ge k}v_{aj}},
 ```
 
 Counts and shares with a common within-area denominator give the same result.
-Pass `outcome_order` to compute the stage matrices immediately, or leave it
-unset so the fitter computes them after determining the outcome order.
+Leave `outcome_order` unset to let the fitter compute these shares in its final
+stage order. Supply it to inspect the stage matrices immediately. When passed
+directly to the fitter, the helper's result retains the original totals so the
+fitter can recompute the denominators if the order changes, including when
+`no_vote` moves first.
 
 **Original scales.** For predictors like median income or population density,
 pass a plain named list of matrices or data frames to `area_covariates`
@@ -298,8 +306,9 @@ for its area ID, and each column for its predictor. The fitter joins by area ID
 and uses the values as supplied. Columns and values can vary by stage. Use data
 frames for categorical predictors. To reuse one table at every fitted stage,
 use `setNames(rep(list(area_predictors), length(stages)), stages)`. To combine
-both types, compute the conditional shares with `outcome_order`, then add the
-original-scale predictors to each stage table by area ID.
+both types, compute the conditional shares in the final stage order, including
+`no_vote` first when specified. Build a new plain list of stage tables by joining
+those shares to the original-scale predictors by area ID.
 
 *Table 6. Model terms available at each candidate depth.*
 
@@ -337,8 +346,9 @@ effects and interactions. [Goplerud, supplement §A.4](https://mgoplerud.com/pap
    for fixed columns and random-intercept levels, where $`t_i`$ is the aggregated
    row's binomial trial count. The intercept is protected. `-1L` (default) and
    `0L` disable this screen. Screened fixed columns contribute zero at prediction.
-   Screened levels use the fitted term covariance. If all levels are screened,
-   drop the random term and its grouped spline. Drop smooths involving a
+   A random-effect group needs at least two supported levels. When fewer
+   remain, drop its intercept, slopes and grouped spline deviations. In a retained
+   group, screened levels use the fitted covariance at prediction. Drop smooths involving a
    screened fixed main effect. Keep eligible survey rows and surviving penalized
    spline bases. The log names dropped smooths and estimated coefficient counts.
 2. **Within-group slopes.** For each retained level $`g`$, let $`s_g`$ count eligible
@@ -368,13 +378,18 @@ effects and interactions. [Goplerud, supplement §A.4](https://mgoplerud.com/pap
    eligible global spline on its own if its grouped term is dropped.
 
 Before solving, log fixed support and collinearity failures, hierarchy removals,
-and condition numbers before and after pruning. Each fitted stage retains formula,
-data, and model fit. [Supplementary material](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS0003055423000035/resource/name/S0003055423000035sup001.pdf)
+and condition numbers before and after pruning. In each newly fitted stage,
+`stage$formula` is the formula supplied to the solver. Use `stage$candidate_formula`
+to inspect the design at the selected depth before random-effect and spline
+screening. [Supplementary material](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS0003055423000035/resource/name/S0003055423000035sup001.pdf)
 
 **Depth selection.** For each stage with $`n`$ eligible respondents, select
-$`d^*=\max\{d\le d_{\mathrm{requested}}:C_{\mathrm{retained}}(d)\le n\}`$.
-Each respondent supplies one trial, including shared cells. If the set is empty,
-warn and attempt depth 0. Later stages can select higher depths if their design
+$`d^*=\max\{d\in H:C_{\mathrm{retained}}(d)\le n\}`$.
+Here $`H`$ contains candidate depths at or below the requested depth that
+retain a random effect or spline. Each respondent supplies one trial, including
+respondents in shared cells. If every eligible candidate exceeds the budget,
+warn and attempt depth 0 when its area intercept is estimable. Otherwise the
+stage reports a failure. Later stages can select higher depths if their design
 shrinks enough.
 
 ```math
@@ -389,10 +404,10 @@ $`\lfloor\min(\#\text{distinct values}/4,35)\rfloor`$ columns. Joint kernels cap
 default sketch width at the aggregated cell count. Each by-smooth counts a global
 basis and one per observed group.
 
-**Solver.** `vglmer` requires a random effect or spline and at least two observed
-areas for an area random intercept. Ineligible stages stop with a logged reason.
-If screening leaves only fixed effects, fit a binomial GLM and sample fixed
-coefficients from its normal approximation. VoteFrame defaults accept
+**Solver.** VoteFrame fits every stage with `vglmer`. An area random intercept
+requires at least two observed areas. If a stage has no eligible random effect
+or spline after screening, fitting stops and records the reason in the stage
+log. VoteFrame defaults accept
 $`\max|\Delta\theta|<0.01`$ for tracked variational parameters or
 $`0<\Delta\mathrm{ELBO}<10^{-5}`$. A supplied `vglmer_control()` has its own defaults.
 Override with `tolerance_parameters` or `tolerance_elbo` (zero disables that
@@ -405,7 +420,7 @@ a non-convergence message.
 | --- | --- |
 | `interaction_support_log` | CSV of nonzero stage respondents by outcome for categorical interactions and varying slopes, including within-group slope variation and counts differing from the modal value. |
 | `depth_support_dir` | Pre-fit PNG per stage. Linear/log axes show cumulative shares of columns by nonzero observations. Solid lines count aggregated rows, dashed lines count respondents. Lower panels break the respondent curve into scalar/correlated random effects, smooths, and fixed effects. Each shaded area uses all coefficients at that depth. Integer requests show depths 1–3 and distinct requested/selected depths. Rejected candidates can be expensive, especially with splines. |
-| `log_file` | Fit CSV path (working directory by default), also in `fit$log_file`. `fit$fit_log` records nominal and retained counts for each attempted depth, selected depth, respondents, cells, and fit status. The fitter warns with the selected depth for each stage. |
+| `log_file` | Fit CSV path (working directory by default), also in `fit$log_file`. Each stage records its outcome, status and any error. Completed stages include the selected depth, candidate and retained coefficient counts, respondents and cells. A stage failure leaves earlier stages in the CSV. |
 
 Set these fit and screening options in the extension's `fit` list with MasterP.
 `fitted_depth` is the accepted candidate, including fractional depths.
@@ -429,7 +444,8 @@ collapsed <- collapse_extended_frame(frame, posterior)
 including observed combinations for crossed effects. Each stage's `frame_levels`
 lists fitted, frame, and frame-only coefficient names. The log counts frame-only
 coefficients. Prediction defaults to the saved frame and accepts a replacement
-or a frame supplied for the first time.
+or a frame supplied for the first time. Supply the survey predictors used by
+the retained stages and the area ID when a retained predictor needs an area join.
 
 Frame-only levels have zero survey trials. The fit integrates their coefficients
 out and the depth rule counts only survey-estimated coefficients. For stage

@@ -197,20 +197,25 @@ predict_sequential_tpf <- function(object, data, ...) {
   Matrix::drop0(basis * (basis > 0))
 }
 
-# vglmer requires a hierarchical term. If screening removes them all,
-# fit the remaining aggregated binomial likelihood with glm().
-fit_sequential_fixed_only <- function(formula, data, iterations) {
-  model <- stats::glm(formula, data, family = stats::binomial(),
-                      control = stats::glm.control(maxit = iterations))
-  if (!model$converged || any(!is.finite(stats::coef(model)))) {
-    stop("The fixed-only binomial model did not converge with finite coefficients.")
-  }
-  structure(
-    list(beta = list(mean = as.matrix(stats::coef(model)), covariance = stats::vcov(model)),
-         alpha = list(mean = matrix(numeric(), 0L, 1L)),
-         formula = list(fe_terms = stats::terms(model), fe_Xlevels = model$xlevels,
-                        fe_contrasts = model$contrasts,
-                        interpret_gam = list(pred.names = all.vars(formula[[3L]]))),
-         internal_parameters = list(it_used = model$iter)),
-    class = "voteframe_fixed_logit")
+# Explain how much survey support was available before dropping whole groups.
+stop_unestimable_stage <- function(design, area_variable, minimum_support) {
+  data <- design$data
+  successes <- sum(data$.success)
+  failures <- sum(data$.failure)
+  trials <- data$.success + data$.failure
+  # Include the area even if it was constant and never entered the candidate formula.
+  groups <- union(design$predictor_names[[area_variable]], names(design$group_slopes))
+  support <- vapply(groups, function(group) {
+    columns <- design$grouping_columns[[group]]
+    if (is.null(columns)) columns <- group
+    labels <- names(design$predictor_names)[match(columns, design$predictor_names)]
+    counts <- rowsum(trials, data[[group]])[, 1L]
+    sprintf("%s: %d of %d observed levels meet the cutoff",
+            paste(labels, collapse = " × "), sum(counts >= minimum_support), length(counts))
+  }, character(1))
+  stop("No estimable random effect or spline for vglmer at depth ", design$depth,
+       " with ", successes + failures, " eligible respondents (", successes, " successes, ",
+       failures, " failures). Each random group requires at least two supported levels ",
+       "(minimum_support = ", minimum_support, "). ", paste(support, collapse = "; "),
+       call. = FALSE)
 }

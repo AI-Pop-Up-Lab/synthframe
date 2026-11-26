@@ -253,6 +253,7 @@ preflight <- lapply(model_specs, prepare_model)
 2. **Screen support.** Fixed columns need at least 10 respondents with
    nonzero entries. A random group level needs at least 10 respondents
    for the whole intercept-and-slopes vector to enter the likelihood.
+   Keep the group only if at least two levels meet that cutoff.
    A varying slope also needs, on average, at least 10 informative
    respondents per retained group. Within a group, this counts respondents
    whose slope value differs from its most common value.
@@ -279,8 +280,8 @@ preflight <- lapply(model_specs, prepare_model)
    corresponding linear random block survives. Survey rows from screened
    groups still inform the overall curve and other retained effects.
 5. **Check depth after screening.** Compare the estimated retained
-   coefficients with eligible respondents. Reduce depth only if the
-   screened candidate still exceeds that budget.
+   coefficients with eligible respondents. Try a lower depth if the candidate
+   exceeds that budget or screening removes every random effect and spline.
 
 
 
