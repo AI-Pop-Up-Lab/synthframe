@@ -2,7 +2,19 @@
 MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "N",
                     aggregate_by = list(), tolerance = 1e-12, max_iterations = 1000L,
                     keep_fits = FALSE, pre_rake_mode = "auto", pre_rake_dir = NULL,
-                    area_variable = NULL, parent_area_variable = NULL, areas_per_batch = NULL) {
+                    area_variable = NULL, parent_area_variable = NULL, areas_per_batch = NULL,
+                    verbose = FALSE, log_file = NULL) {
+  log <- masterp_logger(log_file, verbose)
+  on.exit(log$close(), add = TRUE)
+  log$run(masterp_execute(mother_frame, extensions, n_draws, count_variable, aggregate_by,
+                          tolerance, max_iterations, keep_fits, pre_rake_mode, pre_rake_dir,
+                          area_variable, parent_area_variable, areas_per_batch, log))
+}
+
+masterp_execute <- function(mother_frame, extensions, n_draws, count_variable, aggregate_by,
+                            tolerance, max_iterations, keep_fits, pre_rake_mode, pre_rake_dir,
+                            area_variable, parent_area_variable, areas_per_batch, log) {
+  log$write("Validating population frame, extension specifications, and calibration targets")
   pre_rake_mode <- match.arg(pre_rake_mode, c("auto", "memory", "temporary", "keep"))
   if (pre_rake_mode == "keep" && is.null(pre_rake_dir)) {
     stop("Set pre_rake_dir to keep the pre-rake frame.")
@@ -41,9 +53,10 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
     masterp_options(spec, c("survey", "fit", "predict", "rake", "plots", "register_frame"),
                     paste("Extension", sQuote(outcome)))
     masterp_options(spec$fit, setdiff(names(formals(fit_sequential_logit)),
-                                      c("auxiliary_survey", "extension_variable", "frame")), "fit")
+                                      c("auxiliary_survey", "extension_variable", "frame",
+                                        "progress", "solver_trace")), "fit")
     masterp_options(spec$predict, setdiff(names(formals(predict_sequential_logit)),
-                                         c("fit", "frame", "n_draws", "count_variable")), "predict")
+                                         c("fit", "frame", "n_draws", "count_variable", "progress")), "predict")
     if (is.null(spec$fit$area_variable)) stop("Set fit$area_variable for ", sQuote(outcome), ".")
     if (!is.null(spec$register_frame) && !identical(spec$register_frame, TRUE) &&
         !identical(spec$register_frame, FALSE)) stop("register_frame must be TRUE or FALSE.")
@@ -66,13 +79,19 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
       if (!is.data.frame(plot$targets)) stop("Plot comparisons require a target table.")
     }
   }
+  log$write(sprintf("Validated %d population cells, %d extensions, %d calibration margins, and %d draws",
+                    nrow(mother_frame), length(outcomes), length(margins), n_draws))
 
   extended <- mother_frame
   available <- keys
   fit_info <- fits <- diagnostics <- list()
-  for (outcome in outcomes) {
+  extension_progress <- log$progress("Extensions")
+  extension_progress(0L, length(outcomes), paste(outcomes, collapse = ", "))
+  for (i in seq_along(outcomes)) {
+    outcome <- outcomes[i]
     spec <- extensions[[outcome]]
     fit_args <- spec$fit
+    log$write(paste("Preparing auxiliary survey for", sQuote(outcome)))
     surveys <- if (is.data.frame(spec$survey)) list(spec$survey) else spec$survey
     if (!is.list(surveys) || !length(surveys) ||
         !all(vapply(surveys, is.data.frame, logical(1)))) {
@@ -89,25 +108,45 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
     }
     survey <- do.call(rbind, lapply(surveys, function(x) as.data.frame(x)[columns]))
     fit_args$predictors <- predictors
-    if (is.null(fit_args$log_file)) fit_args$log_file <- tempfile("masterp-fit-", fileext = ".csv")
-    fit <- do.call(fit_sequential_logit, c(list(auxiliary_survey = survey,
-                                               extension_variable = outcome,
-                                               frame = if (isTRUE(spec$register_frame)) extended),
-                                          fit_args))
+    if (is.null(fit_args$log_file)) {
+      fit_args$log_file <- paste0(log$path, "-fit-", i, ".csv")
+    }
+    if (identical(normalizePath(fit_args$log_file, mustWork = FALSE), log$path)) {
+      stop("The fit CSV and MasterP run log must use different paths.")
+    }
+    fit_label <- paste("fitting", sQuote(outcome))
+    log$write(sprintf("Prepared %d survey rows for %s. Stage CSV %s",
+                      nrow(survey), sQuote(outcome), fit_args$log_file))
+    fit <- log$step(fit_label, log$capture_output(
+      do.call(fit_sequential_logit, c(list(auxiliary_survey = survey, extension_variable = outcome,
+                                          frame = if (isTRUE(spec$register_frame)) extended,
+                                          progress = log$progress(fit_label), solver_trace = TRUE),
+                                     fit_args))
+    ))
     fit_info[[outcome]] <- fit[c("outcome_order", "no_vote", "fit_log", "log_file")]
     if (keep_fits) fits[[outcome]] <- fit
 
     predict_args <- masterp_default(spec$predict, list())
     # Keep intermediate predictions in memory unless the caller requests exports.
     if (is.null(predict_args$write_files)) predict_args$write_files <- FALSE
-    posterior <- do.call(predict_sequential_logit, c(list(fit = fit, frame = extended,
-                                                          n_draws = n_draws,
-                                                          count_variable = count_variable),
-                                                     predict_args))
-    extended <- expand_expected_counts(posterior$cells, posterior$draws, extended[[count_variable]],
-                                       posterior, population_draws = paired_frame_counts(extended, posterior))
+    predict_label <- paste("predicting", sQuote(outcome))
+    posterior <- log$step(predict_label, do.call(predict_sequential_logit, c(
+      list(fit = fit, frame = extended, n_draws = n_draws, count_variable = count_variable,
+           progress = log$progress(predict_label)), predict_args
+    )))
+    if (!is.null(posterior$posterior_file)) {
+      log$write(paste("Wrote prediction exports", posterior$posterior_file,
+                      "and", posterior$extended_frame_file))
+    }
+    extend_label <- paste("extending the frame with", sQuote(outcome))
+    extended <- log$step(extend_label, expand_expected_counts(
+      posterior$cells, posterior$draws, extended[[count_variable]], posterior,
+      population_draws = paired_frame_counts(extended, posterior),
+      progress = log$progress(extend_label)
+    ))
     available <- c(available, outcome)
     rm(posterior, fit)
+    extension_progress(i, length(outcomes), sprintf("%s, %d extended rows", outcome, nrow(extended)))
   }
 
   if (is.null(area_variable)) {
@@ -123,19 +162,28 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
   margin_option <- function(field, default = NULL) {
     stats::setNames(lapply(margins, function(x) masterp_default(x[[field]], default)), margin_ids)
   }
-  raked <- rake_joint_extended_frame(
+  rake_label <- "joint raking"
+  raked <- log$step(rake_label, log$capture_output(rake_joint_extended_frame(
     extended, mother_frame, targets = margin_option("targets"), by = margin_option("by"),
     extension_variables = outcomes, margin_variables = unlist(margin_option("outcome")),
     count_variable = count_variable, target_variable = unlist(margin_option("target_variable", "target")),
     target_scale = unlist(margin_option("target_scale", "share")), tolerance = tolerance,
     max_iterations = max_iterations, area_variable = area_variable,
-    parent_area_variable = parent_area_variable, areas_per_batch = areas_per_batch
-  )
+    parent_area_variable = parent_area_variable, areas_per_batch = areas_per_batch,
+    progress = log$progress(rake_label), solver_trace = TRUE
+  )))
 
-  storage <- pre_rake_storage(pre_rake_mode, pre_rake_dir, bytes = as.numeric(object.size(extended)))
+  storage <- log$step("choosing pre-rake storage",
+                      pre_rake_storage(pre_rake_mode, pre_rake_dir, bytes = as.numeric(object.size(extended))))
   on.exit(storage$cleanup(), add = TRUE)
-  pre_rake_part <- storage$put(extended, "extended_frame")
+  pre_rake_part <- log$step(paste("pre-rake storage using", storage$mode),
+                           storage$put(extended, "extended_frame"))
+  if (storage$mode == "keep") log$write(paste("Wrote the pre-rake frame", pre_rake_part))
   rm(extended)
+  n_checks <- 2L * sum(vapply(extensions, function(spec) length(spec$plots), integer(1)))
+  checks_done <- 0L
+  check_progress <- log$progress("Benchmark checks")
+  if (n_checks) check_progress(0L, n_checks)
   for (outcome in outcomes) {
     for (comparison in names(extensions[[outcome]]$plots)) {
       plot <- extensions[[outcome]]$plots[[comparison]]
@@ -146,26 +194,39 @@ MasterP <- function(mother_frame, extensions, n_draws = NULL, count_variable = "
       diagnostics[[outcome]][[comparison]] <- lapply(names(files), function(phase) {
         counts <- if (phase == "before") storage$get(pre_rake_part) else raked
         if (is.null(plot$draw_plot)) plot$draw_plot <- !is.null(files[[phase]])
-        do.call(check_extended_frame, c(list(extended_frame = counts, extension_variable = outcome,
-                                            count_variable = count_variable, plot_file = files[[phase]]),
-                                        plot))
+        result <- do.call(check_extended_frame, c(list(
+          extended_frame = counts, extension_variable = outcome, count_variable = count_variable,
+          plot_file = files[[phase]]
+        ), plot))
+        checks_done <<- checks_done + 1L
+        check_progress(checks_done, n_checks, paste(outcome, comparison, phase, "raking",
+                                                    files[[phase]]))
+        result
       })
       names(diagnostics[[outcome]][[comparison]]) <- names(files)
     }
   }
   rm(pre_rake_part)
 
-  aggregates <- lapply(aggregate_by, function(by) {
+  aggregate_progress <- log$progress("Aggregating raked counts")
+  if (length(aggregate_by)) aggregate_progress(0L, length(aggregate_by))
+  aggregates <- lapply(seq_along(aggregate_by), function(i) {
+    by <- aggregate_by[[i]]
     counts <- raked[c(count_variable, draw_columns)]
-    if (!length(by)) return(as.data.frame(lapply(counts, sum)))
-    groups <- raked[by]
-    ids <- frame_cell_keys(groups, groups)
-    result <- cbind(groups[!duplicated(ids), , drop = FALSE], rowsum(counts, ids, reorder = FALSE))
+    result <- if (!length(by)) {
+      as.data.frame(lapply(counts, sum))
+    } else {
+      groups <- raked[by]
+      ids <- frame_cell_keys(groups, groups)
+      cbind(groups[!duplicated(ids), , drop = FALSE], rowsum(counts, ids, reorder = FALSE))
+    }
     rownames(result) <- NULL
+    aggregate_progress(i, length(aggregate_by), names(aggregate_by)[i])
     result
   })
+  names(aggregates) <- names(aggregate_by)
   list(frame = raked, aggregates = aggregates, diagnostics = diagnostics,
-       fit_info = fit_info, fits = if (keep_fits) fits)
+       fit_info = fit_info, fits = if (keep_fits) fits, log_file = log$path)
 }
 
 masterp_default <- function(value, default) {

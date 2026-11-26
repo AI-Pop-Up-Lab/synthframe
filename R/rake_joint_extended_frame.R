@@ -6,7 +6,8 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
                                        tolerance = 0.000000000001, max_iterations = 1000L,
                                        margin_variables = stats::setNames(names(targets), names(targets)),
                                        area_variable = NULL, parent_area_variable = NULL,
-                                       areas_per_batch = NULL) {
+                                       areas_per_batch = NULL, progress = NULL,
+                                       solver_trace = FALSE) {
   margin_names <- names(targets)
   if (!is.character(extension_variables) || !length(extension_variables) ||
       anyNA(extension_variables) || any(!nzchar(extension_variables)) ||
@@ -72,6 +73,9 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
   if (!is.null(area_variable)) {
     batches <- geographic_batches(frame, area_variable, parent_area_variable, areas_per_batch, by)
     if (length(batches) > 1L) {
+      work <- length(batches) * length(count_columns)
+      if (!is.null(progress)) progress(0L, work, sprintf("%d geographic batches × %d count columns",
+                                                        length(batches), length(count_columns)))
       target_keys <- lapply(margin_names, function(margin) {
         columns <- by[[margin]]
         if (!all(columns %in% names(targets[[margin]]))) stop("Missing raking grouping columns.")
@@ -86,6 +90,10 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
       extended_rows <- split(seq_len(nrow(extended_frame)), batch_index[cell])
       raked <- extended_frame
       for (i in seq_along(batches)) {
+        if (isTRUE(solver_trace)) {
+          cat("Geographic raking batch ", i, "/", length(batches), " — ", names(batches)[i],
+              "\n", sep = "")
+        }
         original <- frame[batches[[i]], , drop = FALSE]
         rows <- extended_rows[[i]]
         batch_targets <- stats::setNames(lapply(seq_along(margin_names), function(j) {
@@ -94,10 +102,14 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
           keep <- target_keys[[j]] %in% frame_cell_keys(original[columns], frame[columns])
           targets[[margin]][keep, , drop = FALSE]
         }), margin_names)
+        batch_progress <- if (!is.null(progress)) function(done, total, detail) {
+          if (done > 0L) progress((i - 1L) * length(count_columns) + done, work,
+                                  paste0("batch ", names(batches)[i], " — ", detail))
+        }
         block <- rake_joint_extended_frame(
           extended_frame[rows, , drop = FALSE], original, batch_targets, by,
           extension_variables, target_variable, count_variable, target_scale, tolerance,
-          max_iterations, margin_variables
+          max_iterations, margin_variables, progress = batch_progress, solver_trace = solver_trace
         )
         raked[rows, count_columns] <- block[count_columns]
       }
@@ -106,6 +118,7 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
   }
 
   raked <- extended_frame
+  if (!is.null(progress)) progress(0L, length(count_columns), "mean and posterior draw columns")
   for (i in seq_along(count_columns)) {
     column <- count_columns[i]
     if (i == 1L || length(population_draws)) {
@@ -123,8 +136,9 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
     }
     raked[[column]] <- if (total == 0) numeric(nrow(raked)) else {
       fit_joint_rake(extended_frame[[column]], cell, cell_share, margins,
-                     tolerance, max_iterations, column) * total
+                     tolerance, max_iterations, column, solver_trace) * total
     }
+    if (!is.null(progress)) progress(i, length(count_columns), column)
   }
   raked
 }
@@ -213,7 +227,8 @@ prepare_joint_rake_margin <- function(frame, extended, cell, cell_share, targets
        mass = unlist(mass), reference = unlist(reference))
 }
 
-fit_joint_rake <- function(seed, cell, cell_share, margins, tolerance, max_iterations, column) {
+fit_joint_rake <- function(seed, cell, cell_share, margins, tolerance, max_iterations, column,
+                           solver_trace = FALSE) {
   active <- seed > 0 & cell_share[cell] > 0
   for (margin in margins) {
     active <- active & c(0, margin$target)[margin$index + 1L] > 0
@@ -265,9 +280,11 @@ fit_joint_rake <- function(seed, cell, cell_share, margins, tolerance, max_itera
   }
   # A complete cycle updates all extension margins in one fixed-point solve.
   initial <- numeric(offset)
+  if (isTRUE(solver_trace)) cat("SQUAREM — calibrating ", column, "\n", sep = "")
   solution <- tryCatch(
     SQUAREM::squarem(initial, update, control = list(tol = tolerance / 2,
-                                                   maxiter = max_iterations))$par,
+                                                   maxiter = max_iterations,
+                                                   trace = solver_trace))$par,
     error = function(error) {
       stop("Joint raking failed for ", sQuote(column), ": ", conditionMessage(error),
            call. = FALSE)

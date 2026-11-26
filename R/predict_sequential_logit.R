@@ -2,7 +2,7 @@
 predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, count_variable = "N",
                                      output_dir = "data/output", allow_missing_levels = TRUE,
                                      new_fixed_sd = NULL, write_files = TRUE,
-                                     draw_state = NULL, batch_size = nrow(frame)) {
+                                     draw_state = NULL, batch_size = nrow(frame), progress = NULL) {
   if (!inherits(fit, "voteframe_sequential_logit")) stop("Supply a sequential logit fit.")
   # Use the fit's population frame unless the caller supplies a different one.
   if (is.null(frame)) stop("Supply a prediction frame or pass frame when fitting the model.")
@@ -62,12 +62,16 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
                  dimnames = list(NULL, outcomes, draw_names))
   # Every cell starts with all its probability available.
   remaining <- matrix(1, nrow(frame), n_draws)
+  starts <- seq.int(1L, nrow(frame), by = batch_size)
+  total_batches <- length(starts) * length(fit$stages)
+  if (!is.null(progress)) progress(0L, total_batches, "prediction batches across outcome stages")
   for (i in seq_along(fit$stages)) {
     outcome <- outcomes[i]
     stage <- fit$stages[[outcome]]
     newdata <- prepare_prediction_stage(fit, stage, outcome, frame)
     # Each draw combines fitted coefficients with any frame-only effects.
-    for (start in seq.int(1L, nrow(frame), by = batch_size)) {
+    for (batch in seq_along(starts)) {
+      start <- starts[batch]
       rows <- seq.int(start, min(start + batch_size - 1L, nrow(frame)))
       logits <- tryCatch(
         predict_vglmer_levels(stage$fit, newdata[rows, , drop = FALSE], n_draws,
@@ -84,6 +88,10 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
       draws[rows, i, ] <- remaining[rows, , drop = FALSE] * conditional
       # The opposite tail stays positive when the conditional rounds to one.
       remaining[rows, ] <- remaining[rows, , drop = FALSE] * stats::plogis(-logits)
+      if (!is.null(progress)) {
+        progress((i - 1L) * length(starts) + batch, total_batches,
+                 sprintf("%s, cells %d–%d", outcome, start, tail(rows, 1L)))
+      }
     }
   }
   # The last outcome has no fitted stage. It receives the remaining probability.
@@ -112,7 +120,9 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   saveRDS(posterior, temporary[1L])
   # Write the full frame in blocks so a second copy of all draws stays off the heap.
   starts <- seq.int(1L, nrow(frame), by = 1000L)
-  for (start in starts) {
+  if (!is.null(progress)) progress(0L, length(starts), "frame export batches")
+  for (batch in seq_along(starts)) {
+    start <- starts[batch]
     rows <- seq.int(start, min(start + 999L, nrow(frame)))
     block <- expand_expected_counts(frame[rows, cell_columns, drop = FALSE],
                                     draws[rows, , , drop = FALSE],
@@ -122,6 +132,9 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
                                     })
     utils::write.table(block, temporary[2L], sep = ",", row.names = FALSE,
                        col.names = start == 1L, append = start != 1L)
+    if (!is.null(progress)) {
+      progress(batch, length(starts), sprintf("exported cells %d–%d", start, tail(rows, 1L)))
+    }
   }
   if (!all(file.rename(temporary, paths))) stop("Could not publish the posterior and frame files.")
   posterior

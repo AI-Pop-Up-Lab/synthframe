@@ -81,7 +81,7 @@ frame_cell_keys <- function(cells, reference) {
 
 # Put each cell and outcome on its own row. Each draw column is an expected count.
 expand_expected_counts <- function(cells, draws, population, posterior, include_draws = TRUE,
-                                   population_draws = NULL) {
+                                   population_draws = NULL, progress = NULL) {
   outcomes <- dimnames(draws)[[2L]]
   # Repeat each cell once per outcome, with outcomes varying fastest.
   cell_rows <- rep(seq_len(nrow(cells)), each = length(outcomes))
@@ -101,15 +101,18 @@ expand_expected_counts <- function(cells, draws, population, posterior, include_
   }
   # Apply the same row order and population weights to every draw.
   if (include_draws || !is.null(population_draws)) {
-    for (i in seq_len(dim(draws)[3L])) {
+    n_draws <- dim(draws)[3L]
+    if (!is.null(progress)) progress(0L, n_draws, "count draws")
+    for (i in seq_len(n_draws)) {
       draw <- matrix(draws[, , i], nrow(cells), length(outcomes))
       weight <- if (is.null(population_draws)) population else population_draws[cell_rows, i]
       counts <- as.vector(t(draw)) * weight
       if (!is.null(population_draws)) {
         expanded[[posterior$count_variable]] <-
-          expanded[[posterior$count_variable]] + counts / dim(draws)[3L]
+          expanded[[posterior$count_variable]] + counts / n_draws
       }
       if (include_draws) expanded[[dimnames(draws)[[3L]][i]]] <- counts
+      if (!is.null(progress)) progress(i, n_draws)
     }
   }
   expanded

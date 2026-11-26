@@ -8,7 +8,8 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                                  no_interactions = character(),
                                  tolerance_parameters = NULL, tolerance_elbo = NULL,
                                  max_iterations = NULL, interaction_support_log = NULL,
-                                 depth_support_dir = NULL, minimum_support = -1L) {
+                                 depth_support_dir = NULL, minimum_support = -1L,
+                                 progress = NULL, solver_trace = FALSE) {
   # The outcome and area ID are separate survey columns.
   if (!is.character(extension_variable) || length(extension_variable) != 1L ||
       !is.character(area_variable) || length(area_variable) != 1L ||
@@ -113,6 +114,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
   fits <- stats::setNames(vector("list", length(stages)), stages)
   fit_log <- data.frame()
   support_log <- data.frame()
+  if (!is.null(progress)) progress(0L, length(stages), paste("starting", stages[1L]))
   for (i in seq_along(stages)) {
     outcome <- stages[i]
     stage_label <- paste0("Stage ", i, "/", length(stages), " ", sQuote(outcome))
@@ -234,6 +236,11 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
           control <- vglmer::vglmer_control(tolerance_parameters = 0.01, tolerance_elbo = 1e-5)
         }
         for (name in names(solver_overrides)) control[[name]] <- solver_overrides[[name]]
+        if (isTRUE(solver_trace)) {
+          control$quiet <- FALSE
+          control$quiet_rho <- FALSE
+          control$print_prog <- 1L
+        }
         fit_log[i, paste0("dropped_", names(prepared$dropped))] <- as.list(prepared$dropped)
         fit_log$dropped_smooth_terms[i] <- paste(prepared$dropped_smooth_terms, collapse = "; ")
         fit_log$dropped_smooth_level_columns[i] <- prepared$dropped_smooth_level_columns
@@ -284,6 +291,13 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     utils::write.csv(fit_log, log_file, row.names = FALSE)
     fits[[outcome]] <- design
     message(stage_label, " — model returned (", i, " of ", length(stages), " completed).")
+    if (!is.null(progress)) {
+      detail <- sprintf("%s, %s iterations, max parameter change %s",
+                        outcome, fit_log$iterations_used[i],
+                        format(fit_log$max_parameter_change[i], digits = 4))
+      if (i < length(stages)) detail <- paste0(detail, "; next ", stages[i + 1L])
+      progress(i, length(stages), detail)
+    }
   }
 
   # Save the stage designs and area covariates needed to rebuild prediction data.

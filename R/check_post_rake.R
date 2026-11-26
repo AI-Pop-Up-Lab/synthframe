@@ -15,7 +15,8 @@ check_post_rake <- function(raked_frame, frame, targets, by, extension_variable,
                  metrics = joint_metrics, plot_file = joint_plot_file)))
 }
 
-post_rake_cell_comparison <- function(raked_frame, frame, extension_variable, count_variable = "N") {
+post_rake_cell_comparison <- function(raked_frame, frame, extension_variable, count_variable = "N",
+                                     include_max_error = FALSE) {
   cell_columns <- setdiff(names(frame), count_variable)
   validate_prediction_frame(frame, cell_columns, count_variable)
   if (!all(cell_columns %in% names(raked_frame))) {
@@ -34,6 +35,11 @@ post_rake_cell_comparison <- function(raked_frame, frame, extension_variable, co
   joint <- data.frame(reference, target_population = frame[[count_variable]],
                       estimate = totals[[count_variable]],
                       lower_90 = NA_real_, upper_90 = NA_real_)
+  if (include_max_error) {
+    joint$max_abs_error <- Reduce(function(error, counts) {
+      pmax(error, abs(counts - joint$target_population))
+    }, totals, init = 0)
+  }
   if (length(draw_columns)) {
     intervals <- t(apply(totals[draw_columns], 1L, stats::quantile,
                          probs = c(0.05, 0.95), names = FALSE))

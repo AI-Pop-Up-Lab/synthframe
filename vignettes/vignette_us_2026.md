@@ -34,16 +34,20 @@ shares repeat within each state and choice, while House shares belong to
 individual districts. Some House shares on the 2026 map come from upstream
 modeled scenarios. Agreement with these benchmarks is a calibration check.
 
+*Read the three inputs, build district IDs, and check that every input uses CD120.*
+
 
 ``` r
 # Load VoteFrame from this checkout so the audit uses the same functions as the fit.
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
 
+# Declare the shared input path, join keys, and recorded outcomes.
 country <- file.path("data", "input", "us 2026")
 fips <- c("state_fips", "district_fips")
 demographics <- c("age_cat", "gender_cat", "race_cat", "hispanic_cat", "educ_cat")
 pres <- "vote_pres_2024"
 house <- "vote_house_2024"
+# Keep all districts in a state together unless the caller overrides the geography.
 parent_area <- Sys.getenv("VOTEFRAME_PARENT_AREA", "state_fips")
 areas_per_batch <- vignette_areas_per_batch()
 # The files use choices as their category order. The model uses vote_order
@@ -117,6 +121,8 @@ Include `on_ballot` in the party-stage candidate designs so the support,
 collinearity, and hierarchy rules decide whether its main effect and
 interactions enter each fitted stage.
 
+*Prepare district predictors for each stage and election benchmarks for calibration.*
+
 
 ``` r
 # Each stage looks up district predictors for the outcome it models.
@@ -189,6 +195,8 @@ presidential choice. Each model uses its own complete survey cases.
 Identical predictor rows are grouped into binomial successes and failures.
 At each stage, respondents who chose an earlier outcome leave the risk set.
 The counts below refer to eligible respondents at that stage.
+
+*Build the candidate binomial designs and screen them before any solver iterations.*
 
 
 ``` r
@@ -525,6 +533,112 @@ directory containing `pres_fit.rds` and `house_fit.rds`.
 
 
 
+### Read the fitted formulas and coefficient counts
+
+The next snippet defines two reporting functions. They translate the fitted
+formula's group labels back to the predictor names and use the fitted
+coefficient vectors to count the effects each stage actually estimated.
+
+
+``` r
+group_variables <- function(stage, group) {
+  # A crossed group records its component variables. A single factor names itself.
+  components <- stage$grouping_columns[[group]]
+  if (is.null(components)) group else components
+}
+
+display_fitted_formula <- function(stage) {
+  fit <- stage$fit
+  # Use the solver formula after screening and substitute labels for display.
+  decode <- function(term) {
+    if (is.symbol(term) && as.character(term) %in% names(stage$grouping_columns)) {
+      return(as.name(paste(group_variables(stage, as.character(term)), collapse = " × ")))
+    }
+    if (!is.call(term)) return(term)
+    if (identical(term[[1L]], as.name("|"))) {
+      # Recover the intercept and slopes encoded in a support-masked random term.
+      screened <- fit$screened_random[[as.character(term[[3L]])]]
+      if (!is.null(screened)) {
+        term[[2L]] <- str2lang(paste(screened$slopes, collapse = " + "))
+        label <- paste(group_variables(stage, screened$group), collapse = " × ")
+        term[[3L]] <- as.name(paste(label, "[supported levels]"))
+      }
+    }
+    if (identical(term[[1L]], as.name("v_s"))) {
+      # A grouped smooth may also use a masked factor for supported levels.
+      args <- as.list(term)
+      by <- as.character(args$by)
+      if (length(by) && by %in% names(fit$screened_smooth_groups)) {
+        group <- unname(fit$screened_smooth_groups[by])
+        label <- paste(group_variables(stage, group), collapse = " × ")
+        args$by <- as.name(paste(label, "[supported levels]"))
+        term <- as.call(args)
+      }
+    }
+    as.call(lapply(as.list(term), decode))
+  }
+  cat(deparse(decode(fit$formula$formula), width.cutoff = 90L), sep = "\n")
+}
+
+retained_stage_counts <- function(stage) {
+  fit <- stage$fit
+  # Apply one predictor order so, for example, age × state and state × age combine.
+  combination <- function(variables) {
+    variables <- setdiff(variables, c("1", "(Intercept)"))
+    ordered <- names(stage$predictor_names)[stage$predictor_names %in% variables]
+    stopifnot(length(ordered) == length(unique(variables)))
+    if (length(ordered)) paste(ordered, collapse = " × ") else "(Intercept)"
+  }
+  # Match the fitted fixed coefficients to their terms using the design's assignment index.
+  fixed_terms <- stats::delete.response(fit$formula$fe_terms)
+  design <- stats::model.matrix(fixed_terms, stage$data)
+  fixed_columns <- match(rownames(fit$beta$mean), colnames(design))
+  stopifnot(!anyNA(fixed_columns))
+  terms <- c("(Intercept)", attr(fixed_terms, "term.labels"))
+  labels <- terms[attr(design, "assign")[fixed_columns] + 1L]
+  fixed <- vapply(labels, function(label) {
+    if (label == "(Intercept)") return(combination(character()))
+    contrast <- stage$fixed_contrasts[[label]]
+    combination(if (is.null(contrast)) all.vars(str2lang(label)) else contrast$predictor)
+  }, character(1))
+
+  # Each fitted random or spline block points to its rows in the coefficient vector.
+  blocks <- fit$internal_parameters$cyclical_pos
+  names(blocks) <- names(fit$internal_parameters$names_of_RE)
+  random_and_smooth <- unlist(lapply(names(blocks), function(block) {
+    indices <- blocks[[block]]
+    if (startsWith(block, "spline-")) {
+      # A spline base uses its numeric predictors. A deviation also uses its by-factor.
+      number <- as.integer(sub("^.*-([0-9]+)-(base|int)$", "\\1", block))
+      spec <- fit$formula$interpret_gam$smooth.spec[[number]]
+      by <- if (endsWith(block, "-int")) spec$by
+      if (length(by) && by %in% names(fit$screened_smooth_groups)) {
+        by <- unname(fit$screened_smooth_groups[by])
+      }
+      variables <- c(spec$term, if (length(by)) group_variables(stage, by))
+      return(rep(combination(variables), length(indices)))
+    }
+    # Random coefficient labels carry the group, slope, and retained level.
+    names_at_level <- rownames(fit$alpha$mean)[indices]
+    slopes <- vapply(strsplit(names_at_level, " @ ", fixed = TRUE), `[[`, character(1), 2L)
+    screened <- fit$screened_random[[block]]
+    group <- block
+    if (!is.null(screened)) {
+      group <- screened$group
+      slopes <- screened$slopes[match(slopes, screened$columns)]
+      stopifnot(!anyNA(slopes))
+    }
+    vapply(strsplit(slopes, ":", fixed = TRUE), function(slope) {
+      combination(c(group_variables(stage, group), slope))
+    }, character(1))
+  }), use.names = FALSE)
+  # Every coefficient row must appear exactly once in the count.
+  counts <- base::table(c(fixed, random_and_smooth))
+  stopifnot(sum(counts) == nrow(fit$beta$mean) + nrow(fit$alpha$mean))
+  counts
+}
+```
+
 ## 8. Fit and extend with 2024 presidential vote
 
 ### Scaling to more posterior draws
@@ -550,8 +664,17 @@ partitions in a compressed format if the analysis needs the full draws.
 For the diagnostic plots, keep only the state presidential and district
 House totals per draw and calculate intervals from those totals.
 
+*Fit or load the presidential stages, then report convergence and the terms that entered each fit.*
+
+The formulas show the solver terms after screening. Each stage compares
+successes for its named outcome with the remaining eligible respondents.
+A crossed group displays both predictors, such as `district_id × age_cat`.
+`[supported levels]` marks groups fitted only at levels that cleared the
+survey-support cutoff.
+
 
 ``` r
+# Use the shared country output folder unless the caller specifies a different path.
 out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
                   unset = file.path("data", "output", basename(country)))
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
@@ -596,10 +719,14 @@ pres_fit <- load_or_fit_us_model(
   interaction_support_log = file.path(out, "presidential_interaction_support.csv"),
   log_file = file.path(out, "presidential_fit_log.csv")
 )
-knitr::kable(pres_fit$fit_log[stage_columns])
+# Report the depth, screening counts, and convergence outcome for each stage.
+knitr::kable(pres_fit$fit_log[stage_columns], format = "pipe",
+             caption = "Table 9. Presidential stage design and convergence diagnostics.")
 ```
 
 
+
+Table: Table 9. Presidential stage design and convergence diagnostics.
 
 |outcome    | observations| fitted_depth| estimated_parameters| dropped_fixed| dropped_scalar_random| dropped_correlated_random| dropped_smooth| estimated_retained_parameters| fixed_condition_after| iterations_used| max_parameter_change|
 |:----------|------------:|------------:|--------------------:|-------------:|---------------------:|-------------------------:|--------------:|-----------------------------:|---------------------:|---------------:|--------------------:|
@@ -608,124 +735,102 @@ knitr::kable(pres_fit$fit_log[stage_columns])
 |Republican |        23922|            2|                42535|             0|                  9391|                      1852|          21838|                          9450|              24.63738|              80|            0.0046068|
 
 ``` r
-knitr::include_graphics(list.files(depth_support_dir, "^vote_pres_2024-stage-.*[.]png$",
-                                  full.names = TRUE))
-```
-
-``` r
+# Show the formula used after screening, with original names for crossed groups.
 for (stage in names(pres_fit$stages)) {
   cat(stage, "\n")
-  cat(trimws(deparse(pres_fit$stages[[stage]]$formula), which = "right"), sep = "\n")
+  display_fitted_formula(pres_fit$stages[[stage]])
   cat("\n")
 }
 ```
 
 ```
 ## No Vote
-## cbind(.success, .failure) ~ 1 + house_share + pres_share + (1 +
-##     house_share + pres_share | district_id) + (1 + house_share +
-##     pres_share | state_fips) + (1 + house_share + pres_share |
-##     age_cat) + (1 + house_share + pres_share | gender_cat) +
-##     (1 + house_share + pres_share | race_cat) + (1 + house_share +
-##     pres_share | hispanic_cat) + (1 + house_share + pres_share |
-##     educ_cat) + (1 + house_share + pres_share | lineup) + (1 |
-##     .group_1_2) + (1 | .group_1_3) + (1 | .group_1_4) + (1 |
-##     .group_1_5) + (1 | .group_1_6) + (1 | .group_1_7) + (1 |
-##     .group_1_8) + (1 | .group_2_3) + (1 | .group_2_4) + (1 |
-##     .group_2_5) + (1 | .group_2_6) + (1 | .group_2_7) + (1 |
-##     .group_2_8) + (1 | .group_3_4) + (1 | .group_3_5) + (1 |
-##     .group_3_6) + (1 | .group_3_7) + (1 | .group_3_8) + (1 |
-##     .group_4_5) + (1 | .group_4_6) + (1 | .group_4_7) + (1 |
-##     .group_4_8) + (1 | .group_5_6) + (1 | .group_5_7) + (1 |
-##     .group_5_8) + (1 | .group_6_7) + (1 | .group_6_8) + (1 |
-##     .group_7_8) + v_s(house_share, by = district_id) + v_s(pres_share,
-##     by = district_id) + v_s(house_share, by = state_fips) + v_s(pres_share,
-##     by = state_fips) + v_s(house_share, by = age_cat) + v_s(pres_share,
-##     by = age_cat) + v_s(house_share, by = gender_cat) + v_s(pres_share,
-##     by = gender_cat) + v_s(house_share, by = race_cat) + v_s(pres_share,
-##     by = race_cat) + v_s(house_share, by = hispanic_cat) + v_s(pres_share,
-##     by = hispanic_cat) + v_s(house_share, by = educ_cat) + v_s(pres_share,
-##     by = educ_cat) + v_s(house_share, by = lineup) + v_s(pres_share,
-##     by = lineup) + v_s(house_share, pres_share, type = "gKRLS")
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + (1 | district_id) + (1 + house_share |
+##     state_fips) + (1 + house_share + pres_share | age_cat) + (1 + house_share + pres_share |
+##     gender_cat) + (1 + house_share + pres_share | race_cat) + (1 + house_share + pres_share |
+##     hispanic_cat) + (1 + house_share + pres_share | educ_cat) + (1 + house_share + pres_share |
+##     lineup) + (1 | `district_id × age_cat [supported levels]`) + (1 | `district_id × gender_cat`) +
+##     (1 | `district_id × race_cat [supported levels]`) + (1 | `district_id × hispanic_cat [supported levels]`) +
+##     (1 | `district_id × educ_cat [supported levels]`) + (1 | `state_fips × age_cat [supported levels]`) +
+##     (1 | `state_fips × gender_cat`) + (1 | `state_fips × race_cat [supported levels]`) +
+##     (1 | `state_fips × hispanic_cat [supported levels]`) + (1 | `state_fips × educ_cat [supported levels]`) +
+##     (1 | `state_fips × lineup`) + (1 | `age_cat × gender_cat`) + (1 | `age_cat × race_cat [supported levels]`) +
+##     (1 | `age_cat × hispanic_cat`) + (1 | `age_cat × educ_cat`) + (1 | `age_cat × lineup [supported levels]`) +
+##     (1 | `gender_cat × race_cat`) + (1 | `gender_cat × hispanic_cat`) + (1 | `gender_cat × educ_cat`) +
+##     (1 | `gender_cat × lineup`) + (1 | `race_cat × hispanic_cat`) + (1 | `race_cat × educ_cat`) +
+##     (1 | `race_cat × lineup [supported levels]`) + (1 | `hispanic_cat × educ_cat`) + (1 |
+##     `hispanic_cat × lineup`) + (1 | `educ_cat × lineup`) + v_s(house_share, by = state_fips) +
+##     v_s(house_share, by = age_cat) + v_s(pres_share, by = age_cat) + v_s(house_share, by = gender_cat) +
+##     v_s(pres_share, by = gender_cat) + v_s(house_share, by = race_cat) + v_s(pres_share, by = race_cat) +
+##     v_s(house_share, by = hispanic_cat) + v_s(pres_share, by = hispanic_cat) + v_s(house_share,
+##     by = educ_cat) + v_s(pres_share, by = educ_cat) + v_s(house_share, by = lineup) + v_s(pres_share,
+##     by = lineup)
 ##
 ## Democratic
-## cbind(.success, .failure) ~ 1 + house_share + pres_share + incumbent +
-##     on_ballot + house_share:incumbent + (1 + house_share + pres_share +
-##     incumbent + on_ballot | district_id) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | state_fips) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | age_cat) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | gender_cat) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | race_cat) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | hispanic_cat) + (1 +
-##     house_share + pres_share + incumbent + on_ballot | educ_cat) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | lineup) +
-##     (1 | .group_1_2) + (1 | .group_1_3) + (1 | .group_1_4) +
-##     (1 | .group_1_5) + (1 | .group_1_6) + (1 | .group_1_7) +
-##     (1 | .group_1_8) + (1 | .group_2_3) + (1 | .group_2_4) +
-##     (1 | .group_2_5) + (1 | .group_2_6) + (1 | .group_2_7) +
-##     (1 | .group_2_8) + (1 | .group_3_4) + (1 | .group_3_5) +
-##     (1 | .group_3_6) + (1 | .group_3_7) + (1 | .group_3_8) +
-##     (1 | .group_4_5) + (1 | .group_4_6) + (1 | .group_4_7) +
-##     (1 | .group_4_8) + (1 | .group_5_6) + (1 | .group_5_7) +
-##     (1 | .group_5_8) + (1 | .group_6_7) + (1 | .group_6_8) +
-##     (1 | .group_7_8) + v_s(house_share, by = district_id) + v_s(pres_share,
-##     by = district_id) + v_s(house_share, by = state_fips) + v_s(pres_share,
-##     by = state_fips) + v_s(house_share, by = age_cat) + v_s(pres_share,
-##     by = age_cat) + v_s(house_share, by = gender_cat) + v_s(pres_share,
-##     by = gender_cat) + v_s(house_share, by = race_cat) + v_s(pres_share,
-##     by = race_cat) + v_s(house_share, by = hispanic_cat) + v_s(pres_share,
-##     by = hispanic_cat) + v_s(house_share, by = educ_cat) + v_s(pres_share,
-##     by = educ_cat) + v_s(house_share, by = lineup) + v_s(pres_share,
-##     by = lineup) + v_s(house_share, pres_share, type = "gKRLS") +
-##     v_s(house_share, incumbent, type = "gKRLS") + v_s(house_share,
-##     on_ballot, type = "gKRLS") + v_s(pres_share, incumbent, type = "gKRLS") +
-##     v_s(pres_share, on_ballot, type = "gKRLS")
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + incumbent + on_ballot + house_share:incumbent +
+##     (1 | district_id) + (1 + house_share + incumbent + on_ballot | state_fips) + (1 + house_share +
+##     pres_share + incumbent + on_ballot | age_cat) + (1 + house_share + pres_share + incumbent +
+##     on_ballot | gender_cat) + (1 + house_share + pres_share + incumbent + on_ballot | race_cat) +
+##     (1 + house_share + pres_share + incumbent + on_ballot | hispanic_cat) + (1 + house_share +
+##     pres_share + incumbent + on_ballot | educ_cat) + (1 + house_share + pres_share + incumbent |
+##     lineup) + (1 | `district_id × age_cat [supported levels]`) + (1 | `district_id × gender_cat`) +
+##     (1 | `district_id × race_cat [supported levels]`) + (1 | `district_id × hispanic_cat [supported levels]`) +
+##     (1 | `district_id × educ_cat [supported levels]`) + (1 | `state_fips × age_cat [supported levels]`) +
+##     (1 | `state_fips × gender_cat`) + (1 | `state_fips × race_cat [supported levels]`) +
+##     (1 | `state_fips × hispanic_cat [supported levels]`) + (1 | `state_fips × educ_cat [supported levels]`) +
+##     (1 | `state_fips × lineup`) + (1 | `age_cat × gender_cat`) + (1 | `age_cat × race_cat [supported levels]`) +
+##     (1 | `age_cat × hispanic_cat`) + (1 | `age_cat × educ_cat`) + (1 | `age_cat × lineup [supported levels]`) +
+##     (1 | `gender_cat × race_cat`) + (1 | `gender_cat × hispanic_cat`) + (1 | `gender_cat × educ_cat`) +
+##     (1 | `gender_cat × lineup`) + (1 | `race_cat × hispanic_cat`) + (1 | `race_cat × educ_cat`) +
+##     (1 | `race_cat × lineup [supported levels]`) + (1 | `hispanic_cat × educ_cat`) + (1 |
+##     `hispanic_cat × lineup`) + (1 | `educ_cat × lineup [supported levels]`) + v_s(house_share,
+##     by = state_fips) + v_s(house_share, by = age_cat) + v_s(pres_share, by = age_cat) + v_s(house_share,
+##     by = gender_cat) + v_s(pres_share, by = gender_cat) + v_s(house_share, by = race_cat) +
+##     v_s(pres_share, by = race_cat) + v_s(house_share, by = hispanic_cat) + v_s(pres_share,
+##     by = hispanic_cat) + v_s(house_share, by = educ_cat) + v_s(pres_share, by = educ_cat) +
+##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup) + v_s(house_share, incumbent,
+##     type = "gKRLS")
 ##
 ## Republican
-## cbind(.success, .failure) ~ 1 + house_share + pres_share + incumbent +
-##     on_ballot + (1 + house_share + pres_share + incumbent + on_ballot |
-##     district_id) + (1 + house_share + pres_share + incumbent +
-##     on_ballot | state_fips) + (1 + house_share + pres_share +
-##     incumbent + on_ballot | age_cat) + (1 + house_share + pres_share +
-##     incumbent + on_ballot | gender_cat) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | race_cat) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | hispanic_cat) + (1 +
-##     house_share + pres_share + incumbent + on_ballot | educ_cat) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | lineup) +
-##     (1 | .group_1_2) + (1 | .group_1_3) + (1 | .group_1_4) +
-##     (1 | .group_1_5) + (1 | .group_1_6) + (1 | .group_1_7) +
-##     (1 | .group_1_8) + (1 | .group_2_3) + (1 | .group_2_4) +
-##     (1 | .group_2_5) + (1 | .group_2_6) + (1 | .group_2_7) +
-##     (1 | .group_2_8) + (1 | .group_3_4) + (1 | .group_3_5) +
-##     (1 | .group_3_6) + (1 | .group_3_7) + (1 | .group_3_8) +
-##     (1 | .group_4_5) + (1 | .group_4_6) + (1 | .group_4_7) +
-##     (1 | .group_4_8) + (1 | .group_5_6) + (1 | .group_5_7) +
-##     (1 | .group_5_8) + (1 | .group_6_7) + (1 | .group_6_8) +
-##     (1 | .group_7_8) + v_s(house_share, by = district_id) + v_s(pres_share,
-##     by = district_id) + v_s(house_share, by = state_fips) + v_s(pres_share,
-##     by = state_fips) + v_s(house_share, by = age_cat) + v_s(pres_share,
-##     by = age_cat) + v_s(house_share, by = gender_cat) + v_s(pres_share,
-##     by = gender_cat) + v_s(house_share, by = race_cat) + v_s(pres_share,
-##     by = race_cat) + v_s(house_share, by = hispanic_cat) + v_s(pres_share,
-##     by = hispanic_cat) + v_s(house_share, by = educ_cat) + v_s(pres_share,
-##     by = educ_cat) + v_s(house_share, by = lineup) + v_s(pres_share,
-##     by = lineup) + v_s(house_share, pres_share, type = "gKRLS") +
-##     v_s(house_share, incumbent, type = "gKRLS") + v_s(house_share,
-##     on_ballot, type = "gKRLS") + v_s(pres_share, incumbent, type = "gKRLS") +
-##     v_s(pres_share, on_ballot, type = "gKRLS")
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + incumbent + on_ballot + (1 | district_id) +
+##     (1 + house_share + incumbent | state_fips) + (1 + house_share + pres_share + incumbent +
+##     on_ballot | age_cat) + (1 + house_share + pres_share + incumbent + on_ballot | gender_cat) +
+##     (1 + house_share + pres_share + incumbent + on_ballot | race_cat) + (1 + house_share +
+##     pres_share + incumbent + on_ballot | hispanic_cat) + (1 + house_share + pres_share + incumbent +
+##     on_ballot | educ_cat) + (1 + house_share + pres_share + incumbent | lineup) + (1 | `district_id × age_cat [supported levels]`) +
+##     (1 | `district_id × gender_cat [supported levels]`) + (1 | `district_id × race_cat [supported levels]`) +
+##     (1 | `district_id × hispanic_cat [supported levels]`) + (1 | `district_id × educ_cat [supported levels]`) +
+##     (1 | `state_fips × age_cat [supported levels]`) + (1 | `state_fips × gender_cat [supported levels]`) +
+##     (1 | `state_fips × race_cat [supported levels]`) + (1 | `state_fips × hispanic_cat [supported levels]`) +
+##     (1 | `state_fips × educ_cat [supported levels]`) + (1 | `state_fips × lineup`) + (1 |
+##     `age_cat × gender_cat`) + (1 | `age_cat × race_cat [supported levels]`) + (1 | `age_cat × hispanic_cat`) +
+##     (1 | `age_cat × educ_cat [supported levels]`) + (1 | `age_cat × lineup [supported levels]`) +
+##     (1 | `gender_cat × race_cat`) + (1 | `gender_cat × hispanic_cat`) + (1 | `gender_cat × educ_cat`) +
+##     (1 | `gender_cat × lineup`) + (1 | `race_cat × hispanic_cat`) + (1 | `race_cat × educ_cat [supported levels]`) +
+##     (1 | `race_cat × lineup [supported levels]`) + (1 | `hispanic_cat × educ_cat`) + (1 |
+##     `hispanic_cat × lineup`) + (1 | `educ_cat × lineup [supported levels]`) + v_s(house_share,
+##     by = state_fips) + v_s(house_share, by = age_cat) + v_s(pres_share, by = age_cat) + v_s(house_share,
+##     by = gender_cat) + v_s(pres_share, by = gender_cat) + v_s(house_share, by = race_cat) +
+##     v_s(pres_share, by = race_cat) + v_s(house_share, by = hispanic_cat) + v_s(pres_share,
+##     by = hispanic_cat) + v_s(house_share, by = educ_cat) + v_s(pres_share, by = educ_cat) +
+##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup)
 ```
 
 The three presidential stages met the maximum parameter-change tolerance
 of 0.01 in the saved national fit.
 
+*Expand presidential choice within one state and reuse the same coefficient draws across states.*
+
 
 ``` r
+# Retain draws for fitted coefficients and new levels across all state batches.
 pres_draw_state <- new.env(parent = emptyenv())
 predict_presidential_state <- function(original) {
   prediction <- predict_sequential_logit(
     pres_fit, frame = original, n_draws = n_draws, write_files = FALSE,
     draw_state = pres_draw_state, batch_size = 4000L
   )
+  # Convert presidential probabilities to counts on the mother-frame scale.
   aggregate_extended_frame(original, prediction, by = names(prediction$cells))
 }
 ```
@@ -743,6 +848,8 @@ interaction levels found only in the population frame, prediction draws
 from the fitted variance distribution and reuses the sampled effect
 whenever that level appears again.
 
+*Fit or load House choice conditional on presidential choice, then report convergence and fitted terms.*
+
 
 ``` r
 set.seed(2027)
@@ -755,10 +862,14 @@ house_fit <- load_or_fit_us_model(
   interaction_support_log = file.path(out, "house_interaction_support.csv"),
   log_file = file.path(out, "house_fit_log.csv")
 )
-knitr::kable(house_fit$fit_log[stage_columns])
+# Report the same stage diagnostics and decoded formulas as for the presidential fit.
+knitr::kable(house_fit$fit_log[stage_columns], format = "pipe",
+             caption = "Table 10. House stage design and convergence diagnostics.")
 ```
 
 
+
+Table: Table 10. House stage design and convergence diagnostics.
 
 |outcome    | observations| fitted_depth| estimated_parameters| dropped_fixed| dropped_scalar_random| dropped_correlated_random| dropped_smooth| estimated_retained_parameters| fixed_condition_after| iterations_used| max_parameter_change|
 |:----------|------------:|------------:|--------------------:|-------------:|---------------------:|-------------------------:|--------------:|-----------------------------:|---------------------:|---------------:|--------------------:|
@@ -767,246 +878,212 @@ knitr::kable(house_fit$fit_log[stage_columns])
 |Republican |        21552|            2|                43894|             0|                 10163|                      1897|          21838|                          9991|              19.13335|              95|            0.0074460|
 
 ``` r
-knitr::include_graphics(list.files(depth_support_dir, "^vote_house_2024-stage-.*[.]png$",
-                                  full.names = TRUE))
-```
-
-``` r
 for (stage in names(house_fit$stages)) {
   cat(stage, "\n")
-  cat(trimws(deparse(house_fit$stages[[stage]]$formula), which = "right"), sep = "\n")
+  display_fitted_formula(house_fit$stages[[stage]])
   cat("\n")
 }
 ```
 
 ```
 ## No Vote
-## cbind(.success, .failure) ~ 1 + house_share + pres_share + (1 +
-##     house_share + pres_share | district_id) + (1 + house_share +
-##     pres_share | state_fips) + (1 + house_share + pres_share |
-##     age_cat) + (1 + house_share + pres_share | gender_cat) +
-##     (1 + house_share + pres_share | race_cat) + (1 + house_share +
-##     pres_share | hispanic_cat) + (1 + house_share + pres_share |
-##     educ_cat) + (1 + house_share + pres_share | vote_pres_2024) +
-##     (1 + house_share + pres_share | lineup) + (1 | .group_1_2) +
-##     (1 | .group_1_3) + (1 | .group_1_4) + (1 | .group_1_5) +
-##     (1 | .group_1_6) + (1 | .group_1_7) + (1 | .group_1_8) +
-##     (1 | .group_1_9) + (1 | .group_2_3) + (1 | .group_2_4) +
-##     (1 | .group_2_5) + (1 | .group_2_6) + (1 | .group_2_7) +
-##     (1 | .group_2_8) + (1 | .group_2_9) + (1 | .group_3_4) +
-##     (1 | .group_3_5) + (1 | .group_3_6) + (1 | .group_3_7) +
-##     (1 | .group_3_8) + (1 | .group_3_9) + (1 | .group_4_5) +
-##     (1 | .group_4_6) + (1 | .group_4_7) + (1 | .group_4_8) +
-##     (1 | .group_4_9) + (1 | .group_5_6) + (1 | .group_5_7) +
-##     (1 | .group_5_8) + (1 | .group_5_9) + (1 | .group_6_7) +
-##     (1 | .group_6_8) + (1 | .group_6_9) + (1 | .group_7_8) +
-##     (1 | .group_7_9) + (1 | .group_8_9) + v_s(house_share, by = district_id) +
-##     v_s(pres_share, by = district_id) + v_s(house_share, by = state_fips) +
-##     v_s(pres_share, by = state_fips) + v_s(house_share, by = age_cat) +
-##     v_s(pres_share, by = age_cat) + v_s(house_share, by = gender_cat) +
-##     v_s(pres_share, by = gender_cat) + v_s(house_share, by = race_cat) +
-##     v_s(pres_share, by = race_cat) + v_s(house_share, by = hispanic_cat) +
-##     v_s(pres_share, by = hispanic_cat) + v_s(house_share, by = educ_cat) +
-##     v_s(pres_share, by = educ_cat) + v_s(house_share, by = vote_pres_2024) +
-##     v_s(pres_share, by = vote_pres_2024) + v_s(house_share, by = lineup) +
-##     v_s(pres_share, by = lineup) + v_s(house_share, pres_share,
-##     type = "gKRLS")
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + (1 | district_id) + (1 + house_share |
+##     state_fips) + (1 + house_share + pres_share | age_cat) + (1 + house_share + pres_share |
+##     gender_cat) + (1 + house_share + pres_share | race_cat) + (1 + house_share + pres_share |
+##     hispanic_cat) + (1 + house_share + pres_share | educ_cat) + (1 + house_share + pres_share |
+##     vote_pres_2024) + (1 + house_share + pres_share | lineup) + (1 | `district_id × age_cat [supported levels]`) +
+##     (1 | `district_id × gender_cat`) + (1 | `district_id × race_cat [supported levels]`) +
+##     (1 | `district_id × hispanic_cat [supported levels]`) + (1 | `district_id × educ_cat [supported levels]`) +
+##     (1 | `district_id × vote_pres_2024 [supported levels]`) + (1 | `state_fips × age_cat [supported levels]`) +
+##     (1 | `state_fips × gender_cat`) + (1 | `state_fips × race_cat [supported levels]`) +
+##     (1 | `state_fips × hispanic_cat [supported levels]`) + (1 | `state_fips × educ_cat [supported levels]`) +
+##     (1 | `state_fips × vote_pres_2024 [supported levels]`) + (1 | `state_fips × lineup`) +
+##     (1 | `age_cat × gender_cat`) + (1 | `age_cat × race_cat [supported levels]`) + (1 | `age_cat × hispanic_cat`) +
+##     (1 | `age_cat × educ_cat`) + (1 | `age_cat × vote_pres_2024`) + (1 | `age_cat × lineup [supported levels]`) +
+##     (1 | `gender_cat × race_cat`) + (1 | `gender_cat × hispanic_cat`) + (1 | `gender_cat × educ_cat`) +
+##     (1 | `gender_cat × vote_pres_2024`) + (1 | `gender_cat × lineup`) + (1 | `race_cat × hispanic_cat`) +
+##     (1 | `race_cat × educ_cat`) + (1 | `race_cat × vote_pres_2024`) + (1 | `race_cat × lineup [supported levels]`) +
+##     (1 | `hispanic_cat × educ_cat`) + (1 | `hispanic_cat × vote_pres_2024`) + (1 | `hispanic_cat × lineup`) +
+##     (1 | `educ_cat × vote_pres_2024`) + (1 | `educ_cat × lineup`) + (1 | `vote_pres_2024 × lineup [supported levels]`) +
+##     v_s(house_share, by = state_fips) + v_s(house_share, by = age_cat) + v_s(pres_share, by = age_cat) +
+##     v_s(house_share, by = gender_cat) + v_s(pres_share, by = gender_cat) + v_s(house_share,
+##     by = race_cat) + v_s(pres_share, by = race_cat) + v_s(house_share, by = hispanic_cat) +
+##     v_s(pres_share, by = hispanic_cat) + v_s(house_share, by = educ_cat) + v_s(pres_share,
+##     by = educ_cat) + v_s(house_share, by = vote_pres_2024) + v_s(pres_share, by = vote_pres_2024) +
+##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup)
 ##
 ## Democratic
-## cbind(.success, .failure) ~ 1 + house_share + pres_share + incumbent +
-##     on_ballot + house_share:incumbent + (1 + house_share + pres_share +
-##     incumbent + on_ballot | district_id) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | state_fips) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | age_cat) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | gender_cat) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | race_cat) + (1 + house_share +
-##     pres_share + incumbent + on_ballot | hispanic_cat) + (1 +
-##     house_share + pres_share + incumbent + on_ballot | educ_cat) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | vote_pres_2024) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | lineup) +
-##     (1 | .group_1_2) + (1 | .group_1_3) + (1 | .group_1_4) +
-##     (1 | .group_1_5) + (1 | .group_1_6) + (1 | .group_1_7) +
-##     (1 | .group_1_8) + (1 | .group_1_9) + (1 | .group_2_3) +
-##     (1 | .group_2_4) + (1 | .group_2_5) + (1 | .group_2_6) +
-##     (1 | .group_2_7) + (1 | .group_2_8) + (1 | .group_2_9) +
-##     (1 | .group_3_4) + (1 | .group_3_5) + (1 | .group_3_6) +
-##     (1 | .group_3_7) + (1 | .group_3_8) + (1 | .group_3_9) +
-##     (1 | .group_4_5) + (1 | .group_4_6) + (1 | .group_4_7) +
-##     (1 | .group_4_8) + (1 | .group_4_9) + (1 | .group_5_6) +
-##     (1 | .group_5_7) + (1 | .group_5_8) + (1 | .group_5_9) +
-##     (1 | .group_6_7) + (1 | .group_6_8) + (1 | .group_6_9) +
-##     (1 | .group_7_8) + (1 | .group_7_9) + (1 | .group_8_9) +
-##     v_s(house_share, by = district_id) + v_s(pres_share, by = district_id) +
-##     v_s(house_share, by = state_fips) + v_s(pres_share, by = state_fips) +
-##     v_s(house_share, by = age_cat) + v_s(pres_share, by = age_cat) +
-##     v_s(house_share, by = gender_cat) + v_s(pres_share, by = gender_cat) +
-##     v_s(house_share, by = race_cat) + v_s(pres_share, by = race_cat) +
-##     v_s(house_share, by = hispanic_cat) + v_s(pres_share, by = hispanic_cat) +
-##     v_s(house_share, by = educ_cat) + v_s(pres_share, by = educ_cat) +
-##     v_s(house_share, by = vote_pres_2024) + v_s(pres_share, by = vote_pres_2024) +
-##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup) +
-##     v_s(house_share, pres_share, type = "gKRLS") + v_s(house_share,
-##     incumbent, type = "gKRLS") + v_s(house_share, on_ballot,
-##     type = "gKRLS") + v_s(pres_share, incumbent, type = "gKRLS") +
-##     v_s(pres_share, on_ballot, type = "gKRLS")
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + incumbent + on_ballot + house_share:incumbent +
+##     (1 | district_id) + (1 + house_share + incumbent + on_ballot | state_fips) + (1 + house_share +
+##     pres_share + incumbent + on_ballot | age_cat) + (1 + house_share + pres_share + incumbent +
+##     on_ballot | gender_cat) + (1 + house_share + pres_share + incumbent + on_ballot | race_cat) +
+##     (1 + house_share + pres_share + incumbent + on_ballot | hispanic_cat) + (1 + house_share +
+##     pres_share + incumbent + on_ballot | educ_cat) + (1 + house_share + pres_share + incumbent +
+##     on_ballot | vote_pres_2024) + (1 + house_share + pres_share + incumbent | lineup) + (1 |
+##     `district_id × age_cat [supported levels]`) + (1 | `district_id × gender_cat`) + (1 |
+##     `district_id × race_cat [supported levels]`) + (1 | `district_id × hispanic_cat [supported levels]`) +
+##     (1 | `district_id × educ_cat [supported levels]`) + (1 | `district_id × vote_pres_2024 [supported levels]`) +
+##     (1 | `state_fips × age_cat [supported levels]`) + (1 | `state_fips × gender_cat`) + (1 |
+##     `state_fips × race_cat [supported levels]`) + (1 | `state_fips × hispanic_cat [supported levels]`) +
+##     (1 | `state_fips × educ_cat [supported levels]`) + (1 | `state_fips × vote_pres_2024 [supported levels]`) +
+##     (1 | `state_fips × lineup`) + (1 | `age_cat × gender_cat`) + (1 | `age_cat × race_cat [supported levels]`) +
+##     (1 | `age_cat × hispanic_cat`) + (1 | `age_cat × educ_cat`) + (1 | `age_cat × vote_pres_2024 [supported levels]`) +
+##     (1 | `age_cat × lineup [supported levels]`) + (1 | `gender_cat × race_cat`) + (1 | `gender_cat × hispanic_cat`) +
+##     (1 | `gender_cat × educ_cat`) + (1 | `gender_cat × vote_pres_2024`) + (1 | `gender_cat × lineup`) +
+##     (1 | `race_cat × hispanic_cat`) + (1 | `race_cat × educ_cat`) + (1 | `race_cat × vote_pres_2024 [supported levels]`) +
+##     (1 | `race_cat × lineup [supported levels]`) + (1 | `hispanic_cat × educ_cat`) + (1 |
+##     `hispanic_cat × vote_pres_2024`) + (1 | `hispanic_cat × lineup`) + (1 | `educ_cat × vote_pres_2024`) +
+##     (1 | `educ_cat × lineup [supported levels]`) + (1 | `vote_pres_2024 × lineup [supported levels]`) +
+##     v_s(house_share, by = state_fips) + v_s(house_share, by = age_cat) + v_s(pres_share, by = age_cat) +
+##     v_s(house_share, by = gender_cat) + v_s(pres_share, by = gender_cat) + v_s(house_share,
+##     by = race_cat) + v_s(pres_share, by = race_cat) + v_s(house_share, by = hispanic_cat) +
+##     v_s(pres_share, by = hispanic_cat) + v_s(house_share, by = educ_cat) + v_s(pres_share,
+##     by = educ_cat) + v_s(house_share, by = vote_pres_2024) + v_s(pres_share, by = vote_pres_2024) +
+##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup) + v_s(house_share, incumbent,
+##     type = "gKRLS")
 ##
 ## Republican
-## cbind(.success, .failure) ~ 1 + house_share + pres_share + incumbent +
-##     (1 + house_share + pres_share + incumbent + on_ballot | district_id) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | state_fips) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | age_cat) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | gender_cat) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | race_cat) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | hispanic_cat) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | educ_cat) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | vote_pres_2024) +
-##     (1 + house_share + pres_share + incumbent + on_ballot | lineup) +
-##     (1 | .group_1_2) + (1 | .group_1_3) + (1 | .group_1_4) +
-##     (1 | .group_1_5) + (1 | .group_1_6) + (1 | .group_1_7) +
-##     (1 | .group_1_8) + (1 | .group_1_9) + (1 | .group_2_3) +
-##     (1 | .group_2_4) + (1 | .group_2_5) + (1 | .group_2_6) +
-##     (1 | .group_2_7) + (1 | .group_2_8) + (1 | .group_2_9) +
-##     (1 | .group_3_4) + (1 | .group_3_5) + (1 | .group_3_6) +
-##     (1 | .group_3_7) + (1 | .group_3_8) + (1 | .group_3_9) +
-##     (1 | .group_4_5) + (1 | .group_4_6) + (1 | .group_4_7) +
-##     (1 | .group_4_8) + (1 | .group_4_9) + (1 | .group_5_6) +
-##     (1 | .group_5_7) + (1 | .group_5_8) + (1 | .group_5_9) +
-##     (1 | .group_6_7) + (1 | .group_6_8) + (1 | .group_6_9) +
-##     (1 | .group_7_8) + (1 | .group_7_9) + (1 | .group_8_9) +
-##     v_s(house_share, by = district_id) + v_s(pres_share, by = district_id) +
-##     v_s(house_share, by = state_fips) + v_s(pres_share, by = state_fips) +
-##     v_s(house_share, by = age_cat) + v_s(pres_share, by = age_cat) +
-##     v_s(house_share, by = gender_cat) + v_s(pres_share, by = gender_cat) +
-##     v_s(house_share, by = race_cat) + v_s(pres_share, by = race_cat) +
-##     v_s(house_share, by = hispanic_cat) + v_s(pres_share, by = hispanic_cat) +
-##     v_s(house_share, by = educ_cat) + v_s(pres_share, by = educ_cat) +
-##     v_s(house_share, by = vote_pres_2024) + v_s(pres_share, by = vote_pres_2024) +
-##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup) +
-##     v_s(house_share, pres_share, type = "gKRLS") + v_s(house_share,
-##     incumbent, type = "gKRLS") + v_s(house_share, on_ballot,
-##     type = "gKRLS") + v_s(pres_share, incumbent, type = "gKRLS") +
-##     v_s(pres_share, on_ballot, type = "gKRLS")
+## cbind(.success, .failure) ~ 1 + house_share + pres_share + incumbent + (1 | `district_id [supported levels]`) +
+##     (1 + house_share + incumbent | state_fips) + (1 + house_share + pres_share + incumbent |
+##     age_cat) + (1 + house_share + pres_share + incumbent | gender_cat) + (1 + house_share +
+##     pres_share + incumbent | race_cat) + (1 + house_share + pres_share + incumbent | hispanic_cat) +
+##     (1 + house_share + pres_share + incumbent | educ_cat) + (1 + house_share + pres_share +
+##     incumbent | vote_pres_2024) + (1 + house_share + pres_share + incumbent | lineup) + (1 |
+##     `district_id × age_cat [supported levels]`) + (1 | `district_id × gender_cat [supported levels]`) +
+##     (1 | `district_id × race_cat [supported levels]`) + (1 | `district_id × hispanic_cat [supported levels]`) +
+##     (1 | `district_id × educ_cat [supported levels]`) + (1 | `district_id × vote_pres_2024 [supported levels]`) +
+##     (1 | `state_fips × age_cat [supported levels]`) + (1 | `state_fips × gender_cat [supported levels]`) +
+##     (1 | `state_fips × race_cat [supported levels]`) + (1 | `state_fips × hispanic_cat [supported levels]`) +
+##     (1 | `state_fips × educ_cat [supported levels]`) + (1 | `state_fips × vote_pres_2024 [supported levels]`) +
+##     (1 | `state_fips × lineup [supported levels]`) + (1 | `age_cat × gender_cat`) + (1 |
+##     `age_cat × race_cat [supported levels]`) + (1 | `age_cat × hispanic_cat`) + (1 | `age_cat × educ_cat [supported levels]`) +
+##     (1 | `age_cat × vote_pres_2024 [supported levels]`) + (1 | `age_cat × lineup [supported levels]`) +
+##     (1 | `gender_cat × race_cat`) + (1 | `gender_cat × hispanic_cat`) + (1 | `gender_cat × educ_cat`) +
+##     (1 | `gender_cat × vote_pres_2024`) + (1 | `gender_cat × lineup`) + (1 | `race_cat × hispanic_cat`) +
+##     (1 | `race_cat × educ_cat [supported levels]`) + (1 | `race_cat × vote_pres_2024 [supported levels]`) +
+##     (1 | `race_cat × lineup [supported levels]`) + (1 | `hispanic_cat × educ_cat`) + (1 |
+##     `hispanic_cat × vote_pres_2024`) + (1 | `hispanic_cat × lineup`) + (1 | `educ_cat × vote_pres_2024`) +
+##     (1 | `educ_cat × lineup [supported levels]`) + (1 | `vote_pres_2024 × lineup [supported levels]`) +
+##     v_s(house_share, by = state_fips) + v_s(house_share, by = age_cat) + v_s(pres_share, by = age_cat) +
+##     v_s(house_share, by = gender_cat) + v_s(pres_share, by = gender_cat) + v_s(house_share,
+##     by = race_cat) + v_s(pres_share, by = race_cat) + v_s(house_share, by = hispanic_cat) +
+##     v_s(pres_share, by = hispanic_cat) + v_s(house_share, by = educ_cat) + v_s(pres_share,
+##     by = educ_cat) + v_s(house_share, by = vote_pres_2024) + v_s(pres_share, by = vote_pres_2024) +
+##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup)
 ```
 
 In the saved national House fit, No Vote and Democratic reached the
 100-iteration cap with maximum parameter changes of 0.43108 and 0.30709.
 Republican met the 0.01 tolerance after 95 iterations.
 
-### Coefficients by predictor combination
+### Retained coefficients by predictor combination
 
-Each row counts the fixed, random, and spline coefficients attributed to a
-single predictor or interaction. A categorical combination contributes one
-random intercept per observed combination of levels. A categorical predictor
-interacted with a numeric predictor contributes a slope per observed level
-plus any spline-basis coefficients. Fixed columns are counted after
-screening, so the listed totals can be smaller than the nominal
-coefficient counts used to select depth. Zero means the combination
-contributes no coefficients in that stage.
+Each row counts fitted fixed effects, random effects, and spline-basis
+coefficients for a predictor or interaction. Random terms count only
+retained group levels and slopes. Spline coefficients for a global curve
+count under its numeric predictors, and grouped deviations also count
+under the grouping variable. Zero means the fit has no coefficient for
+that combination in that stage. The design-stage estimate can differ
+from the actual count because the solver constructs the final basis.
 
+
+Table: Table 11. Actual fitted coefficients by predictor combination and stage.
 
 |Combination                   | Pres. No Vote| Pres. Democratic| Pres. Republican| House No Vote| House Democratic| House Republican|
 |:-----------------------------|-------------:|----------------:|----------------:|-------------:|----------------:|----------------:|
-|district_id × house_share     |        15,731|           15,731|           15,731|        15,731|           15,731|           15,731|
-|district_id × age_cat         |         6,025|            6,016|            5,587|         6,017|            5,991|            5,282|
-|district_id × pres_share      |         5,680|            5,680|            5,680|         5,680|            5,680|            5,680|
-|district_id × educ_cat        |         2,595|            2,583|            2,496|         2,587|            2,550|            2,385|
-|state_fips × house_share      |         1,871|            1,871|            1,871|         1,871|            1,871|            1,871|
-|district_id × race_cat        |         1,944|            1,914|            1,650|         1,929|            1,880|            1,551|
-|district_id × gender_cat      |           872|              872|              872|           872|              872|              868|
-|district_id × hispanic_cat    |           870|              870|              850|           870|              870|              835|
-|district_id × vote_pres_2024  |             0|                0|                0|         1,735|            1,510|            1,322|
-|state_fips × age_cat          |           712|              712|              701|           711|              711|              697|
-|state_fips × pres_share       |           675|              675|              675|           675|              675|              675|
-|age_cat × house_share         |           539|              539|              539|           539|              539|              539|
-|district_id                   |           436|              436|              436|           436|              436|              436|
-|district_id × lineup          |           436|              436|              436|           436|              436|              436|
-|district_id × state_fips      |           436|              436|              436|           436|              436|              436|
-|state_fips × educ_cat         |           306|              306|              306|           306|              305|              300|
-|district_id × incumbent       |             0|              436|              436|             0|              436|              436|
-|district_id × on_ballot       |             0|              436|              436|             0|              436|              436|
-|educ_cat × house_share        |           251|              251|              251|           251|              251|              251|
-|house_share × lineup          |           251|              251|              251|           251|              251|              251|
-|state_fips × race_cat         |           250|              250|              239|           250|              250|              235|
-|race_cat × house_share        |           215|              215|              215|           215|              215|              215|
-|age_cat × pres_share          |           194|              194|              194|           194|              194|              194|
-|house_share × pres_share      |           175|              170|              135|           185|              175|              135|
-|gender_cat × house_share      |           107|              107|              107|           107|              107|              107|
-|hispanic_cat × house_share    |           107|              107|              107|           107|              107|              107|
-|house_share × incumbent       |             0|              171|              135|             0|              176|              135|
-|house_share × on_ballot       |             0|              170|              135|             0|              175|              135|
-|pres_share × incumbent        |             0|              170|              135|             0|              175|              135|
-|pres_share × on_ballot        |             0|              170|              135|             0|              175|              135|
-|state_fips × gender_cat       |           102|              102|              102|           102|              102|              102|
-|state_fips × hispanic_cat     |           102|              102|              101|           102|              102|              101|
-|state_fips × vote_pres_2024   |             0|                0|                0|           204|              200|              195|
-|state_fips × lineup           |            93|               93|               93|            93|               93|               93|
-|educ_cat × pres_share         |            90|               90|               90|            90|               90|               90|
-|pres_share × lineup           |            90|               90|               90|            90|               90|               90|
-|vote_pres_2024 × house_share  |             0|                0|                0|           179|              179|              179|
-|age_cat × educ_cat            |            84|               84|               84|            84|               84|               84|
-|age_cat × lineup              |            84|               84|               84|            84|               84|               83|
-|race_cat × pres_share         |            77|               77|               77|            77|               77|               77|
-|age_cat × race_cat            |            70|               70|               70|            70|               70|               70|
+|state_fips × house_share      |         1,836|            1,836|            1,836|         1,836|            1,836|            1,836|
+|district_id × educ_cat        |         2,070|            2,010|            1,045|         2,042|            1,951|              930|
+|district_id × age_cat         |         2,606|            2,205|              431|         2,438|            1,884|              399|
+|district_id × gender_cat      |           872|              872|              837|           872|              872|              787|
+|district_id × race_cat        |           998|              954|              486|           978|              890|              445|
+|district_id × hispanic_cat    |           686|              668|              513|           672|              639|              463|
+|state_fips × age_cat          |           634|              621|              504|           632|              612|              468|
+|age_cat × house_share         |           504|              504|              504|           504|              504|              504|
+|district_id                   |           436|              436|              436|           436|              436|              424|
+|district_id × vote_pres_2024  |             0|                0|                0|         1,117|              862|              448|
+|state_fips × educ_cat         |           292|              289|              266|           291|              286|              257|
+|house_share                   |           246|              246|              246|           281|              281|              281|
+|educ_cat × house_share        |           216|              216|              216|           216|              216|              216|
+|house_share × lineup          |           216|              216|              216|           216|              216|              216|
+|age_cat × pres_share          |           182|              182|              182|           182|              182|              182|
+|race_cat × house_share        |           180|              180|              180|           180|              180|              180|
+|state_fips × race_cat         |           191|              181|              139|           189|              177|              131|
+|state_fips × gender_cat       |           102|              102|              100|           102|              102|              101|
+|state_fips × lineup           |            93|               93|               93|            93|               93|               91|
+|state_fips × hispanic_cat     |            96|               96|               89|            95|               93|               86|
+|age_cat × educ_cat            |            84|               84|               82|            84|               84|               82|
+|pres_share                    |            73|               73|               73|            85|               85|               85|
+|educ_cat × pres_share         |            78|               78|               78|            78|               78|               78|
+|pres_share × lineup           |            78|               78|               78|            78|               78|               78|
+|age_cat × lineup              |            82|               82|               75|            81|               80|               62|
+|state_fips × vote_pres_2024   |             0|                0|                0|           188|              151|              122|
+|gender_cat × house_share      |            72|               72|               72|            72|               72|               72|
+|hispanic_cat × house_share    |            72|               72|               72|            72|               72|               72|
+|vote_pres_2024 × house_share  |             0|                0|                0|           144|              144|              144|
+|age_cat × race_cat            |            69|               69|               66|            69|               69|               64|
+|race_cat × pres_share         |            65|               65|               65|            65|               65|               65|
 |state_fips                    |            51|               51|               51|            51|               51|               51|
-|gender_cat × pres_share       |            38|               38|               38|            38|               38|               38|
-|hispanic_cat × pres_share     |            38|               38|               38|            38|               38|               38|
-|educ_cat × lineup             |            36|               36|               36|            36|               36|               35|
+|educ_cat × lineup             |            36|               35|               35|            36|               34|               32|
 |state_fips × incumbent        |             0|               51|               51|             0|               51|               51|
-|state_fips × on_ballot        |             0|               51|               51|             0|               51|               51|
-|vote_pres_2024 × pres_share   |             0|                0|                0|            64|               64|               64|
-|race_cat × educ_cat           |            30|               30|               30|            30|               30|               30|
-|race_cat × lineup             |            30|               30|               30|            30|               30|               28|
+|race_cat × educ_cat           |            30|               30|               29|            30|               30|               29|
 |age_cat × gender_cat          |            28|               28|               28|            28|               28|               28|
 |age_cat × hispanic_cat        |            28|               28|               28|            28|               28|               28|
-|age_cat × vote_pres_2024      |             0|                0|                0|            56|               56|               56|
+|age_cat × vote_pres_2024      |             0|                0|                0|            56|               54|               48|
+|gender_cat × pres_share       |            26|               26|               26|            26|               26|               26|
+|hispanic_cat × pres_share     |            26|               26|               26|            26|               26|               26|
+|vote_pres_2024 × pres_share   |             0|                0|                0|            52|               52|               52|
+|race_cat × lineup             |            27|               26|               22|            27|               24|               22|
+|state_fips × on_ballot        |             0|               51|                0|             0|               51|                0|
 |age_cat                       |            14|               14|               14|            14|               14|               14|
 |educ_cat × vote_pres_2024     |             0|                0|                0|            24|               24|               24|
 |gender_cat × educ_cat         |            12|               12|               12|            12|               12|               12|
 |gender_cat × lineup           |            12|               12|               12|            12|               12|               12|
 |hispanic_cat × educ_cat       |            12|               12|               12|            12|               12|               12|
 |hispanic_cat × lineup         |            12|               12|               12|            12|               12|               12|
-|vote_pres_2024 × lineup       |             0|                0|                0|            24|               24|               23|
+|vote_pres_2024 × lineup       |             0|                0|                0|            23|               20|               19|
 |gender_cat × race_cat         |            10|               10|               10|            10|               10|               10|
 |race_cat × hispanic_cat       |            10|               10|               10|            10|               10|               10|
-|race_cat × vote_pres_2024     |             0|                0|                0|            20|               20|               20|
+|house_share × incumbent       |             0|               29|                0|             0|               30|                0|
+|race_cat × vote_pres_2024     |             0|                0|                0|            20|               19|               18|
 |age_cat × incumbent           |             0|               14|               14|             0|               14|               14|
-|age_cat × on_ballot           |             0|               14|               14|             0|               14|               14|
+|age_cat × on_ballot           |             0|               14|               14|             0|               14|                0|
 |educ_cat                      |             6|                6|                6|             6|                6|                6|
 |lineup                        |             6|                6|                6|             6|                6|                6|
 |race_cat                      |             5|                5|                5|             5|                5|                5|
 |educ_cat × incumbent          |             0|                6|                6|             0|                6|                6|
-|educ_cat × on_ballot          |             0|                6|                6|             0|                6|                6|
 |gender_cat × hispanic_cat     |             4|                4|                4|             4|                4|                4|
 |gender_cat × vote_pres_2024   |             0|                0|                0|             8|                8|                8|
 |hispanic_cat × vote_pres_2024 |             0|                0|                0|             8|                8|                8|
 |lineup × incumbent            |             0|                6|                6|             0|                6|                6|
-|lineup × on_ballot            |             0|                6|                6|             0|                6|                6|
 |race_cat × incumbent          |             0|                5|                5|             0|                5|                5|
-|race_cat × on_ballot          |             0|                5|                5|             0|                5|                5|
+|educ_cat × on_ballot          |             0|                6|                6|             0|                6|                0|
+|race_cat × on_ballot          |             0|                5|                5|             0|                5|                0|
 |gender_cat                    |             2|                2|                2|             2|                2|                2|
 |hispanic_cat                  |             2|                2|                2|             2|                2|                2|
 |vote_pres_2024                |             0|                0|                0|             4|                4|                4|
 |gender_cat × incumbent        |             0|                2|                2|             0|                2|                2|
-|gender_cat × on_ballot        |             0|                2|                2|             0|                2|                2|
 |hispanic_cat × incumbent      |             0|                2|                2|             0|                2|                2|
-|hispanic_cat × on_ballot      |             0|                2|                2|             0|                2|                2|
 |vote_pres_2024 × incumbent    |             0|                0|                0|             0|                4|                4|
-|vote_pres_2024 × on_ballot    |             0|                0|                0|             0|                4|                4|
 |(Intercept)                   |             1|                1|                1|             1|                1|                1|
-|house_share                   |             1|                1|                1|             1|                1|                1|
-|pres_share                    |             1|                1|                1|             1|                1|                1|
+|gender_cat × on_ballot        |             0|                2|                2|             0|                2|                0|
+|hispanic_cat × on_ballot      |             0|                2|                2|             0|                2|                0|
 |incumbent                     |             0|                1|                1|             0|                1|                1|
+|vote_pres_2024 × on_ballot    |             0|                0|                0|             0|                4|                0|
 |on_ballot                     |             0|                1|                1|             0|                1|                0|
-|**Total**                     |        41,859|           43,530|           42,531|        44,163|           45,566|           43,889|
+|**Total**                     |        13,489|           13,135|            9,450|        14,943|           14,040|            9,991|
+
+*Expand House choice within each presidential category while keeping draw indices paired.*
 
 
 ``` r
+# Keep the House coefficient draws aligned across all state batches.
 house_draw_state <- new.env(parent = emptyenv())
 predict_house_state <- function(incoming) {
   prediction <- predict_sequential_logit(
     house_fit, frame = incoming, write_files = FALSE,
     draw_state = house_draw_state, batch_size = 4000L
   )
+  # Multiply conditional House probabilities by the matching presidential counts.
   aggregate_extended_frame(incoming, prediction, by = names(prediction$cells))
 }
 ```
@@ -1026,14 +1103,17 @@ to save all joint pre-rake partitions.
 Set `VOTEFRAME_US_RAKED_DIR` to use a different partition directory
 when the fit output directory has limited free space.
 
+*Predict by state, jointly calibrate both vote margins, and save each verified partition.*
 
 ``` r
+# Apply the same tolerance to election margins and mother-frame cells.
 rake_tolerance <- 0.00000001
 run_rake <- identical(Sys.getenv("VOTEFRAME_US_RAKE", unset = "true"), "true")
 raked_dir <- Sys.getenv("VOTEFRAME_US_RAKED_DIR", unset = file.path(out, "raked_frame"))
 if (run_rake) dir.create(raked_dir, showWarnings = FALSE)
 states <- geographic_batches(frame, "district_id", parent_area, areas_per_batch, rake_by)
 count_columns <- c("N", paste0("N_draw_", seq_len(n_draws)))
+# Estimate the storage requirement before allocating any predicted partitions.
 state_bytes <- pre_rake_frame_bytes(lengths(states) * length(choices)^2,
                                     n_draws, ncol(frame) + 1L)
 pre_rake_mode <- Sys.getenv("VOTEFRAME_PRE_RAKE_STORAGE", "auto")
@@ -1052,15 +1132,28 @@ plot_totals <- function(block, extension) {
         rowsum(block[count_columns], group, reorder = FALSE))
 }
 
+change_summaries <- if (run_rake) {
+  # Check demographic margins nationally and selected subgroups within districts.
+  groupings <- c(as.list(demographics), list(c("age_cat", "educ_cat")))
+  district_groups <- list(c("district_id", "age_cat"), c("district_id", "educ_cat"))
+  setNames(lapply(c(pres, house), function(outcome) {
+    groups <- c(groupings, if (outcome == pres) list("district_id"), district_groups)
+    partitioned_raking_change_summary(frame, "district_id", outcome, "No Vote", groups)
+  }), c(pres, house))
+}
+
 summarize_states <- function() {
   lapply(names(states), function(state) {
     if (isTRUE(getOption("knitr.in.progress"))) {
       cat("Processing partition ", state, "\n", sep = "", file = stderr())
     }
     original <- frame[states[[state]], , drop = FALSE]
+    # Predict presidential choice first, then House choice within each presidential category.
     incoming <- predict_presidential_state(original)
     joint <- predict_house_state(incoming)
+    rm(incoming)
     stopifnot(nrow(joint) == nrow(original) * length(choices)^2L)
+    # Use memory or scratch disk for the state’s pre-rake counts.
     joint_part <- storage$put(joint, paste0("state_", state))
     if (storage$mode == "temporary") on.exit(unlink(joint_part))
     before <- setNames(lapply(names(plot_targets), function(x) plot_totals(joint, x)),
@@ -1077,14 +1170,14 @@ summarize_states <- function() {
       table[keep, , drop = FALSE]
     }) |> setNames(names(rake_targets))
 
-    raked <- rake_joint_extended_frame(storage$get(joint_part), original, targets, by = rake_by,
+    extended <- storage$get(joint_part)
+    raked <- rake_joint_extended_frame(extended, original, targets, by = rake_by,
                                        tolerance = rake_tolerance)
-    keys <- setdiff(names(original), "N")
-    cell <- match(frame_cell_keys(raked[keys], original[keys]),
-                  frame_cell_keys(original[keys], original[keys]))
-    counts <- rowsum(raked[count_columns], cell)
-    error <- max(abs(as.matrix(counts) - original$N))
-    stopifnot(error <= rake_tolerance)
+    # Sum over both elections and compare the mean and all draws with the source cell.
+    cells <- post_rake_cell_comparison(raked, original, c(pres, house), include_max_error = TRUE)
+    stopifnot(max(cells$max_abs_error) <= rake_tolerance)
+    for (change in change_summaries) change$add(extended, raked, original)
+    # Publish the verified partition only after the write succeeds.
     path <- file.path(raked_dir, paste0("state_", state, ".rds"))
     saveRDS(raked, paste0(path, ".tmp"))
     stopifnot(file.rename(paste0(path, ".tmp"), path))
@@ -1092,10 +1185,11 @@ summarize_states <- function() {
     list(before = before, extended_path = extended_path,
          after = setNames(lapply(names(plot_targets), function(x) plot_totals(raked, x)),
                           names(plot_targets)),
-         cell_error = error)
+         cells = cells)
   })
 }
 
+# Seed once before the national sequence to keep draw IDs aligned across states.
 set.seed(2028)
 summaries <- summarize_states()
 if (storage$mode == "keep") {
@@ -1103,11 +1197,6 @@ if (storage$mode == "keep") {
   prune_geographic_partitions(dirname(paths[1L]), paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
 }
 storage$cleanup()
-if (run_rake) max(vapply(summaries, function(x) x$cell_error, numeric(1)))
-```
-
-```
-## [1] 1.455192e-11
 ```
 
 ## 11. Compare predictions with election benchmarks
@@ -1125,14 +1214,16 @@ population denominator. The rake still uses population-share targets.
 The default benchmarks also enter model fitting as area predictors, so
 agreement with them measures calibration.
 
+*Compare the predicted shares and draw intervals with election benchmarks before and after calibration.*
 
 ``` r
 figure_dir <- file.path("vignettes", "assets", "us-2026")
 dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 fits <- setNames(list(pres_fit, house_fit), c(pres, house))
-figures <- character()
+elections <- setNames(c("Presidential vote", "House vote"), c(pres, house))
 for (phase in c("before", if (run_rake) "after")) {
   for (outcome in names(plot_targets)) {
+    # Pool counts at the benchmark geography for this election.
     specification <- plot_targets[[outcome]]
     totals <- do.call(rbind, lapply(summaries, function(x) x[[phase]][[outcome]]))
     figure <- file.path(figure_dir, paste0(outcome, "_", phase, "_rake.png"))
@@ -1142,67 +1233,158 @@ for (phase in c("before", if (run_rake) "after")) {
       no_vote = fits[[outcome]]$no_vote,
       plot_file = figure, coverage_tolerance = if (phase == "after") rake_tolerance else 0
     )
-    cat(outcome, phase, "rake\n")
-    print(check$metrics)
+    # Pair the table and figure by election and calibration step.
+    caption <- paste(elections[[outcome]], phase, "raking")
+    print(knitr::kable(check$metrics, format = "pipe", digits = 4,
+                       caption = paste(caption, "– errors and 90% interval coverage against the election benchmarks.")))
     utils::write.csv(check$metrics, file.path(out, paste0(outcome, "_", phase, "_rake_metrics.csv")))
-    figures <- c(figures, sub("^vignettes/", "", figure))
+    figure_caption <- paste(caption, "– benchmark shares versus predictions and 90% intervals.")
+    cat("\n![", figure_caption, "](", sub("^vignettes/", "", figure), ")\n\n",
+        "*", figure_caption, "*\n\n", sep = "")
   }
 }
 ```
 
-```
-## vote_pres_2024 before rake
-##                  bias_pp   RMSE_pp  spearman coverage_90_pct
-## Overall    -1.011683e-15  6.819554 0.8897880       11.764706
-## No Vote    -2.555208e+01 25.878180 0.9619005        0.000000
-## Democratic  6.390972e+00  7.245576 0.9637104       17.647059
-## Republican -8.399158e+00  9.080388 0.9678733        5.882353
-## Other       2.008186e+00  2.137081 0.6830769       11.764706
-```
+Table: Presidential vote before raking – errors and 90% interval coverage against the election benchmarks.
 
-```
-## vote_house_2024 before rake
-##                  bias_pp   RMSE_pp  spearman coverage_90_pct
-## Overall    -3.559762e-16  7.549046 0.9340115      22.0183486
-## No Vote    -2.291095e+01 23.549801 0.9237887       0.4587156
-## Democratic  6.013019e+00  8.710310 0.9661041      26.6055046
-## Republican -6.737396e+00  9.317651 0.9658836      21.5596330
-## Other       7.243763e-01  2.876831 0.6327862      17.8899083
-```
+|           |  bias_pp| RMSE_pp| spearman| coverage_90_pct|
+|:----------|--------:|-------:|--------:|---------------:|
+|Overall    |   0.0000|  6.8196|   0.8898|         11.7647|
+|No Vote    | -25.5521| 25.8782|   0.9619|          0.0000|
+|Democratic |   6.3910|  7.2456|   0.9637|         17.6471|
+|Republican |  -8.3992|  9.0804|   0.9679|          5.8824|
+|Other      |   2.0082|  2.1371|   0.6831|         11.7647|
 
-```
-## vote_pres_2024 after rake
-##                  bias_pp      RMSE_pp spearman coverage_90_pct
-## Overall    -1.027228e-15 1.351630e-08        1             100
-## No Vote     1.743387e-09 9.799187e-09        1             100
-## Democratic  2.196171e-10 1.652576e-08        1             100
-## Republican -3.096324e-10 1.657980e-08        1             100
-## Other       9.001217e-11 2.832738e-10        1             100
-```
+![Presidential vote before raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_pres_2024_before_rake.png)
 
-```
-## vote_house_2024 after rake
-##                  bias_pp      RMSE_pp  spearman coverage_90_pct
-## Overall    -3.641262e-16 4.855958e-10 0.9999997             100
-## No Vote    -7.926541e-11 1.353295e-09 1.0000000             100
-## Democratic  3.637376e-11 5.915701e-10 0.9999961             100
-## Republican -3.763284e-11 5.954933e-10 0.9999999             100
-## Other       1.257984e-12 5.331505e-11 1.0000000             100
-```
+*Presidential vote before raking – benchmark shares versus predictions and 90% intervals.*
+
+
+
+Table: House vote before raking – errors and 90% interval coverage against the election benchmarks.
+
+|           |  bias_pp| RMSE_pp| spearman| coverage_90_pct|
+|:----------|--------:|-------:|--------:|---------------:|
+|Overall    |   0.0000|  7.5490|   0.9340|         22.0183|
+|No Vote    | -22.9109| 23.5498|   0.9238|          0.4587|
+|Democratic |   6.0130|  8.7103|   0.9661|         26.6055|
+|Republican |  -6.7374|  9.3177|   0.9659|         21.5596|
+|Other      |   0.7244|  2.8768|   0.6328|         17.8899|
+
+![House vote before raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_house_2024_before_rake.png)
+
+*House vote before raking – benchmark shares versus predictions and 90% intervals.*
+
+
+
+Table: Presidential vote after raking – errors and 90% interval coverage against the election benchmarks.
+
+|           | bias_pp| RMSE_pp| spearman| coverage_90_pct|
+|:----------|-------:|-------:|--------:|---------------:|
+|Overall    |       0|       0|        1|             100|
+|No Vote    |       0|       0|        1|             100|
+|Democratic |       0|       0|        1|             100|
+|Republican |       0|       0|        1|             100|
+|Other      |       0|       0|        1|             100|
+
+![Presidential vote after raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_pres_2024_after_rake.png)
+
+*Presidential vote after raking – benchmark shares versus predictions and 90% intervals.*
+
+
+
+Table: House vote after raking – errors and 90% interval coverage against the election benchmarks.
+
+|           | bias_pp| RMSE_pp| spearman| coverage_90_pct|
+|:----------|-------:|-------:|--------:|---------------:|
+|Overall    |       0|       0|        1|             100|
+|No Vote    |       0|       0|        1|             100|
+|Democratic |       0|       0|        1|             100|
+|Republican |       0|       0|        1|             100|
+|Other      |       0|       0|        1|             100|
+
+![House vote after raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_house_2024_after_rake.png)
+
+*House vote after raking – benchmark shares versus predictions and 90% intervals.*
+
+## 12. Check the original joint stratification cells
+
+Sum over both vote choices within each original district-by-demographic
+cell. Compare its raked mean and every draw with the population in the
+mother frame. The plot shows the mean and 90% draw interval against the
+original count. The maximum error also checks every draw outside that interval.
+
+*Combine the checks for all mother-frame cells and report the largest count discrepancy.*
 
 ``` r
-knitr::include_graphics(figures, error = FALSE)
+if (run_rake) {
+  # Stack the cell comparisons while keeping each original demographic cell distinct.
+  joint_cells <- do.call(rbind, lapply(summaries, "[[", "cells"))
+  figure <- file.path(figure_dir, "original-cell-totals.png")
+  joint_metrics <- plot_post_rake_cells(joint_cells, figure, count_tolerance = rake_tolerance)
+  joint_metrics$cells_checked <- nrow(joint_cells)
+  joint_metrics$max_abs_count_error <- max(joint_cells$max_abs_error)
+  stopifnot(joint_metrics$max_abs_count_error <= rake_tolerance)
+  utils::write.csv(joint_metrics, file.path(out, "original_cell_totals_metrics.csv"))
+  print(knitr::kable(joint_metrics, format = "pipe", digits = 12,
+                     caption = "Agreement between raked and original population counts in every mother-frame cell."))
+  caption <- "Original cell counts versus raked totals and 90% intervals after summing over both votes."
+  cat("\n![", caption, "](", sub("^vignettes/", "", figure), ")\n\n",
+      "*", caption, "*\n\n", sep = "")
+}
 ```
 
-![plot of chunk target-plots](assets/us-2026/vote_pres_2024_before_rake.png)
+Table: Agreement between raked and original population counts in every mother-frame cell.
 
-![plot of chunk target-plots](assets/us-2026/vote_house_2024_before_rake.png)
+|                   | bias_count| RMSE_count|  spearman| coverage_90_pct| cells_checked| max_abs_count_error|
+|:------------------|----------:|----------:|---------:|---------------:|-------------:|-------------------:|
+|All original cells |          0|          0| 0.9999999|             100|        497550|             1.5e-11|
 
-![plot of chunk target-plots](assets/us-2026/vote_pres_2024_after_rake.png)
+![Original cell counts versus raked totals and 90% intervals after summing over both votes.](assets/us-2026/original-cell-totals.png)
 
-![plot of chunk target-plots](assets/us-2026/vote_house_2024_after_rake.png)
+*Original cell counts versus raked totals and 90% intervals after summing over both votes.*
 
-## 12. Inspect the final frame
+## 13. Measure how raking changes vote shares
+
+Each row shows a demographic or district grouping. The outcome panels
+show subgroup changes in percentage points as dots and population-weighted
+averages as squares. Green marks increases and red marks decreases.
+Party shares use voters as the denominator, while
+No Vote uses the full population. The total variation panel summarizes
+the change in the distribution among voters for each draw and for the mean
+counts. The presidential plot includes districts because that calibration
+target is statewide. The House plot includes district-by-demographic
+groups because the district target covers all demographics together.
+
+*Plot before-to-after vote-share changes by demographic group and district using paired draws.*
+
+``` r
+if (run_rake) {
+  # Plot the summaries collected while the before and after counts were both available.
+  captions <- setNames(c(
+    "Presidential vote share changes across demographic and district groupings.",
+    "House vote share changes across demographic and district-by-demographic groupings."
+  ), c(pres, house))
+  for (outcome in names(change_summaries)) {
+    figure <- file.path(figure_dir, paste0(outcome, "_raking_changes.png"))
+    change_summaries[[outcome]]$plot(figure)
+    caption <- captions[[outcome]]
+    cat("\n![", caption, "](", sub("^vignettes/", "", figure), ")\n\n",
+        "*", caption, "*\n\n", sep = "")
+  }
+}
+```
+
+![Presidential vote share changes across demographic and district groupings.](assets/us-2026/vote_pres_2024_raking_changes.png)
+
+*Presidential vote share changes across demographic and district groupings.*
+
+
+![House vote share changes across demographic and district-by-demographic groupings.](assets/us-2026/vote_house_2024_raking_changes.png)
+
+*House vote share changes across demographic and district-by-demographic groupings.*
+
+## 14. Inspect the final frame
 
 Each compressed state RDS includes both outcome columns, `N`, and all
 draw-specific counts. The original state and district keys are carried by
@@ -1211,6 +1393,7 @@ the national joint frame in a later analysis. The table shows 100 rows
 sampled across the state and DC partitions, with both vote outcomes and
 three draw counts.
 
+*Sample 100 rows from the saved joint frame and record where the partitions are stored.*
 
 ``` r
 if (run_rake) {
@@ -1218,16 +1401,18 @@ if (run_rake) {
   raked_paths <- file.path(raked_dir, paste0("state_", names(states), ".rds"))
   stopifnot(all(file.exists(raked_paths)))
   partition_sizes <- lengths(states) * length(choices)^2L
+  # Show the calibrated mean and three draw columns from the complete saved frame.
   preview_columns <- c(predictors, pres, house, "N",
                        paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
   preview <- sample_extended_frame(raked_paths, preview_columns, partition_sizes)
   prune_geographic_partitions(raked_dir, raked_paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
   writeLines(normalizePath(raked_dir, mustWork = TRUE), file.path(out, "raked-directory.txt"))
-  knitr::kable(preview, digits = 3, row.names = FALSE)
+  knitr::kable(preview, digits = 3, row.names = FALSE,
+               caption = "Sample of 100 raked joint rows with the calibrated mean and three draws.")
 }
 ```
 
-
+Table: Sample of 100 raked joint rows with the calibrated mean and three draws.
 
 |state_fips |district_id |age_cat |gender_cat |race_cat        |hispanic_cat |educ_cat     |vote_pres_2024 |vote_house_2024 |       N| N_draw_1| N_draw_63| N_draw_125|
 |:----------|:-----------|:-------|:----------|:---------------|:------------|:------------|:--------------|:---------------|-------:|--------:|---------:|----------:|

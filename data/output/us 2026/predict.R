@@ -3,7 +3,8 @@ Sys.setenv(VOTEFRAME_US_RAKE = "false")
 lines <- readLines("vignettes/vignette_us_2026.Rmd")
 fence <- intToUtf8(rep(96L, 3L))
 chunk <- function(name) {
-  start <- which(lines == paste0(fence, "{r ", name, "}"))
+  label <- paste0(fence, "{r ", name)
+  start <- which(lines == paste0(label, "}") | startsWith(lines, paste0(label, ",")))
   finish <- which(lines == fence & seq_along(lines) > start)[1L]
   parse(text = lines[seq.int(start + 1L, finish - 1L)])
 }
@@ -11,7 +12,7 @@ for (name in c("inputs", "covariates-and-targets")) eval(chunk(name))
 n_draws <- 125L
 loadNamespace("gKRLS")
 
-# Save each stage immediately after it returns, in addition to the full model.
+# Reuse the fitted national models for the pre-rake comparison.
 for (model in c("pres_fit", "house_fit")) {
   assign(model, readRDS(file.path(out, paste0(model, ".rds"))))
 }
@@ -42,7 +43,7 @@ states <- all_states
 names(summaries) <- names(states)
 stopifnot(length(summaries) == 51L)
 expressions <- chunk("target-plots")
-for (expr in expressions[-length(expressions)]) {
+for (expr in expressions) {
   if (is.call(expr) && identical(expr[[1]], as.name("<-")) &&
       identical(expr[[2]], as.name("figure_dir"))) {
     figure_dir <- file.path(out, "figures")

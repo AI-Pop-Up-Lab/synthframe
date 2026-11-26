@@ -140,6 +140,15 @@ result$frame
 result$aggregates$state_presidential
 ```
 
+`MasterP()` reports the current step and tracks completed fit stages,
+prediction batches, and raking batches and draws. Time estimates appear
+after the first unit finishes and update from the observed pace. Set
+`verbose = TRUE` to see solver iterations and every progress update in
+the console. The run log includes the detailed trace, warnings, and any
+failure. Each run gets a timestamped log under `data/output/masterp_logs/`
+by default. Set `log_file` to write it to a different path.
+See `result$log_file` for the path and `result$fit_info` for the stage CSVs.
+
 Use `fit` for options such as `predictors`, `outcome_order`, `no_vote`,
 splines, solver control, and stage-specific area covariates. By default,
 predictors are columns shared by the extension's surveys and its input frame.
