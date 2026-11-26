@@ -443,8 +443,8 @@ Spline prediction reuses fitted bases, including for new numeric values.
 
 **New fixed levels.** Unseen fixed contrasts lack fitted population variances.
 Prediction stops and lists missing predictor names and values unless you
-harmonize categories or supply `new_fixed_sd`, giving a
-$\mathcal N(0,\texttt{new\_fixed\_sd}^{\,2})$ log-odds prior. Contrasts use the
+harmonize categories or supply `new_fixed_sd`. If you set it to $`s`$,
+the log-odds prior is $`\mathcal{N}(0,s^2)`$. Contrasts use the
 fitted reference or the first fitted level when coding has no reference.
 `allow_missing_levels = FALSE` rejects new levels.
 `predict_vglmer_levels(..., n_draws = 0)` gives stage log odds using fitted
