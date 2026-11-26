@@ -6,7 +6,7 @@
 | Model | Saved stages | Complete model |
 | --- | ---: | --- |
 | Presidential | 3 of 3 | [Ready](data/output/us-2026-national-b0bb47d/pres_fit.rds) |
-| House | 1 of 3 | Pending |
+| House | 3 of 3 | [Ready](data/output/us-2026-national-b0bb47d/house_fit.rds) |
 <!-- end checkpoint status -->
 
 Run from the VoteFrame repository root with the same code as commit
@@ -35,13 +35,18 @@ iterations. House No Vote had returned at the 100-iteration cap with
 a maximum parameter change of 0.092, above the 0.01 tolerance. Its
 checkpoint and the complete presidential fit were saved.
 
-The [November 25 restart log](data/output/us-2026-national-b0bb47d/resume-20261125.log)
-tracks the restarted House fit. The run queues the pre-rake comparisons
-once both full model files exist. Check the log and process before
-launching another run. The restart script reuses the saved presidential
-fit and restarts an incomplete House fit from stage 1 using the vignette
-seed. To start it manually, use a new log filename to preserve previous
-output.
+The November 26 import supplied the complete House fit. Its SHA-256
+matched the audit, and its three fitted stages and convergence statistics
+matched the audit CSV. The House No Vote and Democratic stages reached
+100 iterations with final changes of 0.43108 and 0.30709. Republican
+met the tolerance after 95 iterations with a final change of 0.007446.
+The three House checkpoints were extracted from the full model.
+
+The [prediction log](data/output/us-2026-national-b0bb47d/predict-imported-house.log)
+tracks the 125-draw pre-rake comparisons using the saved fits. Check the log
+and process before launching another run. The restart script reuses full
+model files when present. Use a new log filename for a manual restart to
+preserve previous output.
 
 ```sh
 run_dir="$PWD/data/output/us-2026-national-b0bb47d"
