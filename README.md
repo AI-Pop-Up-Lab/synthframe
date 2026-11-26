@@ -113,34 +113,51 @@ names and coding across surveys. Later fits can use previous outcomes as
 predictors when their surveys contain those outcomes.
 
 ```r
-result <- MasterP(
-  mother_frame,
-  extensions = list(
-    presidential = list(
-      survey = presidential_survey,
-      fit = list(area_variable = "district_id", depth = 2,
-                 no_interactions = c("district_id", "state_fips"),
-                 area_covariates = presidential_covariates),
-      predict = list(batch_size = 4000L),
-      rake = list(state = list(targets = presidential_state_targets, by = "state_fips")),
-      plots = list(district = list(targets = presidential_district_benchmarks,
-                                   by = "district_id", after_file = "presidential_district.png"))
-    ),
-    house = list(
-      survey = list(house_survey_1, house_survey_2),
-      fit = list(area_variable = "district_id", depth = 2,
-                 no_interactions = c("district_id", "state_fips"),
-                 area_covariates = house_covariates),
-      rake = list(district = list(targets = house_district_targets, by = "district_id"))
-    )
-  ),
-  aggregate_by = list(state_presidential = c("state_fips", "presidential"),
-                      national_joint = c("presidential", "house"),
-                      national_total = character())
-)
+result <- MasterP(                                        # Fit, extend, and jointly rake the frame.
+  mother_frame,                                           # Original population cells and their counts.
+  extensions = list(                                      # Add outcome columns in the order listed.
+    presidential = list(                                  # Choose the first outcome column name.
+      survey = presidential_survey,                       # Survey with a matching presidential column.
+      fit = list(                                         # Specify the presidential model.
+        area_variable = "district_id",                     # Match area covariates by district.
+        depth = 2,                                        # Request interactions up to order two.
+        no_interactions = c("district_id", "state_fips"),   # Keep these predictors out of interactions.
+        area_covariates = presidential_covariates           # Supply district covariates for the vote stages.
+      ),                                                  # End the presidential fit options.
+      predict = list(batch_size = 4000L),                   # Predict in batches of up to 4,000 cells.
+      rake = list(state = list(                           # Name the presidential calibration margin.
+        targets = presidential_state_targets,              # Supply the presidential targets by state.
+        by = "state_fips"                                  # Calibrate separately in each state.
+      )),                                                 # End the presidential raking options.
+      plots = list(district = list(                        # Compare predictions with district benchmarks.
+        targets = presidential_district_benchmarks,        # Supply the benchmark shares.
+        by = "district_id",                                # Compare within each district.
+        after_file = "presidential_district.png"             # Save the after-rake comparison plot.
+      ))                                                  # End the presidential benchmark options.
+    ),                                                    # End the first extension.
+    house = list(                                         # Choose the second outcome column name.
+      survey = list(house_survey_1, house_survey_2),         # Pool two surveys with matching House columns.
+      fit = list(                                         # Specify the House model.
+        area_variable = "district_id",                     # Match area covariates by district.
+        depth = 2,                                        # Request interactions up to order two.
+        no_interactions = c("district_id", "state_fips"),   # Keep these predictors out of interactions.
+        area_covariates = house_covariates                  # Supply district covariates for the vote stages.
+      ),                                                  # End the House fit options.
+      rake = list(district = list(                         # Name the House calibration margin.
+        targets = house_district_targets,                  # Supply the House targets by district.
+        by = "district_id"                                 # Calibrate separately in each district.
+      ))                                                  # End the House raking options.
+    )                                                     # End the second extension.
+  ),                                                      # End the ordered list of extensions.
+  aggregate_by = list(                                    # Name and define the summaries to return.
+    state_presidential = c("state_fips", "presidential"),   # Presidential counts by state and choice.
+    national_joint = c("presidential", "house"),            # National counts by both vote choices.
+    national_total = character()                          # Sum all cells into one national total.
+  )                                                       # End the summary definitions.
+)                                                         # Run MasterP and store the result.
 
-result$frame
-result$aggregates$state_presidential
+result$frame                                              # Inspect the full calibrated frame.
+result$aggregates$state_presidential                      # Inspect the presidential summary by state.
 ```
 
 `MasterP()` reports the current step and tracks completed fit stages,
