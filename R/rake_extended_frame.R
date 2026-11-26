@@ -143,6 +143,18 @@ rake_extended_frame <- function(extended_frame, frame, targets, by, extension_va
   result
 }
 
+# Base rowsum() preserves integer storage. Group totals can exceed that range
+# even when every individual count fits in an integer.
+raking_rowsum <- function(counts, group, reorder = TRUE) {
+  if (is.data.frame(counts)) {
+    integers <- vapply(counts, is.integer, logical(1))
+    counts[integers] <- lapply(counts[integers], as.double)
+  } else if (is.integer(counts)) {
+    storage.mode(counts) <- "double"
+  }
+  rowsum(counts, group, reorder = reorder)
+}
+
 rake_group_shares <- function(weights, cell_share, target, margin, tolerance,
                               max_iterations, group_label, column) {
   active_rows <- cell_share > 0

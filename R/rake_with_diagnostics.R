@@ -17,7 +17,7 @@ rake_with_diagnostics <- function(extended_frame, frame, targets, by, extension_
   # The target plots compare shares, even when the rake received count targets.
   if (length(by)) {
     keys <- frame_cell_keys(frame[by], frame[by])
-    totals <- rowsum(frame[[count_variable]], keys, reorder = FALSE)
+    totals <- raking_rowsum(frame[[count_variable]], keys, reorder = FALSE)
     target_keys <- frame_cell_keys(targets[by], frame[by])
     population <- totals[match(target_keys, rownames(totals)), 1L]
   } else {

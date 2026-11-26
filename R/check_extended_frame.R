@@ -50,16 +50,31 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
   group_outcome <- frame_cell_keys(cell_keys, cell_keys)
   first <- !duplicated(group_outcome)
   grouped_keys <- cell_keys[first, , drop = FALSE]
-  grouped_counts <- rowsum(counts, group_outcome, reorder = FALSE)
+  counts_matrix <- as.matrix(raking_rowsum(counts, group_outcome, reorder = FALSE))
   group <- rep.int(1L, nrow(grouped_keys))
+  target_group <- rep.int(1L, nrow(targets))
   if (length(by)) {
     group_keys <- grouped_keys[by]
-    group <- match(frame_cell_keys(group_keys, group_keys),
-                   frame_cell_keys(unique(group_keys), group_keys))
+    levels <- frame_cell_keys(unique(group_keys), group_keys)
+    group <- match(frame_cell_keys(group_keys, group_keys), levels)
+    target_group <- match(frame_cell_keys(targets[by], group_keys), levels)
   }
-  denominators <- rowsum(grouped_counts, group, reorder = FALSE)
-  counts_matrix <- as.matrix(grouped_counts)
-  share_denominator <- as.matrix(denominators)[group, , drop = FALSE]
+  outcomes <- unique(as.character(grouped_keys[[extension_variable]]))
+  if (anyNA(target_group) || !all(targets[[extension_variable]] %in% outcomes)) {
+    stop("Each target must identify a known group and modeled outcome.")
+  }
+  validate_benchmark_share_totals(target_values, target_group, length(outcomes))
+
+  # A globally modeled category can have no rows in a particular group.
+  absent <- !frame_cell_keys(targets[keys], grouped_keys) %in% group_outcome[first]
+  if (any(absent)) {
+    if (any(target_values[absent] > 0)) stop("A positive target has no extended-frame rows in its group.")
+    grouped_keys <- rbind(grouped_keys, targets[absent, keys, drop = FALSE])
+    counts_matrix <- rbind(counts_matrix, matrix(0, sum(absent), ncol(counts_matrix)))
+    group <- c(group, target_group[absent])
+  }
+  denominators <- rowsum(counts_matrix, group, reorder = FALSE)
+  share_denominator <- denominators[group, , drop = FALSE]
   if (!is.null(no_vote)) {
     if (!is.character(no_vote) || length(no_vote) != 1L ||
         !no_vote %in% grouped_keys[[extension_variable]]) {
@@ -74,14 +89,14 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
     # Targets arrive on the population scale, even when only some parties are plotted.
     target_voted <- targets[[extension_variable]] != no_vote
     if (any(target_voted)) {
-      target_group <- if (length(by)) frame_cell_keys(targets[by], targets[by]) else
-        rep.int(1L, nrow(targets))
       nonvoter <- match(target_group[target_voted], target_group[!target_voted])
       target_turnout <- 1 - target_values[!target_voted][nonvoter]
       if (anyNA(target_turnout) || any(target_turnout <= 0)) {
         stop("Each party target group needs a No Vote target implying positive turnout.")
       }
-      targets[[target_variable]][target_voted] <- target_values[target_voted] / target_turnout
+      party_shares <- target_values[target_voted] / target_turnout
+      validate_benchmark_share_totals(party_shares, target_group[target_voted], length(outcomes) - 1L)
+      targets[[target_variable]][target_voted] <- pmin(1, party_shares)
     }
   }
   shares <- counts_matrix / share_denominator
@@ -107,7 +122,7 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
   }
 
   if (is.null(outcome_order)) {
-    outcome_order <- unique(as.character(extended_frame[[extension_variable]]))
+    outcome_order <- outcomes
   } else if (!is.character(outcome_order) || anyNA(outcome_order) ||
              anyDuplicated(outcome_order) ||
              !all(comparison[[extension_variable]] %in% outcome_order)) {
@@ -140,6 +155,16 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
   }
   names(metrics)[1:2] <- c("bias_pp", "RMSE_pp")
   invisible(list(comparison = comparison, metrics = metrics, plot_file = plot_file))
+}
+
+validate_benchmark_share_totals <- function(shares, group, outcome_count) {
+  totals <- rowsum(cbind(share = shares, outcomes = 1L), group, reorder = FALSE)
+  tolerance <- sqrt(.Machine$double.eps)
+  if (any(totals[, "share"] > 1 + tolerance)) stop("Benchmark shares exceed one within a group.")
+  complete <- totals[, "outcomes"] == outcome_count
+  if (any(abs(totals[complete, "share"] - 1) > tolerance)) {
+    stop("Benchmark shares for all modeled outcomes must sum to one within each complete group.")
+  }
 }
 
 frame_target_metrics <- function(panels, panel_titles, target_variable,

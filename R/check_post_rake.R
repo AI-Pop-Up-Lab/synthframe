@@ -38,7 +38,7 @@ post_rake_cell_comparison <- function(raked_frame, frame, extension_variable, co
       stop("Raked and original population draws must match by draw number.")
     }
   }
-  totals <- rowsum(raked_frame[c(count_variable, draw_columns)], cell)
+  totals <- raking_rowsum(raked_frame[c(count_variable, draw_columns)], cell)
   joint <- data.frame(reference, target_population = frame[[count_variable]],
                       estimate = totals[[count_variable]],
                       lower_90 = NA_real_, upper_90 = NA_real_)

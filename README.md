@@ -501,9 +501,19 @@ of the incoming draw counts for a paired frame.
 | `plot_raking_changes()` | Compare aligned extended and raked frames for margins left unconstrained by a municipality rake. [Denmark vignette](vignettes/vignette_denmark_2026.md#measure-how-raking-changes-the-estimates) |
 | `rake_with_diagnostics()` | Run the same rake and return the raked frame plus target, original-joint, and unconstrained-margin diagnostics and plots. |
 
-For vote diagnostics, set `no_vote = fit$no_vote` and supply the No Vote population
-share in every group. Party and Overall panels use voter shares, while the No Vote
-panel uses population shares. Draw intervals use turnout from the same draw.
+For benchmark comparisons with `check_extended_frame()` or `check_post_rake()`,
+set `no_vote = fit$no_vote` to show party and Overall panels as shares among voters.
+Supply benchmark shares on the eligible-population scale, including the No Vote
+share for each group with a party target. Draw intervals use turnout from the same
+draw. Each group's supplied benchmark shares may sum to at most one. A complete
+set of outcomes must sum to one. The numerical tolerance for these checks is
+`sqrt(.Machine$double.eps)` (about $`1.5\times10^{-8}`$).
+
+The “what changes with raking” plots use the whole eligible population for
+every outcome. For example, take 100 eligible people. If nonvoters rise from
+40 to 60 and two parties each fall from 30 to 20, the three panels show +20,
+−10 and −10 percentage points. Total variation is half the sum of the absolute
+changes, or 20 percentage points in this example.
 
 **Raking.** Use `rake_extended_frame(extended_frame, frame, targets, by, extension_variable)`.
 For every mean or draw column, let $N_x$ be the corresponding original cell
@@ -517,8 +527,17 @@ $$
 `SQUAREM::squarem()` accelerates outcome scaling toward targets and normalization
 within each cell. Supply at least one target per group as shares, or counts with
 `target_scale = "count"`. Untargeted outcomes divide the remainder. Keys match
-by value. Missing combinations and zero counts stay zero. Unreachable margins
-report the group and count column.
+by value. Missing combinations and zero counts stay zero. Geographic batching
+uses the outcomes observed across the whole frame. A zero target for a known
+outcome can be met in a group with no rows for that outcome. A positive target
+requires positive support.
+
+Some feasible sparse targets force an initially positive count to exactly zero.
+For example, consider ten cells numbered 1 to 10, with population $`10i`$ in
+cell $`i`$. Cell 1 supports only outcome 1. Each later cell splits its seed
+equally between outcomes $`i-1`$ and $`i`$. Set the count target for outcome
+$`i`$ to $`10i`$. The unique solution assigns every cell entirely to its own
+outcome. At the default settings both solvers report a failure to match the targets.
 
 Mean and draw columns are raked independently. With incoming population draws,
 both solvers pair columns by draw number. The original-cell plot centers draw

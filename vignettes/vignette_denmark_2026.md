@@ -334,11 +334,14 @@ knitr::kable(after$outcome$metrics, digits = 4)
 demographic margins. Each row shows a grouping, such as age group or
 municipality × education. In the outcome panels, dots are subgroup
 changes in percentage points and squares are population-weighted
-averages. Green marks increases and red marks decreases. Shares use
-the number of voters for ballot choices and the full group population
-for No Vote. The total variation panel summarizes changes across the
-whole distribution among voters. Its dots are posterior draws and its
-square uses the mean counts.
+averages. Green marks increases and red marks decreases. Every outcome, including No Vote, is expressed as a share of the
+eligible population in that group. Total variation is half the sum of
+the absolute changes in these shares, population-weighted across groups.
+Its dots show paired draws and its square uses the mean counts.
+
+The archived Figure 4 below uses the earlier voter denominator for party
+shares and total variation. Running Snippet 10 with the current code produces
+the eligible-population comparison described above.
 
 *Snippet 10. Compare pre-rake and post-rake vote shares across demographic groupings.*
 

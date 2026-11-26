@@ -1162,8 +1162,7 @@ change_summaries <- if (run_rake) {
   district_groups <- list(c("district_id", "age_cat"), c("district_id", "educ_cat"))
   setNames(lapply(c(pres, house), function(outcome) {
     groups <- c(groupings, if (outcome == pres) list("district_id"), district_groups)
-    partitioned_raking_change_summary(frame, "district_id", outcome, "No Vote", groups,
-                                      variation_on_cvap = TRUE)
+    partitioned_raking_change_summary(frame, "district_id", outcome, "No Vote", groups)
   }), c(pres, house))
 }
 
@@ -1375,14 +1374,17 @@ if (run_rake) {
 Each row shows a demographic or district grouping. The outcome panels
 show subgroup changes in percentage points as dots and population-weighted
 averages as squares. Green marks increases and red marks decreases.
-The individual party panels use voters as the denominator, while No Vote
-uses the full citizen voting-age population (CVAP). Total variation includes
-all four choices. It is half the sum of their absolute changes in CVAP shares,
+All four outcome panels use the citizen voting-age population (CVAP)
+in the subgroup as their denominator. Total variation includes all four choices. It is half the sum of their absolute changes in CVAP shares,
 in percentage points, weighted across subgroups by CVAP. Its dots show
 the paired draws and its square shows the mean-count result.
 The presidential plot includes districts because that calibration
 target is statewide. The House plot includes district-by-demographic
 groups because the district target covers all demographics together.
+
+Figures 8 and 9 below come from the earlier run. Their party panels use
+voters as the denominator. The No Vote and total-variation panels already
+use CVAP. Running Snippet 14 with the current code uses CVAP for every panel.
 
 *Snippet 14. Plot before-to-after vote-share changes by demographic group and district using paired draws.*
 

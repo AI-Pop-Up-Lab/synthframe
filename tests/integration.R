@@ -66,15 +66,8 @@ main <- function() {
     "area", "vote"), frame, "vote", include_max_error = TRUE)$max_abs_error) < 1e-8)
   names(extended)[match(legacy, names(extended))] <- population[-1L]
 
-  # A turnout-only change contributes to full-population variation in both plot paths.
-  pre <- data.frame(N = c(40, 30, 30), N_draw_1 = c(45, 27.5, 27.5))
-  post <- data.frame(N = c(60, 20, 20), N_draw_1 = c(55, 22.5, 22.5))
-  summarize <- function(include_nonvoters) combine_conditional_raking_summaries(list(
-    conditional_raking_summary(pre, post, seq_len(3L), rep(1L, 3L), cbind(100, 100),
-                               seq_len(3L), choices, "No Vote", include_nonvoters)))
-  stopifnot(isTRUE(all.equal(summarize(TRUE)$squares[1L], 20)),
-            isTRUE(all.equal(summarize(TRUE)$points[[1L]], 10)),
-            isTRUE(all.equal(summarize(FALSE)$squares[1L], 0)))
+  source("tests/raking_change_shares.R", local = TRUE)
+  check_raking_change_shares()
   batches <- geographic_batches(frame, "area", areas_per_batch = 1L)
   parts <- function(x) lapply(batches, function(i) x[x$area %in% frame$area[i], ])
   direct <- file.path(scratch, "direct-changes.png")
@@ -124,6 +117,12 @@ main <- function() {
   source("tests/stage_screening.R", local = TRUE)
   source("tests/prediction_design.R", local = TRUE)
   source("tests/stage_log.R", local = TRUE)
+  source("tests/structural_zeros.R", local = TRUE)
+  source("tests/raking_paths.R", local = TRUE)
+  source("tests/benchmark_validation.R", local = TRUE)
+  check_structural_zeros()
+  check_raking_paths()
+  check_benchmark_validation()
   check_area_covariates()
   check_stage_screening()
   check_prediction_design(scratch)

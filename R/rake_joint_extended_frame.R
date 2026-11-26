@@ -67,6 +67,38 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
     }
   }
 
+  # A zero target may name an outcome present only in another geographic block.
+  outcome_levels <- lapply(extended_frame[unique(unname(margin_variables))], function(x) {
+    unique(as.character(x))
+  })
+  rake_block <- function(extended_frame, frame, targets, cell, progress) {
+    raked <- extended_frame
+    if (!is.null(progress)) progress(0L, length(count_columns), "mean and posterior draw columns")
+    for (i in seq_along(count_columns)) {
+      column <- count_columns[i]
+      if (i == 1L || length(population_draws)) {
+        population <- frame[[c(count_variable, population_draws)[i]]]
+        total <- sum(population)
+        if (!is.finite(total)) stop("Original population totals must be finite.")
+        cell_share <- if (total > 0) population / total else population
+        margins <- lapply(margin_names, function(margin) {
+          extension <- margin_variables[[margin]]
+          prepare_joint_rake_margin(frame, extended_frame, cell, cell_share,
+                                    targets[[margin]], by[[margin]], extension,
+                                    population, target_variable[[margin]], target_scale[[margin]],
+                                    tolerance, keys, outcome_levels[[extension]])
+        })
+        names(margins) <- margin_names
+      }
+      raked[[column]] <- if (total == 0) numeric(nrow(raked)) else {
+        fit_joint_rake(extended_frame[[column]], cell, cell_share, margins,
+                       tolerance, max_iterations, column, solver_trace) * total
+      }
+      if (!is.null(progress)) progress(i, length(count_columns), column)
+    }
+    raked
+  }
+
   if (is.null(area_variable) && (!is.null(parent_area_variable) || !is.null(areas_per_batch))) {
     stop("Set area_variable when supplying geographic batch options.")
   }
@@ -106,41 +138,15 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
           if (done > 0L) progress((i - 1L) * length(count_columns) + done, work,
                                   paste0("batch ", names(batches)[i], " — ", detail))
         }
-        block <- rake_joint_extended_frame(
-          extended_frame[rows, , drop = FALSE], original, batch_targets, by,
-          extension_variables, target_variable, count_variable, target_scale, tolerance,
-          max_iterations, margin_variables, progress = batch_progress, solver_trace = solver_trace
-        )
+        block <- rake_block(extended_frame[rows, , drop = FALSE], original, batch_targets,
+                            match(cell[rows], batches[[i]]), batch_progress)
         raked[rows, count_columns] <- block[count_columns]
       }
       return(raked)
     }
   }
 
-  raked <- extended_frame
-  if (!is.null(progress)) progress(0L, length(count_columns), "mean and posterior draw columns")
-  for (i in seq_along(count_columns)) {
-    column <- count_columns[i]
-    if (i == 1L || length(population_draws)) {
-      population <- frame[[c(count_variable, population_draws)[i]]]
-      total <- sum(population)
-      if (!is.finite(total)) stop("Original population totals must be finite.")
-      cell_share <- if (total > 0) population / total else population
-      margins <- lapply(margin_names, function(margin) {
-        prepare_joint_rake_margin(frame, extended_frame, cell, cell_share,
-                                  targets[[margin]], by[[margin]], margin_variables[[margin]],
-                                  population, target_variable[[margin]], target_scale[[margin]],
-                                  tolerance, keys)
-      })
-      names(margins) <- margin_names
-    }
-    raked[[column]] <- if (total == 0) numeric(nrow(raked)) else {
-      fit_joint_rake(extended_frame[[column]], cell, cell_share, margins,
-                     tolerance, max_iterations, column, solver_trace) * total
-    }
-    if (!is.null(progress)) progress(i, length(count_columns), column)
-  }
-  raked
+  rake_block(extended_frame, frame, targets, cell, progress)
 }
 
 joint_margin_options <- function(value, margins) {
@@ -156,7 +162,7 @@ joint_margin_options <- function(value, margins) {
 
 prepare_joint_rake_margin <- function(frame, extended, cell, cell_share, targets, by,
                                        extension, population, target_variable,
-                                       target_scale, tolerance, keys) {
+                                       target_scale, tolerance, keys, outcomes) {
   if (!is.character(by) || anyNA(by) || anyDuplicated(by) || !all(by %in% keys)) {
     stop("Invalid grouping columns for ", sQuote(extension), ".")
   }
@@ -181,14 +187,13 @@ prepare_joint_rake_margin <- function(frame, extended, cell, cell_share, targets
     group <- rep.int(1L, nrow(frame))
     target_group <- rep.int(1L, nrow(targets))
   }
-  outcomes <- unique(as.character(extended[[extension]]))
   if (any(!nzchar(outcomes))) stop("Extended outcomes must be nonempty for ", sQuote(extension), ".")
   target_outcome <- match(as.character(targets[[extension]]), outcomes)
   if (anyNA(target_group) || anyNA(target_outcome)) {
     stop("A grouping or outcome target level does not match the frame for ", sQuote(extension), ".")
   }
 
-  group_population <- as.numeric(rowsum(population, group))
+  group_population <- as.numeric(raking_rowsum(population, group))
   group_share <- as.numeric(rowsum(cell_share, group))
   supplied <- matrix(NA_real_, length(group_population), length(outcomes))
   supplied[cbind(target_group, target_outcome)] <- values
@@ -239,7 +244,7 @@ fit_joint_rake <- function(seed, cell, cell_share, margins, tolerance, max_itera
     stop("No positive seed support for an original cell after imposing zero targets (", column, ").")
   }
 
-  seed <- seed[active]
+  seed <- as.double(seed[active])
   # Scale each seed row once to preserve association and avoid large count values.
   seed <- seed / as.numeric(rowsum(seed, cell))[cell]
   offset <- 0L
