@@ -72,9 +72,6 @@ knitr::knit("vignettes/vignette_sweden_2026.Rmd", output = "vignettes/vignette_s
 
 ## US 2026
 
-The [national fit notes](US_2026_RESUME.md) cover checkpoints, restart commands,
-and earlier experiments.
-
 The [US 2026 inputs](data/input/us%202026/README.md) cover 2024 House and
 presidential vote on the 2026 congressional district map.
 The [US 2026 vignette](vignettes/vignette_us_2026.md) extends the frame first
@@ -84,12 +81,22 @@ contains the input preparation and model code.
 
 Regenerate the US walkthrough, including its results and figures, from the
 repository root with `knitr`, `vglmer`, `gKRLS`, and `SQUAREM` installed.
+The full render saves the joint stratification frame in `raked_frame/` under
+`VOTEFRAME_US_OUTPUT_DIR` with the calibrated mean and 125 draws per state
+and DC. The default run output directory is `data/output/us 2026`. Set
+`VOTEFRAME_US_RAKED_DIR` to a directory on a larger disk if needed. To
+render with the saved national models, set `VOTEFRAME_US_OUTPUT_DIR` to
+the fit directory and set `VOTEFRAME_US_REUSE_FITS=true`.
 
 ```r
+Sys.setenv(VOTEFRAME_US_FIT = "true")
 knitr::opts_knit$set(root.dir = getwd())
 knitr::opts_chunk$set(error = FALSE)
 knitr::knit("vignettes/vignette_us_2026.Rmd", output = "vignettes/vignette_us_2026.md")
 ```
+
+To save or resume the two national fits before rendering, run
+`Rscript "data/output/us 2026/resume.R"` from the repository root.
 
 ## Fitting the extension variable
 

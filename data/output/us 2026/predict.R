@@ -1,4 +1,5 @@
-out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR")
+out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR", unset = file.path("data", "output", "us 2026"))
+Sys.setenv(VOTEFRAME_US_RAKE = "false")
 lines <- readLines("vignettes/vignette_us_2026.Rmd")
 fence <- intToUtf8(rep(96L, 3L))
 chunk <- function(name) {
@@ -25,7 +26,7 @@ for (expr in expressions) {
   eval(expr)
 }
 stopifnot(!run_rake)
-summary_dir <- file.path(out, "state-totals")
+summary_dir <- file.path(out, "pre_rake_totals")
 dir.create(summary_dir, showWarnings = FALSE)
 all_states <- states
 summaries <- lapply(names(all_states), function(state) {

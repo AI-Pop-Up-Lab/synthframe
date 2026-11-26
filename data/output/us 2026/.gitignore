@@ -1,0 +1,5 @@
+*
+!.gitignore
+!predict.R
+!resume.R
+!update-resume.py

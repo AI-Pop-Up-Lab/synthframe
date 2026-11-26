@@ -1,6 +1,6 @@
 # Extending the US 2026 congressional district frame
 
-This run prepares and audits two models before fitting. The goal is a
+This vignette prepares, audits, and fits two models. The goal is a
 population frame for predicting the 2026 House vote. We first
 estimate 2024 presidential vote in each demographic cell, then estimate
 2024 House vote conditional on that presidential choice. Presidential vote
@@ -649,15 +649,17 @@ for (i in seq_along(audit)) {
 }
 ```
 
-## 7. Stop before fitting
+## 7. Run the national models
 
-Both models have prepared designs. The later run is configured for
-`r n_draws` posterior draws. This knit stops before solver iterations,
-posterior prediction, or raking. To continue in a separate
-run, knit with `VOTEFRAME_US_FIT=true`.
+The national run uses `r n_draws` posterior draws. Set
+`VOTEFRAME_US_FIT=true` to include the model results and predictions.
+To reuse fitted models from the same inputs and settings, set
+`VOTEFRAME_US_REUSE_FITS=true` and point `VOTEFRAME_US_OUTPUT_DIR` to the
+directory containing `pres_fit.rds` and `house_fit.rds`.
 
 ```{r prefit-stop, include=FALSE}
 if (!identical(Sys.getenv("VOTEFRAME_US_FIT"), "true")) knitr::knit_exit()
+rm(preflight, audit)
 ```
 
 ## 8. Fit and extend with 2024 presidential vote
@@ -707,9 +709,22 @@ fit_us_model <- function(...) {
     warning = function(w) cat("Warning: ", conditionMessage(w), "\n", sep = "", file = stderr())
   )
 }
+load_or_fit_us_model <- function(filename, extension, ...) {
+  if (!identical(Sys.getenv("VOTEFRAME_US_REUSE_FITS"), "true")) {
+    return(fit_us_model(...))
+  }
+  loadNamespace("gKRLS")
+  fit <- readRDS(file.path(out, filename))
+  stopifnot(inherits(fit, "voteframe_sequential_logit"),
+            identical(fit$extension_variable, extension),
+            identical(fit$outcome_order, vote_order),
+            identical(names(fit$stages), head(vote_order, -1L)))
+  fit
+}
 set.seed(2026)
 
-pres_fit <- fit_us_model(
+pres_fit <- load_or_fit_us_model(
+  "pres_fit.rds", pres,
   survey, pres, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
   predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
   tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
@@ -726,6 +741,9 @@ for (stage in names(pres_fit$stages)) {
   cat("\n")
 }
 ```
+
+The three presidential stages met the maximum parameter-change tolerance
+of 0.01 in the saved national fit.
 
 ```{r presidential-extension}
 pres_draw_state <- new.env(parent = emptyenv())
@@ -753,7 +771,8 @@ whenever that level appears again.
 
 ```{r house-fit}
 set.seed(2027)
-house_fit <- fit_us_model(
+house_fit <- load_or_fit_us_model(
+  "house_fit.rds", house,
   survey, house, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
   predictors = c(predictors, pres), depth = requested_depth, splines = TRUE, control = control,
   tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
@@ -771,15 +790,20 @@ for (stage in names(house_fit$stages)) {
 }
 ```
 
+In the saved national House fit, No Vote and Democratic reached the
+100-iteration cap with maximum parameter changes of 0.43108 and 0.30709.
+Republican met the 0.01 tolerance after 95 iterations.
+
 ### Coefficients by predictor combination
 
 Each row counts the fixed, random, and spline coefficients attributed to a
 single predictor or interaction. A categorical combination contributes one
 random intercept per observed combination of levels. A categorical predictor
 interacted with a numeric predictor contributes a slope per observed level
-plus any spline-basis coefficients. Totals use the same estimated counts as
-the depth-selection rule. Zero means the combination contributes no
-coefficients in that stage.
+plus any spline-basis coefficients. Fixed columns are counted after
+screening, so the listed totals can be smaller than the nominal
+coefficient counts used to select depth. Zero means the combination
+contributes no coefficients in that stage.
 
 ```{r coefficient-counts, echo=FALSE, results='asis'}
 stage_counts <- c(
@@ -794,8 +818,9 @@ counts <- vapply(stage_counts, function(stage) {
   replace(values, is.na(values), 0L)
 }, integer(length(combinations)))
 totals <- colSums(counts)
-stopifnot(all(totals == c(pres_fit$fit_log$estimated_parameters,
-                         house_fit$fit_log$estimated_parameters)))
+count_columns <- c("retained_fixed_coefficients", "random_coefficients", "spline_coefficients")
+stage_log <- rbind(pres_fit$fit_log[count_columns], house_fit$fit_log[count_columns])
+stopifnot(all(totals == rowSums(stage_log)))
 rows <- order(-rowSums(counts), combinations)
 count_table <- data.frame(
   Combination = c(combinations[rows], "**Total**"),
@@ -818,20 +843,23 @@ predict_house_state <- function(incoming) {
 
 ## 10. Predict the joint frame by state
 
-The default run scores the pre-rake predictions and saves no raked
-partitions. Set `VOTEFRAME_US_RAKE=true` to also calibrate the state
-presidential and district House targets and save the joint frame. Prediction
-and optional calibration use state or DC batches by default. Statewide
+The full run scores the pre-rake predictions, calibrates the state
+presidential and district House targets, and saves the joint stratification
+frame under `raked_frame/` in the run's output directory. Set
+`VOTEFRAME_US_RAKE=false` for a pre-rake benchmark-only run. Prediction
+and calibration use state or DC batches by default. Statewide
 presidential targets keep every district in a state together, even when
 an override requests smaller batches.
 The current state's pre-rake frame uses memory or temporary disk
 according to available memory. Set `VOTEFRAME_PRE_RAKE_STORAGE=keep`
 to save all joint pre-rake partitions.
+Set `VOTEFRAME_US_RAKED_DIR` to use a different partition directory
+when the fit output directory has limited free space.
 
 ```{r joint-rake}
 rake_tolerance <- 0.00000001
-run_rake <- identical(Sys.getenv("VOTEFRAME_US_RAKE"), "true")
-raked_dir <- file.path(out, "raked")
+run_rake <- identical(Sys.getenv("VOTEFRAME_US_RAKE", unset = "true"), "true")
+raked_dir <- Sys.getenv("VOTEFRAME_US_RAKED_DIR", unset = file.path(out, "raked_frame"))
 if (run_rake) dir.create(raked_dir, showWarnings = FALSE)
 states <- geographic_batches(frame, "district_id", parent_area, areas_per_batch, rake_by)
 count_columns <- c("N", paste0("N_draw_", seq_len(n_draws)))
@@ -840,7 +868,8 @@ state_bytes <- pre_rake_frame_bytes(lengths(states) * length(choices)^2,
 pre_rake_mode <- Sys.getenv("VOTEFRAME_PRE_RAKE_STORAGE", "auto")
 storage <- vignette_pre_rake_storage(
   out, if (pre_rake_mode == "keep") sum(state_bytes) else max(state_bytes),
-  final_directory = out, final_bytes = if (run_rake) sum(state_bytes) else 0
+  final_directory = if (run_rake) raked_dir else out,
+  final_bytes = if (run_rake) sum(state_bytes) else 0
 )
 
 # Reduce each block to group-outcome draw totals for the comparison plots.
@@ -854,6 +883,9 @@ plot_totals <- function(block, extension) {
 
 summarize_states <- function() {
   lapply(names(states), function(state) {
+    if (isTRUE(getOption("knitr.in.progress"))) {
+      cat("Processing partition ", state, "\n", sep = "", file = stderr())
+    }
     original <- frame[states[[state]], , drop = FALSE]
     incoming <- predict_presidential_state(original)
     joint <- predict_house_state(incoming)
@@ -882,7 +914,9 @@ summarize_states <- function() {
     counts <- rowsum(raked[count_columns], cell)
     error <- max(abs(as.matrix(counts) - original$N))
     stopifnot(error <= rake_tolerance)
-    saveRDS(raked, file.path(raked_dir, paste0("state_", state, ".rds")))
+    path <- file.path(raked_dir, paste0("state_", state, ".rds"))
+    saveRDS(raked, paste0(path, ".tmp"))
+    stopifnot(file.rename(paste0(path, ".tmp"), path))
 
     list(before = before, extended_path = extended_path,
          after = setNames(lapply(names(plot_targets), function(x) plot_totals(raked, x)),
@@ -943,21 +977,24 @@ knitr::include_graphics(figures, error = FALSE)
 
 ## 12. Inspect the final frame
 
-When raking is enabled, each state RDS includes both outcome columns, `N`, and the draw-specific
-counts. The original state and district keys are carried by `state_fips`
-and `district_id`. Read the partitions together when a later analysis needs
-the national joint frame. The table shows 100 rows sampled across the
-state partitions, including DC, with both vote outcomes and three draw counts.
+Each compressed state RDS includes both outcome columns, `N`, and all
+draw-specific counts. The original state and district keys are carried by
+`state_fips` and `district_id`. Read the partitions with `readRDS()` to use
+the national joint frame in a later analysis. The table shows 100 rows
+sampled across the state and DC partitions, with both vote outcomes and
+three draw counts.
 
 ```{r final-preview}
 if (run_rake) {
   set.seed(2029)
   raked_paths <- file.path(raked_dir, paste0("state_", names(states), ".rds"))
+  stopifnot(all(file.exists(raked_paths)))
   partition_sizes <- lengths(states) * length(choices)^2L
   preview_columns <- c(predictors, pres, house, "N",
                        paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
   preview <- sample_extended_frame(raked_paths, preview_columns, partition_sizes)
   prune_geographic_partitions(raked_dir, raked_paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
+  writeLines(normalizePath(raked_dir, mustWork = TRUE), file.path(out, "raked-directory.txt"))
   knitr::kable(preview, digits = 3, row.names = FALSE)
 }
 ```

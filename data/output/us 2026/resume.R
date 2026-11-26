@@ -1,4 +1,4 @@
-out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR")
+out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR", unset = file.path("data", "output", "us 2026"))
 lines <- readLines("vignettes/vignette_us_2026.Rmd")
 fence <- intToUtf8(rep(96L, 3L))
 chunk <- function(name) {
