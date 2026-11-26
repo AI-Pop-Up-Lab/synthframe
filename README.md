@@ -5,9 +5,13 @@ outcomes observed in surveys. It fits sequential multilevel models,
 predicts outcome counts for each population cell, and calibrates the
 extended frame to known margins.
 
-Run `Rscript --vanilla tests/integration.R` from the repository root to
-check the fit, prediction, extension, raking, and reporting handoffs on
-a small synthetic example. The check uses the R dependencies listed below.
+After installing the R dependencies below or changing the code, run
+`Rscript --vanilla tests/integration.R` from the repository root for a quick
+check before starting a long case-study run. The test fits a small model,
+extends a synthetic population frame, and checks that raking matches the
+supplied targets and preserves the original population totals. You can skip
+this check if you only want to read the vignettes. To reproduce the published
+results, run the relevant vignette.
 
 ## Reproduce a case study
 
