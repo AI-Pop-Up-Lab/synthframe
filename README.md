@@ -84,7 +84,7 @@ Each run writes to `data/output/<country> 2026/` using the same layout.
 | --- | --- | --- |
 | Denmark | One file, `raked_frame/part-01.rds` | 2022 municipal shares of the electoral roll |
 | Sweden | One per geographic batch | 2022 municipal shares of the electoral roll |
-| US | One per state and DC, about 6.5 GiB nationwide | State presidential and district House margins, jointly |
+| US | One per state and DC, about 6.5 GiB nationwide | Joint calibration to 2024 state-level presidential and district-level House margins, accounting for redistricting. [Redistricting methods](https://github.com/robertocerinaprojects/polling-without-people) |
 
 Denmark and Sweden also use these shares as predictors. `No Vote` is eligible
 people who cast no ballot. `Invalid` includes blank and other rejected ballots
@@ -253,46 +253,60 @@ removed for missing or empty outcomes or selected predictors before aggregation.
 
 Order outcomes by frequency across recorded outcomes (ties by label), or supply
 the full `outcome_order`, including the last outcome. If specified, `no_vote`
-moves first and preserves the relative order of the others. For cell $x$, outcome
-$k$, and $K$ ordered outcomes, fit $K-1$ stages. The successes are $n_{xk}$
-and the failures are $\sum_{j>k} n_{xj}$:
+moves first and preserves the relative order of the others. For cell $`x`$, outcome
+$`k`$, and $`K`$ ordered outcomes, fit $`K-1`$ stages. The successes are $`n_{xk}`$
+and the failures are $`\sum_{j>k} n_{xj}`$:
 
-$$
+```math
 q_k(x)=P(Y=k\mid Y\ge k,x),\qquad
 p_k(x)=q_k(x)\prod_{j<k}(1-q_j(x)),\qquad
 q_K(x)=1,\qquad \sum_{k=1}^{K}p_k(x)=1.
-$$
+```
 
-**Area covariates.** Custom inputs are named lists of matrices or data frames
-indexed by stage outcome, area row name, and predictor column name. Columns and
-values may vary by stage. Use data frames for categorical predictors. For the
-same table at every fitted stage, use
-`setNames(rep(list(area_predictors), length(stages)), stages)`.
+**Area covariates.** How you supply the data determines whether the pipeline
+rescales it. The fitter does not infer this from column names or values.
+
+**Conditional shares.** Use `process_area_covariates()` for counts or shares
+that describe a distribution over the modeled outcomes, such as past vote
+shares. For example, with `No Vote` first, the first stage uses the share of
+eligible people who did not vote. The next stage uses the first party's share
+among voters. Each subsequent stage excludes the earlier outcomes.
 
 The helper accepts a CSV path, data frame, or named list of either, with common
 area, outcome, and value column names and the same areas in every dataset. Supply
 at most one row per area and outcome. Rows match by ID and can be reordered.
 List names become predictor names. A single unnamed input uses `area_covariate`.
-For value $v_{ak}$ in area $a$ and stage $k$, the covariate is
+Each dataset must contain every modeled outcome somewhere.
+For value $`v_{ak}`$ in area $`a`$ and stage $`k`$, the covariate is
 
-$$
+```math
 x_{ak}=\frac{v_{ak}}{\sum_{j\ge k}v_{aj}},
 \qquad v_{ak}=0\text{ for missing pairs},\qquad 0/0\mapsto0.
-$$
+```
 
 Counts and shares with a common within-area denominator give the same result.
-Pass `outcome_order` to return the stage matrices directly or let the fitter supply
-its order. Use custom stage matrices to preserve original scales.
+Pass `outcome_order` to compute the stage matrices immediately, or leave it
+unset so the fitter computes them after determining the outcome order.
+
+**Original scales.** For predictors like median income or population density,
+pass a plain named list of matrices or data frames to `area_covariates`
+(`fit$area_covariates` in MasterP). Name each entry for a fitted outcome, each row
+for its area ID, and each column for its predictor. The fitter joins by area ID
+and uses the values as supplied. Columns and values can vary by stage. Use data
+frames for categorical predictors. To reuse one table at every fitted stage,
+use `setNames(rep(list(area_predictors), length(stages)), stages)`. To combine
+both types, compute the conditional shares with `outcome_order`, then add the
+original-scale predictors to each stage table by area ID.
 
 *Table 6. Model terms available at each candidate depth.*
 
 | Candidate depth | Design |
 | --- | --- |
-| $0$ | Intercept and area random intercept |
-| $0.5$ | Add other categorical random intercepts |
-| $0.75$ | Add linear fixed area covariates |
-| $1$ | Main effects, with splines enabled by default |
-| Integer $d>1$ | Terms with at most $d$ distinct predictors |
+| $`0`$ | Intercept and area random intercept |
+| $`0.5`$ | Add other categorical random intercepts |
+| $`0.75`$ | Add linear fixed area covariates |
+| $`1`$ | Main effects, with splines enabled by default |
+| Integer $`d>1`$ | Terms with at most $`d`$ distinct predictors |
 
 `no_interactions` limits named survey or area predictors to main effects,
 including eligible splines, at every candidate depth before counting coefficients.
@@ -307,7 +321,7 @@ factor-by-curve term includes a global spline. Joint continuous smooths require
 four distinct values use linear main effects. `splines = FALSE` uses linear
 effects and interactions. [Goplerud, supplement §A.4](https://mgoplerud.com/papers/Goplerud_MMM_Full.pdf#page=19)
 
-**Design screening.**
+#### Ensuring a well-behaved fitting process: handling collinearity, sparse covariates and other design flaws
 
 1. **Estimability and support.** Build each stage from its eligible respondents.
    Drop constants and crossed random groupings identical to an immediate parent
@@ -316,36 +330,36 @@ effects and interactions. [Goplerud, supplement §A.4](https://mgoplerud.com/pap
    fixed columns, including when a product duplicates a main effect, and warn
    and log omitted predictors and columns at the selected stage. This rank
    check leaves hierarchical interaction and spline bases intact.
-   For `minimum_support = 10L`, require $s_j=\sum_i t_i\mathbf{1}(X_{ij}\ne0)\ge10$
-   for fixed columns and random-intercept levels, where $t_i$ is the aggregated
+   For `minimum_support = 10L`, require $`s_j=\sum_i t_i\mathbf{1}(X_{ij}\ne0)\ge10`$
+   for fixed columns and random-intercept levels, where $`t_i`$ is the aggregated
    row's binomial trial count. The intercept is protected. `-1L` (default) and
    `0L` disable this screen. Screened fixed columns contribute zero at prediction.
    Screened levels use the fitted term covariance. If all levels are screened,
    drop the random term and its grouped spline. Drop smooths involving a
    screened fixed main effect. Keep eligible survey rows and surviving penalized
    spline bases. The log names dropped smooths and estimated coefficient counts.
-2. **Within-group slopes.** For each retained level $g$, let $s_g$ count eligible
+2. **Within-group slopes.** For each retained level $`g`$, let $`s_g`$ count eligible
    respondents whose actual slope value (including products) differs from the
    level's most frequent exact value, weighted by trial counts. Constant levels
-   give $s_g=0$. Drop the slope and grouped smooth if
-   $\sum_g s_g/|G|<10$. Logs record `sparse_random_slopes` and
+   give $`s_g=0`$. Drop the slope and grouped smooth if
+   $`\sum_g s_g/|G|<10`$. Logs record `sparse_random_slopes` and
    `sparse_random_slope_mean_support`. Only retained linear-block levels get fitted
    spline deviations. Screened respondents still inform the global curve and
    other applicable terms. At prediction a screened or unseen level shares a
    new deviation drawn from the fitted spline variance across all its cells in a draw.
-3. **Collinearity after support.** With $W=\operatorname{diag}(\sqrt{t_i})$, scale the
-   supported fixed design to $Z_j=WX_j/\lVert WX_j\rVert_2$. For descending singular
-   values, $\kappa_j=\sigma_1/\sigma_j$ and $\kappa=\max_j\kappa_j$.
-   While $\kappa\ge30$, take the weakest right singular vector $v$ and consider
-   non-intercept columns with $|v_j|\ge0.01\max_l|v_l|$. Among candidates of the
-   highest interaction order, remove the one giving the lowest $\kappa$ after
+3. **Collinearity after support.** Let $`W`$ be diagonal with $`W_{ii}=\sqrt{t_i}`$. Scale the
+   supported fixed design to $`Z_j=WX_j/\lVert WX_j\rVert_2`$. For descending singular
+   values, $`\kappa_j=\sigma_1/\sigma_j`$ and $`\kappa=\max_j\kappa_j`$.
+   While $`\kappa\ge30`$, take the weakest right singular vector $`v`$ and consider
+   non-intercept columns with $`|v_j|\ge0.01\max_l|v_l|`$. Among candidates of the
+   highest interaction order, remove the one giving the lowest $`\kappa`$ after
    hierarchy pruning. Ties remove the later formula column. The rule uses
    predictor variation alone. Belsley, Kuh, and Welsch use about 30 alongside
    variance-decomposition proportions for linear regression. VoteFrame uses 30
    as a logistic pre-fit pruning choice and computes condition indices alone.
    [SAS/STAT guide](https://support.sas.com/documentation/cdl/en/sgug/59902/HTML/default/fit_sect29.htm)
-4. **Hierarchy throughout.** For an interaction with predictor set $S$, retain
-   every immediate parent $S\setminus\{j\}$, $j\in S$, recursively. This applies
+4. **Hierarchy throughout.** For an interaction with predictor set $`S`$, retain
+   every immediate parent $`S\setminus\{j\}`$, $`j\in S`$, recursively. This applies
    to fixed products, crossed intercepts, varying slopes, and their splines.
    If a parent is fully screened, drop its dependent terms. Fit an otherwise
    eligible global spline on its own if its grouped term is dropped.
@@ -354,21 +368,21 @@ Before solving, log fixed support and collinearity failures, hierarchy removals,
 and condition numbers before and after pruning. Each fitted stage retains formula,
 data, and model fit. [Supplementary material](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS0003055423000035/resource/name/S0003055423000035sup001.pdf)
 
-**Depth selection.** For each stage with $n$ eligible respondents, select
-$d^*=\max\{d\le d_{\mathrm{requested}}:C_{\mathrm{retained}}(d)\le n\}$.
+**Depth selection.** For each stage with $`n`$ eligible respondents, select
+$`d^*=\max\{d\le d_{\mathrm{requested}}:C_{\mathrm{retained}}(d)\le n\}`$.
 Each respondent supplies one trial, including shared cells. If the set is empty,
 warn and attempt depth 0. Later stages can select higher depths if their design
 shrinks enough.
 
-$$
+```math
 C_{\mathrm{retained}}=
 \#\text{fixed columns}+\#\text{random intercepts and slopes across levels}
 +\#\text{spline basis columns}.
-$$
+```
 
 Count after support, collinearity, and hierarchy screening, without shrinkage
 discounts or variance/covariance hyperparameters. A truncated linear basis uses
-$\lfloor\min(\#\text{distinct values}/4,35)\rfloor$ columns. Joint kernels cap the
+$`\lfloor\min(\#\text{distinct values}/4,35)\rfloor`$ columns. Joint kernels cap the
 default sketch width at the aggregated cell count. Each by-smooth counts a global
 basis and one per observed group.
 
@@ -376,8 +390,8 @@ basis and one per observed group.
 areas for an area random intercept. Ineligible stages stop with a logged reason.
 If screening leaves only fixed effects, fit a binomial GLM and sample fixed
 coefficients from its normal approximation. VoteFrame defaults accept
-$\max|\Delta\theta|<0.01$ for tracked variational parameters or
-$0<\Delta\mathrm{ELBO}<10^{-5}$. A supplied `vglmer_control()` has its own defaults.
+$`\max|\Delta\theta|<0.01`$ for tracked variational parameters or
+$`0<\Delta\mathrm{ELBO}<10^{-5}`$. A supplied `vglmer_control()` has its own defaults.
 Override with `tolerance_parameters` or `tolerance_elbo` (zero disables that
 criterion) and `max_iterations` per stage. At the cap the solver can return with
 a non-convergence message.
@@ -393,7 +407,7 @@ a non-convergence message.
 Set these fit and screening options in the extension's `fit` list with MasterP.
 `fitted_depth` is the accepted candidate, including fractional depths.
 `retained_order` is the largest surviving term's predictor count
-(intercept $0$, main effect or area intercept $1$, two-way interaction $2$).
+(intercept $`0`$, main effect or area intercept $`1`$, two-way interaction $`2`$).
 
 ## Predicting and extending the frame
 
@@ -416,7 +430,7 @@ or a frame supplied for the first time.
 
 Frame-only levels have zero survey trials. The fit integrates their coefficients
 out and the depth rule counts only survey-estimated coefficients. For stage
-log odds $\eta_k^{(d)}$, use $q_k^{(d)}=\operatorname{logit}^{-1}(\eta_k^{(d)})$
+log odds $\eta_k^{(d)}$, use $q_k^{(d)}=1/(1+\exp(-\eta_k^{(d)}))$
 in the stage formula above. For each draw and random term, sample covariance
 $\Sigma^{(d)}$ from its fitted inverse-Wishart distribution and share one
 $\mathcal N(0,\Sigma^{(d)})$ coefficient vector across cells in each new level.
