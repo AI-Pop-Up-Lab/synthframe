@@ -258,9 +258,12 @@ $`k`$, and $`K`$ ordered outcomes, fit $`K-1`$ stages. The successes are $`n_{xk
 and the failures are $`\sum_{j>k} n_{xj}`$:
 
 ```math
-q_k(x)=P(Y=k\mid Y\ge k,x),\qquad
-p_k(x)=q_k(x)\prod_{j<k}(1-q_j(x)),\qquad
-q_K(x)=1,\qquad \sum_{k=1}^{K}p_k(x)=1.
+q_k(x)=P(Y=k\mid Y\ge k,x),\qquad q_K(x)=1.
+```
+
+```math
+p_k(x)=q_k(x)\prod_{j=1}^{k-1}(1-q_j(x)),\qquad
+\sum_{k=1}^{K}p_k(x)=1.
 ```
 
 **Area covariates.** How you supply the data determines whether the pipeline
@@ -321,7 +324,7 @@ factor-by-curve term includes a global spline. Joint continuous smooths require
 four distinct values use linear main effects. `splines = FALSE` uses linear
 effects and interactions. [Goplerud, supplement §A.4](https://mgoplerud.com/papers/Goplerud_MMM_Full.pdf#page=19)
 
-#### Ensuring a well-behaved fitting process: handling collinearity, sparse covariates and other design flaws
+#### Ensuring a well-behaved fitting process: handling design flaws
 
 1. **Estimability and support.** Build each stage from its eligible respondents.
    Drop constants and crossed random groupings identical to an immediate parent
