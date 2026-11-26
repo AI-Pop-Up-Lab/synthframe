@@ -9,8 +9,8 @@ source data and outcome recodes.
 
 ## Read and inspect the inputs
 
-
 *Snippet 1. Read the population frame, survey, and election results and check their keys.*
+
 
 ``` r
 knitr::opts_chunk$set(error = FALSE)
@@ -45,6 +45,7 @@ cells <- aggregate_extension_survey(
 
 *Snippet 2. Report how many respondents and population cells enter the example.*
 
+
 ``` r
 c(survey_rows = nrow(survey), complete_respondents = sum(cells$counts),
   omitted_respondents = cells$omitted, population_cells = nrow(frame),
@@ -66,8 +67,8 @@ share for its own outcome. The first stage models nonvoting. Later
 stages use respondents whose choices remain after removing the earlier
 outcomes. The final choice receives the remaining probability.
 
-
 *Snippet 3. Build municipality-level predictors from the earlier election.*
+
 
 ``` r
 historical <- process_area_covariates(election, area, outcome, "share_eligible")
@@ -99,8 +100,8 @@ columns removed, and the solver diagnostics. A stage can return a fit
 at the iteration cap, so inspect the solver status before interpreting
 its results.
 
-
 *Snippet 4. Fit and save the sequential vote-choice stages.*
+
 
 ``` r
 requested_depth <- 4L
@@ -122,8 +123,8 @@ fit <- withCallingHandlers(
 save_case_study_rds(fit, file.path(outputs$models, "fit.rds"))
 ```
 
-
 *Snippet 5. Display the selected designs and convergence results for each fitted stage.*
+
 
 ``` r
 fields <- c("outcome", "observations", "fitted_depth", "retained_order",
@@ -174,8 +175,8 @@ The 2022 municipal results also enter as predictors. This comparison
 measures agreement with the calibration targets. Prediction and raking
 batch by constituency by default, keeping each municipality intact.
 
-
 *Snippet 6. Predict vote choice in geographic batches and expand population counts into choice categories.*
+
 
 ``` r
 n_draws <- 125L
@@ -200,8 +201,8 @@ extended_parts <- lapply(seq_along(frame_rows), function(i) {
 rm(draw_state)
 ```
 
-
 *Snippet 7. Pool the predicted counts by municipality and compare their shares with the targets.*
+
 
 ``` r
 figure <- function(name) file.path(figure_dir, paste0(name, ".png"))
@@ -226,18 +227,18 @@ knitr::kable(before$metrics, digits = 4)
 
 |                                |  bias_pp| RMSE_pp| spearman| coverage_90_pct|
 |:-------------------------------|--------:|-------:|--------:|---------------:|
-|Overall                         |   0.0000|  2.3109|   0.9259|         90.0000|
-|No Vote                         | -11.4988| 11.6258|   0.9852|          0.0000|
-|A: Socialdemokratiet            |   0.5687|  2.5125|   0.8695|         93.8776|
-|Other - Left                    |   0.9206|  2.0751|   0.9475|         70.4082|
-|V: Venstre                      |   1.1617|  1.4368|   0.9682|         98.9796|
-|F: SF - Socialistisk Folkeparti |   2.0572|  2.2605|   0.9515|         87.7551|
-|Other - Right                   |  -2.4229|  2.7384|   0.8563|         87.7551|
-|M: Moderaterne                  |   0.6006|  1.2061|   0.9055|         97.9592|
-|I: Liberal Alliance             |  -0.3442|  2.7189|  -0.0852|         89.7959|
-|Æ: Danmarksdemokraterne         |  -2.9450|  4.3559|   0.9084|         75.5102|
-|Invalid                         |   0.0477|  0.3672|   0.7012|        100.0000|
-|Other                           |   0.3555|  0.3925|   0.0859|         97.9592|
+|Overall                         |   0.0000|  2.2832|   0.9281|         90.9184|
+|No Vote                         | -11.5011| 11.6288|   0.9863|          0.0000|
+|A: Socialdemokratiet            |   0.7978|  2.5061|   0.8760|         94.8980|
+|Other - Left                    |   0.9213|  2.0847|   0.9406|         70.4082|
+|V: Venstre                      |   0.9741|  1.3384|   0.9720|        100.0000|
+|F: SF - Socialistisk Folkeparti |   2.0672|  2.2628|   0.9501|         92.8571|
+|Other - Right                   |  -2.2257|  2.5442|   0.8522|         92.8571|
+|M: Moderaterne                  |   0.7115|  1.2028|   0.9167|         97.9592|
+|I: Liberal Alliance             |  -0.6263|  2.8022|  -0.0829|         86.7347|
+|Æ: Danmarksdemokraterne         |  -2.9448|  4.3074|   0.9108|         75.5102|
+|Invalid                         |  -0.0087|  0.3626|   0.7756|        100.0000|
+|Other                           |   0.3336|  0.3660|   0.1232|         97.9592|
 
 *Table 2. Before-rake municipal vote-share errors and 90% interval coverage against the election benchmarks.*
 
@@ -252,8 +253,8 @@ reallocates counts across vote choices within each demographic cell,
 preserving that cell's total. The same constraints apply to the mean
 counts and each posterior draw.
 
-
 *Snippet 8. Calibrate each municipality’s vote totals while preserving the original population cells.*
+
 
 ``` r
 rake_tolerance <- 1e-8
@@ -284,8 +285,8 @@ to save it. Use the saved `models/fit.rds` and the prediction chunk to recreate 
 `check_post_rake()` repeats the municipal comparisons using the same
 denominators and checks every original joint demographic cell's total.
 
-
 *Snippet 9. Check the calibrated election margins and compare counts with the original stratification joint.*
+
 
 ``` r
 after <- check_post_rake(
@@ -339,8 +340,8 @@ for No Vote. The total variation panel summarizes changes across the
 whole distribution among voters. Its dots are posterior draws and its
 square uses the mean counts.
 
-
 *Snippet 10. Compare pre-rake and post-rake vote shares across demographic groupings.*
+
 
 ``` r
 plot_partitioned_raking_changes(
@@ -358,8 +359,8 @@ plot_partitioned_raking_changes(
 
 The table shows 100 randomly selected rows from the raked frame.
 
-
 *Snippet 11. Sample 100 rows from the raked stratification frame.*
+
 
 ``` r
 set.seed(2029)
@@ -371,110 +372,111 @@ knitr::kable(sample_extended_frame(raked, columns), digits = 2, row.names = FALS
 
 |municipality      |gender |age_group |education                                                           |vote_choice_2022                |      N| N_draw_1| N_draw_2|
 |:-----------------|:------|:---------|:-------------------------------------------------------------------|:-------------------------------|------:|--------:|--------:|
-|Faaborg-Midtfyn   |Women  |75-79     |H2010 Upper secondary education, General (stx, hf, student courses) |F: SF - Socialistisk Folkeparti |   1.00|     0.75|     0.33|
-|Haderslev         |Men    |80-84     |H60 Bachelors programs                                              |Other - Left                    |   0.15|     0.15|     0.13|
-|Dragør            |Women  |60-64     |H70 Masters programs                                                |F: SF - Socialistisk Folkeparti |   5.03|     6.30|     5.56|
-|Solrød            |Women  |75-79     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |  13.80|    16.93|     6.38|
-|Haderslev         |Men    |25-29     |H2020 Upper secondary education, General (hhx, htx)                 |F: SF - Socialistisk Folkeparti |   1.75|     1.18|     0.66|
-|Rødovre           |Men    |35-39     |H70 Masters programs                                                |M: Moderaterne                  |  27.95|    31.17|    30.39|
-|Odense            |Men    |55-59     |H40 Short cycle higher education                                    |Invalid                         |  18.12|    26.25|    28.90|
-|Hjørring          |Men    |20-24     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |  37.34|    35.34|    27.90|
-|Høje-Taastrup     |Women  |30-34     |H40 Short cycle higher education                                    |No Vote                         |  17.80|    17.78|    11.02|
-|Randers           |Men    |50-54     |H40 Short cycle higher education                                    |I: Liberal Alliance             |  41.12|    51.30|    36.29|
-|Gladsaxe          |Men    |90-94     |H70 Masters programs                                                |Other                           |   0.01|     0.00|     0.00|
-|Billund           |Men    |45-49     |H60 Bachelors programs                                              |Invalid                         |   0.04|     0.14|     0.07|
-|Assens            |Men    |20-24     |H1030 Primary school 10th grade                                     |M: Moderaterne                  |  12.04|     7.98|     9.81|
-|Ishøj             |Women  |75-79     |H2010 Upper secondary education, General (stx, hf, student courses) |I: Liberal Alliance             |   0.02|     0.01|     0.01|
-|Hedensted         |Women  |85-89     |H30 Vocational Education and Training (VET)                         |Æ: Danmarksdemokraterne         |  16.08|    15.00|     7.33|
-|Dragør            |Men    |25-29     |H30 Vocational Education and Training (VET)                         |Æ: Danmarksdemokraterne         |   1.00|     0.78|     1.31|
-|Hjørring          |Women  |65-69     |H2020 Upper secondary education, General (hhx, htx)                 |I: Liberal Alliance             |   0.37|     0.48|     0.23|
-|Solrød            |Women  |55-59     |H50 Vocational bachelors educations                                 |M: Moderaterne                  |  17.04|    22.66|    16.30|
-|Lejre             |Men    |45-49     |H70 Masters programs                                                |Invalid                         |   0.95|     0.24|     0.21|
-|Ishøj             |Men    |45-49     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |   5.33|     4.89|     6.04|
-|Fredensborg       |Women  |75-79     |H2020 Upper secondary education, General (hhx, htx)                 |Æ: Danmarksdemokraterne         |   0.48|     0.67|     0.03|
-|Halsnæs           |Men    |20-24     |H50 Vocational bachelors educations                                 |M: Moderaterne                  |   0.20|     0.14|     0.18|
-|Assens            |Men    |35-39     |H60 Bachelors programs                                              |M: Moderaterne                  |   1.38|     1.49|     1.31|
-|Nordfyns          |Men    |85-89     |H50 Vocational bachelors educations                                 |A: Socialdemokratiet            |   5.71|     9.90|     6.43|
-|Rødovre           |Women  |60-64     |H2020 Upper secondary education, General (hhx, htx)                 |Other - Right                   |   2.40|     2.05|     1.66|
-|Ringsted          |Women  |60-64     |H40 Short cycle higher education                                    |I: Liberal Alliance             |   1.71|     1.42|     1.85|
-|Hørsholm          |Men    |25-29     |H2020 Upper secondary education, General (hhx, htx)                 |Invalid                         |   0.27|     0.01|     1.82|
-|Faaborg-Midtfyn   |Women  |20-24     |H50 Vocational bachelors educations                                 |I: Liberal Alliance             |   0.88|     0.80|     0.63|
-|Favrskov          |Men    |20-24     |H90 Not stated                                                      |A: Socialdemokratiet            |   0.21|     0.19|     0.27|
-|Fredensborg       |Men    |55-59     |H30 Vocational Education and Training (VET)                         |F: SF - Socialistisk Folkeparti |   8.92|     3.91|     6.30|
-|Ringsted          |Men    |45-49     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |   3.55|     5.95|     2.48|
-|Guldborgsund      |Men    |35-39     |H60 Bachelors programs                                              |Other                           |   0.01|     0.00|     0.00|
-|Vallensbæk        |Men    |70-74     |H1020 Primary school 7th-9th grade                                  |I: Liberal Alliance             |   1.55|     0.37|     2.31|
-|Skive             |Women  |20-24     |H1030 Primary school 10th grade                                     |F: SF - Socialistisk Folkeparti |   5.87|     5.36|     5.90|
-|Roskilde          |Women  |65-69     |H70 Masters programs                                                |Invalid                         |   0.86|     0.44|     0.24|
-|Tønder            |Women  |20-24     |H70 Masters programs                                                |F: SF - Socialistisk Folkeparti |   0.10|     0.06|     0.06|
-|Aalborg           |Men    |60-64     |H50 Vocational bachelors educations                                 |A: Socialdemokratiet            | 226.66|   169.59|   241.82|
-|Morsø             |Women  |60-64     |H2020 Upper secondary education, General (hhx, htx)                 |Other - Left                    |   0.52|     1.01|     0.34|
-|Vallensbæk        |Women  |30-34     |H60 Bachelors programs                                              |I: Liberal Alliance             |   1.00|     1.54|     1.24|
-|Ringkøbing-Skjern |Men    |20-24     |H1020 Primary school 7th-9th grade                                  |Invalid                         |   1.66|     8.59|     0.38|
-|Copenhagen        |Women  |75-79     |H1030 Primary school 10th grade                                     |Æ: Danmarksdemokraterne         |   5.84|     6.10|     4.66|
-|Sønderborg        |Women  |55-59     |H40 Short cycle higher education                                    |Æ: Danmarksdemokraterne         |  10.29|     8.82|     4.09|
-|Copenhagen        |Women  |40-44     |H30 Vocational Education and Training (VET)                         |No Vote                         | 344.77|   291.49|   351.89|
-|Gentofte          |Men    |20-24     |H1030 Primary school 10th grade                                     |Invalid                         |   1.47|     4.03|     0.00|
-|Svendborg         |Men    |50-54     |H40 Short cycle higher education                                    |Other                           |   0.22|     0.05|     1.73|
-|Ishøj             |Women  |50-54     |H1030 Primary school 10th grade                                     |V: Venstre                      |   1.53|     0.64|     1.18|
-|Greve             |Men    |70-74     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |   1.85|     1.24|     0.76|
-|Greve             |Men    |35-39     |H50 Vocational bachelors educations                                 |Other - Right                   |  21.86|    29.79|    19.63|
-|Vesthimmerlands   |Men    |20-24     |H2010 Upper secondary education, General (stx, hf, student courses) |Æ: Danmarksdemokraterne         |   2.92|     1.74|     0.50|
-|Fanø              |Men    |45-49     |H2010 Upper secondary education, General (stx, hf, student courses) |M: Moderaterne                  |   0.35|     0.33|     0.60|
-|Herning           |Women  |90-94     |H1030 Primary school 10th grade                                     |M: Moderaterne                  |   0.50|     0.56|     0.66|
-|Gribskov          |Men    |55-59     |H1030 Primary school 10th grade                                     |No Vote                         |  42.37|    44.91|    31.80|
-|Roskilde          |Men    |25-29     |H50 Vocational bachelors educations                                 |V: Venstre                      |  27.07|    19.14|    20.05|
-|Lemvig            |Men    |60-64     |H40 Short cycle higher education                                    |Other - Right                   |   3.94|     4.38|     3.95|
-|Gribskov          |Men    |45-49     |H60 Bachelors programs                                              |M: Moderaterne                  |   3.03|     3.05|     3.62|
-|Lyngby-Taarbæk    |Men    |20-24     |H2020 Upper secondary education, General (hhx, htx)                 |I: Liberal Alliance             | 117.05|   129.91|   132.64|
-|Tønder            |Women  |55-59     |H60 Bachelors programs                                              |Other                           |   0.01|     0.00|     0.00|
-|Vejen             |Women  |35-39     |H90 Not stated                                                      |I: Liberal Alliance             |   0.33|     0.22|     0.53|
-|Høje-Taastrup     |Women  |75-79     |H30 Vocational Education and Training (VET)                         |I: Liberal Alliance             |   3.88|     0.99|     0.91|
-|Roskilde          |Men    |60-64     |H2010 Upper secondary education, General (stx, hf, student courses) |F: SF - Socialistisk Folkeparti |  10.21|     7.62|     4.95|
-|Kalundborg        |Men    |85-89     |H1020 Primary school 7th-9th grade                                  |No Vote                         |  20.61|    31.89|     8.18|
-|Herlev            |Men    |35-39     |H40 Short cycle higher education                                    |Other                           |   0.10|     0.00|     0.16|
-|Odsherred         |Men    |50-54     |H1020 Primary school 7th-9th grade                                  |M: Moderaterne                  |  14.72|    11.53|    12.62|
-|Lejre             |Women  |40-44     |H1030 Primary school 10th grade                                     |I: Liberal Alliance             |   0.59|     0.23|     0.70|
-|Holstebro         |Men    |90-94     |H50 Vocational bachelors educations                                 |Other - Left                    |   0.67|     1.15|     0.62|
-|Greve             |Women  |55-59     |H60 Bachelors programs                                              |F: SF - Socialistisk Folkeparti |   1.04|     0.96|     1.42|
-|Stevns            |Men    |90-94     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |   0.08|     0.11|     0.01|
-|Nyborg            |Men    |35-39     |H1020 Primary school 7th-9th grade                                  |I: Liberal Alliance             |   5.48|     3.40|     8.11|
-|Frederikssund     |Women  |50-54     |H2020 Upper secondary education, General (hhx, htx)                 |Æ: Danmarksdemokraterne         |   1.39|     1.93|     0.00|
-|Vallensbæk        |Men    |20-24     |H1020 Primary school 7th-9th grade                                  |Other                           |   0.01|     0.01|     0.01|
-|Kerteminde        |Women  |85-89     |H90 Not stated                                                      |Æ: Danmarksdemokraterne         |   0.22|     0.01|     0.20|
-|Gribskov          |Men    |50-54     |H60 Bachelors programs                                              |Other                           |   0.01|     0.00|     0.00|
-|Holbæk            |Women  |90-94     |H30 Vocational Education and Training (VET)                         |V: Venstre                      |   9.75|    18.95|    11.27|
-|Dragør            |Men    |75-79     |H90 Not stated                                                      |Other                           |   0.01|     0.02|     0.00|
-|Horsens           |Men    |70-74     |H1030 Primary school 10th grade                                     |Other - Right                   |   6.35|     3.48|     7.97|
-|Rudersdal         |Men    |45-49     |H40 Short cycle higher education                                    |I: Liberal Alliance             |  25.04|    27.79|    29.63|
-|Middelfart        |Women  |20-24     |H1030 Primary school 10th grade                                     |M: Moderaterne                  |   6.37|     5.95|     4.81|
-|Frederikssund     |Men    |75-79     |H30 Vocational Education and Training (VET)                         |Other - Left                    |  25.95|    33.92|    20.57|
-|Tårnby            |Women  |85-89     |H60 Bachelors programs                                              |F: SF - Socialistisk Folkeparti |   0.07|     0.06|     0.10|
-|Norddjurs         |Men    |40-44     |H60 Bachelors programs                                              |No Vote                         |   0.31|     0.17|     0.27|
-|Copenhagen        |Men    |50-54     |H2020 Upper secondary education, General (hhx, htx)                 |Other - Right                   |  44.52|    32.41|    49.58|
-|Lemvig            |Men    |80-84     |H70 Masters programs                                                |Other - Left                    |   1.82|     2.29|     2.39|
-|Hvidovre          |Women  |80-84     |H30 Vocational Education and Training (VET)                         |Invalid                         |   4.67|     0.46|     4.91|
-|Vejen             |Women  |60-64     |H40 Short cycle higher education                                    |V: Venstre                      |   9.12|     9.47|    10.98|
-|Roskilde          |Men    |75-79     |H90 Not stated                                                      |Æ: Danmarksdemokraterne         |   1.33|     0.44|     3.63|
-|Svendborg         |Men    |70-74     |H60 Bachelors programs                                              |Other - Left                    |   0.81|     0.57|     0.81|
-|Fanø              |Women  |75-79     |H40 Short cycle higher education                                    |I: Liberal Alliance             |   0.09|     0.02|     0.04|
-|Ballerup          |Men    |65-69     |H70 Masters programs                                                |M: Moderaterne                  |  11.09|    11.55|    10.37|
-|Ringsted          |Women  |50-54     |H90 Not stated                                                      |Æ: Danmarksdemokraterne         |   0.06|     0.00|     0.01|
-|Gribskov          |Women  |35-39     |H60 Bachelors programs                                              |F: SF - Socialistisk Folkeparti |   1.40|     1.59|     3.19|
-|Holbæk            |Women  |25-29     |H60 Bachelors programs                                              |Other - Left                    |   5.87|     5.42|     4.41|
-|Frederikssund     |Women  |25-29     |H40 Short cycle higher education                                    |Æ: Danmarksdemokraterne         |   1.33|     0.41|     0.15|
-|Favrskov          |Men    |30-34     |H40 Short cycle higher education                                    |Invalid                         |   1.75|     1.91|     0.67|
-|Norddjurs         |Men    |60-64     |H40 Short cycle higher education                                    |M: Moderaterne                  |   4.63|     3.52|     4.45|
-|Fredensborg       |Men    |35-39     |H70 Masters programs                                                |I: Liberal Alliance             |  37.21|    22.95|    46.31|
-|Brønderslev       |Women  |35-39     |H1030 Primary school 10th grade                                     |V: Venstre                      |   5.75|     7.16|     2.81|
-|Favrskov          |Men    |65-69     |H50 Vocational bachelors educations                                 |Other - Right                   |  12.66|    16.20|     7.96|
-|Sorø              |Women  |35-39     |H50 Vocational bachelors educations                                 |Other - Right                   |  18.89|    28.38|    16.09|
-|Stevns            |Men    |80-84     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |  25.29|    36.60|    23.92|
-|Roskilde          |Men    |50-54     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |  13.14|    12.34|     5.99|
+|Faaborg-Midtfyn   |Women  |75-79     |H2010 Upper secondary education, General (stx, hf, student courses) |F: SF - Socialistisk Folkeparti |   0.99|     0.96|     0.85|
+|Haderslev         |Men    |80-84     |H60 Bachelors programs                                              |Other - Left                    |   0.13|     0.18|     0.11|
+|Dragør            |Women  |60-64     |H70 Masters programs                                                |F: SF - Socialistisk Folkeparti |   4.91|     2.68|     3.22|
+|Solrød            |Women  |75-79     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |  14.12|    13.41|    23.18|
+|Haderslev         |Men    |25-29     |H2020 Upper secondary education, General (hhx, htx)                 |F: SF - Socialistisk Folkeparti |   1.81|     0.79|     0.30|
+|Rødovre           |Men    |35-39     |H70 Masters programs                                                |M: Moderaterne                  |  27.78|    27.18|    17.84|
+|Odense            |Men    |55-59     |H40 Short cycle higher education                                    |Invalid                         |  19.45|    11.38|    27.15|
+|Hjørring          |Men    |20-24     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |  36.31|    28.07|    33.05|
+|Høje-Taastrup     |Women  |30-34     |H40 Short cycle higher education                                    |No Vote                         |  17.94|    14.95|    10.44|
+|Randers           |Men    |50-54     |H40 Short cycle higher education                                    |I: Liberal Alliance             |  39.92|    60.36|    33.08|
+|Gladsaxe          |Men    |90-94     |H70 Masters programs                                                |Other                           |   0.01|     0.02|     0.00|
+|Billund           |Men    |45-49     |H60 Bachelors programs                                              |Invalid                         |   0.04|     0.01|     0.02|
+|Assens            |Men    |20-24     |H1030 Primary school 10th grade                                     |M: Moderaterne                  |  10.67|     5.47|     4.29|
+|Ishøj             |Women  |75-79     |H2010 Upper secondary education, General (stx, hf, student courses) |I: Liberal Alliance             |   0.02|     0.06|     0.03|
+|Hedensted         |Women  |85-89     |H30 Vocational Education and Training (VET)                         |Æ: Danmarksdemokraterne         |  16.97|    19.02|    19.52|
+|Dragør            |Men    |25-29     |H30 Vocational Education and Training (VET)                         |Æ: Danmarksdemokraterne         |   1.03|     0.96|     1.39|
+|Hjørring          |Women  |65-69     |H2020 Upper secondary education, General (hhx, htx)                 |I: Liberal Alliance             |   0.31|     0.29|     0.44|
+|Solrød            |Women  |55-59     |H50 Vocational bachelors educations                                 |M: Moderaterne                  |  17.72|    27.35|    12.45|
+|Lejre             |Men    |45-49     |H70 Masters programs                                                |Invalid                         |   0.84|     0.83|     0.56|
+|Ishøj             |Men    |45-49     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |   5.21|     3.65|     6.23|
+|Fredensborg       |Women  |75-79     |H2020 Upper secondary education, General (hhx, htx)                 |Æ: Danmarksdemokraterne         |   0.49|     0.39|     0.60|
+|Halsnæs           |Men    |20-24     |H50 Vocational bachelors educations                                 |M: Moderaterne                  |   0.21|     0.17|     0.35|
+|Assens            |Men    |35-39     |H60 Bachelors programs                                              |M: Moderaterne                  |   1.37|     1.03|     1.41|
+|Nordfyns          |Men    |85-89     |H50 Vocational bachelors educations                                 |A: Socialdemokratiet            |   5.60|     3.92|     4.42|
+|Rødovre           |Women  |60-64     |H2020 Upper secondary education, General (hhx, htx)                 |Other - Right                   |   2.41|     2.10|     2.67|
+|Ringsted          |Women  |60-64     |H40 Short cycle higher education                                    |I: Liberal Alliance             |   1.67|     0.99|     1.94|
+|Hørsholm          |Men    |25-29     |H2020 Upper secondary education, General (hhx, htx)                 |Invalid                         |   0.30|     0.02|     0.33|
+|Faaborg-Midtfyn   |Women  |20-24     |H50 Vocational bachelors educations                                 |I: Liberal Alliance             |   0.83|     0.59|     0.69|
+|Favrskov          |Men    |20-24     |H90 Not stated                                                      |A: Socialdemokratiet            |   0.22|     0.19|     0.38|
+|Fredensborg       |Men    |55-59     |H30 Vocational Education and Training (VET)                         |F: SF - Socialistisk Folkeparti |   9.99|    10.14|    16.02|
+|Ringsted          |Men    |45-49     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |   3.45|     3.62|     4.31|
+|Guldborgsund      |Men    |35-39     |H60 Bachelors programs                                              |Other                           |   0.01|     0.01|     0.00|
+|Vallensbæk        |Men    |70-74     |H1020 Primary school 7th-9th grade                                  |I: Liberal Alliance             |   1.41|     1.26|     1.22|
+|Skive             |Women  |20-24     |H1030 Primary school 10th grade                                     |F: SF - Socialistisk Folkeparti |   6.71|     1.81|    10.76|
+|Roskilde          |Women  |65-69     |H70 Masters programs                                                |Invalid                         |   0.70|     0.36|     0.29|
+|Tønder            |Women  |20-24     |H70 Masters programs                                                |F: SF - Socialistisk Folkeparti |   0.11|     0.11|     0.05|
+|Aalborg           |Men    |60-64     |H50 Vocational bachelors educations                                 |A: Socialdemokratiet            | 231.05|   289.59|   137.97|
+|Morsø             |Women  |60-64     |H2020 Upper secondary education, General (hhx, htx)                 |Other - Left                    |   0.53|     0.35|     0.17|
+|Vallensbæk        |Women  |30-34     |H60 Bachelors programs                                              |I: Liberal Alliance             |   1.01|     0.54|     1.09|
+|Ringkøbing-Skjern |Men    |20-24     |H1020 Primary school 7th-9th grade                                  |Invalid                         |   1.54|     1.38|     0.01|
+|Copenhagen        |Women  |75-79     |H1030 Primary school 10th grade                                     |Æ: Danmarksdemokraterne         |   5.42|     9.49|     5.79|
+|Sønderborg        |Women  |55-59     |H40 Short cycle higher education                                    |Æ: Danmarksdemokraterne         |  10.96|     5.84|    16.19|
+|Copenhagen        |Women  |40-44     |H30 Vocational Education and Training (VET)                         |No Vote                         | 344.49|   306.79|   346.02|
+|Gentofte          |Men    |20-24     |H1030 Primary school 10th grade                                     |Invalid                         |   1.64|     2.85|     0.04|
+|Svendborg         |Men    |50-54     |H40 Short cycle higher education                                    |Other                           |   0.27|     0.03|     0.11|
+|Ishøj             |Women  |50-54     |H1030 Primary school 10th grade                                     |V: Venstre                      |   1.77|     2.64|     1.87|
+|Greve             |Men    |70-74     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |   1.88|     0.86|     1.47|
+|Greve             |Men    |35-39     |H50 Vocational bachelors educations                                 |Other - Right                   |  21.69|    33.10|     8.01|
+|Vesthimmerlands   |Men    |20-24     |H2010 Upper secondary education, General (stx, hf, student courses) |Æ: Danmarksdemokraterne         |   3.16|     4.37|     4.35|
+|Fanø              |Men    |45-49     |H2010 Upper secondary education, General (stx, hf, student courses) |M: Moderaterne                  |   0.35|     0.20|     0.32|
+|Herning           |Women  |90-94     |H1030 Primary school 10th grade                                     |M: Moderaterne                  |   0.49|     0.31|     0.37|
+|Gribskov          |Men    |55-59     |H1030 Primary school 10th grade                                     |No Vote                         |  42.22|    55.72|    48.15|
+|Roskilde          |Men    |25-29     |H50 Vocational bachelors educations                                 |V: Venstre                      |  27.65|    33.52|    38.51|
+|Lemvig            |Men    |60-64     |H40 Short cycle higher education                                    |Other - Right                   |   3.77|     4.67|     3.41|
+|Gribskov          |Men    |45-49     |H60 Bachelors programs                                              |M: Moderaterne                  |   2.97|     1.66|     2.13|
+|Lyngby-Taarbæk    |Men    |20-24     |H2020 Upper secondary education, General (hhx, htx)                 |I: Liberal Alliance             | 118.82|   116.88|    94.24|
+|Tønder            |Women  |55-59     |H60 Bachelors programs                                              |Other                           |   0.01|     0.06|     0.00|
+|Vejen             |Women  |35-39     |H90 Not stated                                                      |I: Liberal Alliance             |   0.33|     0.11|     0.14|
+|Høje-Taastrup     |Women  |75-79     |H30 Vocational Education and Training (VET)                         |I: Liberal Alliance             |   3.62|     5.11|     6.77|
+|Roskilde          |Men    |60-64     |H2010 Upper secondary education, General (stx, hf, student courses) |F: SF - Socialistisk Folkeparti |  10.40|     5.86|     6.95|
+|Kalundborg        |Men    |85-89     |H1020 Primary school 7th-9th grade                                  |No Vote                         |  21.15|    33.05|    17.76|
+|Herlev            |Men    |35-39     |H40 Short cycle higher education                                    |Other                           |   0.08|     0.01|     0.26|
+|Odsherred         |Men    |50-54     |H1020 Primary school 7th-9th grade                                  |M: Moderaterne                  |  14.36|    17.44|    11.15|
+|Lejre             |Women  |40-44     |H1030 Primary school 10th grade                                     |I: Liberal Alliance             |   0.62|     0.92|     0.63|
+|Holstebro         |Men    |90-94     |H50 Vocational bachelors educations                                 |Other - Left                    |   0.63|     0.55|     0.67|
+|Greve             |Women  |55-59     |H60 Bachelors programs                                              |F: SF - Socialistisk Folkeparti |   1.04|     0.70|     2.67|
+|Stevns            |Men    |90-94     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |   0.08|     0.09|     0.05|
+|Nyborg            |Men    |35-39     |H1020 Primary school 7th-9th grade                                  |I: Liberal Alliance             |   5.35|     6.25|     2.85|
+|Frederikssund     |Women  |50-54     |H2020 Upper secondary education, General (hhx, htx)                 |Æ: Danmarksdemokraterne         |   1.54|     1.69|     3.90|
+|Vallensbæk        |Men    |20-24     |H1020 Primary school 7th-9th grade                                  |Other                           |   0.01|     0.00|     0.00|
+|Kerteminde        |Women  |85-89     |H90 Not stated                                                      |Æ: Danmarksdemokraterne         |   0.23|     0.14|     0.28|
+|Gribskov          |Men    |50-54     |H60 Bachelors programs                                              |Other                           |   0.01|     0.01|     0.00|
+|Holbæk            |Women  |90-94     |H30 Vocational Education and Training (VET)                         |V: Venstre                      |   9.92|     4.98|     5.55|
+|Dragør            |Men    |75-79     |H90 Not stated                                                      |Other                           |   0.01|     0.00|     0.00|
+|Horsens           |Men    |70-74     |H1030 Primary school 10th grade                                     |Other - Right                   |   6.47|     3.80|     8.40|
+|Rudersdal         |Men    |45-49     |H40 Short cycle higher education                                    |I: Liberal Alliance             |  24.99|    34.12|    29.72|
+|Middelfart        |Women  |20-24     |H1030 Primary school 10th grade                                     |M: Moderaterne                  |   5.94|     3.70|     4.25|
+|Frederikssund     |Men    |75-79     |H30 Vocational Education and Training (VET)                         |Other - Left                    |  24.96|    28.74|    23.38|
+|Tårnby            |Women  |85-89     |H60 Bachelors programs                                              |F: SF - Socialistisk Folkeparti |   0.07|     0.03|     0.06|
+|Norddjurs         |Men    |40-44     |H60 Bachelors programs                                              |No Vote                         |   0.31|     0.20|     0.32|
+|Copenhagen        |Men    |50-54     |H2020 Upper secondary education, General (hhx, htx)                 |Other - Right                   |  43.69|    41.54|    51.05|
+|Lemvig            |Men    |80-84     |H70 Masters programs                                                |Other - Left                    |   1.85|     2.41|     1.76|
+|Hvidovre          |Women  |80-84     |H30 Vocational Education and Training (VET)                         |Invalid                         |   4.09|     5.48|     1.94|
+|Vejen             |Women  |60-64     |H40 Short cycle higher education                                    |V: Venstre                      |   9.63|    17.27|     6.68|
+|Roskilde          |Men    |75-79     |H90 Not stated                                                      |Æ: Danmarksdemokraterne         |   1.23|     1.37|     0.89|
+|Svendborg         |Men    |70-74     |H60 Bachelors programs                                              |Other - Left                    |   0.75|     0.64|     0.44|
+|Fanø              |Women  |75-79     |H40 Short cycle higher education                                    |I: Liberal Alliance             |   0.08|     0.20|     0.04|
+|Ballerup          |Men    |65-69     |H70 Masters programs                                                |M: Moderaterne                  |  10.77|     8.44|     6.46|
+|Ringsted          |Women  |50-54     |H90 Not stated                                                      |Æ: Danmarksdemokraterne         |   0.07|     0.05|     0.12|
+|Gribskov          |Women  |35-39     |H60 Bachelors programs                                              |F: SF - Socialistisk Folkeparti |   1.31|     1.67|     3.13|
+|Holbæk            |Women  |25-29     |H60 Bachelors programs                                              |Other - Left                    |   5.60|    10.04|     8.63|
+|Frederikssund     |Women  |25-29     |H40 Short cycle higher education                                    |Æ: Danmarksdemokraterne         |   1.24|     0.30|     0.75|
+|Favrskov          |Men    |30-34     |H40 Short cycle higher education                                    |Invalid                         |   1.86|     0.81|     2.13|
+|Norddjurs         |Men    |60-64     |H40 Short cycle higher education                                    |M: Moderaterne                  |   4.41|     5.07|     2.84|
+|Fredensborg       |Men    |35-39     |H70 Masters programs                                                |I: Liberal Alliance             |  38.76|    25.94|    28.97|
+|Brønderslev       |Women  |35-39     |H1030 Primary school 10th grade                                     |V: Venstre                      |   5.47|     5.63|     2.88|
+|Favrskov          |Men    |65-69     |H50 Vocational bachelors educations                                 |Other - Right                   |  12.75|    14.13|    10.96|
+|Sorø              |Women  |35-39     |H50 Vocational bachelors educations                                 |Other - Right                   |  19.28|    17.98|    21.36|
+|Stevns            |Men    |80-84     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |  25.46|    18.58|    29.43|
+|Roskilde          |Men    |50-54     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |  13.26|     5.31|    13.50|
 
 *Table 4. Sample of 100 raked joint rows with their calibrated mean and two posterior draws.*
 
 *Snippet 12. Keep the requested output partitions and release the remaining pre-rake storage.*
+
 
 ``` r
 if (storage$mode == "keep") {
