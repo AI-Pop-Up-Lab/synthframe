@@ -12,6 +12,15 @@ rake_extended_frame <- function(extended_frame, frame, targets, by, extension_va
   if (!all(vapply(list(extension_variable, target_variable, count_variable), function(x) {
     is.character(x) && length(x) == 1L && !is.na(x) && nzchar(x)
   }, logical(1)))) stop("Supply valid outcome, target, and count column names.")
+  population_draws <- prediction_count_draws(frame, count_variable)
+  # The joint solver already pairs each count draw with its original population.
+  if (length(population_draws)) {
+    return(rake_joint_extended_frame(
+      extended_frame, frame, targets = stats::setNames(list(targets), extension_variable),
+      by = by, target_variable = target_variable, count_variable = count_variable,
+      target_scale = target_scale, tolerance = tolerance, max_iterations = max_iterations
+    ))
+  }
   cell_columns <- setdiff(names(frame), count_variable)
   validate_prediction_frame(frame, cell_columns, count_variable)
   if (extension_variable %in% names(frame) || !is.character(by) || anyNA(by) ||

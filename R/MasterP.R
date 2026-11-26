@@ -48,6 +48,7 @@ masterp_execute <- function(mother_frame, extensions, n_draws, count_variable, a
 
   # Validate the configuration before starting a potentially expensive fit.
   margins <- list()
+  prediction_dirs <- character()
   for (outcome in outcomes) {
     spec <- extensions[[outcome]]
     masterp_options(spec, c("survey", "fit", "predict", "rake", "plots", "register_frame"),
@@ -57,6 +58,17 @@ masterp_execute <- function(mother_frame, extensions, n_draws, count_variable, a
                                         "progress", "solver_trace")), "fit")
     masterp_options(spec$predict, setdiff(names(formals(predict_sequential_logit)),
                                          c("fit", "frame", "n_draws", "count_variable", "progress")), "predict")
+    if (isTRUE(spec$predict$write_files)) {
+      path <- masterp_default(spec$predict$output_dir, formals(predict_sequential_logit)$output_dir)
+      if (!is.character(path) || length(path) != 1L || is.na(path) || !nzchar(path)) {
+        stop("Supply a prediction output directory for ", sQuote(outcome), ".")
+      }
+      path <- normalizePath(path.expand(path), mustWork = FALSE)
+      if (path %in% prediction_dirs) {
+        stop("Use a separate predict$output_dir for each extension that writes predictions.")
+      }
+      prediction_dirs <- c(prediction_dirs, path)
+    }
     if (is.null(spec$fit$area_variable)) stop("Set fit$area_variable for ", sQuote(outcome), ".")
     if (!is.null(spec$register_frame) && !identical(spec$register_frame, TRUE) &&
         !identical(spec$register_frame, FALSE)) stop("register_frame must be TRUE or FALSE.")
@@ -173,14 +185,17 @@ masterp_execute <- function(mother_frame, extensions, n_draws, count_variable, a
     progress = log$progress(rake_label), solver_trace = TRUE
   )))
 
-  storage <- log$step("choosing pre-rake storage",
-                      pre_rake_storage(pre_rake_mode, pre_rake_dir, bytes = as.numeric(object.size(extended))))
-  on.exit(storage$cleanup(), add = TRUE)
-  pre_rake_part <- log$step(paste("pre-rake storage using", storage$mode),
-                           storage$put(extended, "extended_frame"))
-  if (storage$mode == "keep") log$write(paste("Wrote the pre-rake frame", pre_rake_part))
-  rm(extended)
   n_checks <- 2L * sum(vapply(extensions, function(spec) length(spec$plots), integer(1)))
+  if (n_checks || pre_rake_mode == "keep") {
+    storage <- log$step("choosing pre-rake storage",
+                        pre_rake_storage(pre_rake_mode, pre_rake_dir,
+                                         bytes = as.numeric(object.size(extended))))
+    on.exit(storage$cleanup(), add = TRUE)
+    pre_rake_part <- log$step(paste("pre-rake storage using", storage$mode),
+                             storage$put(extended, "extended_frame"))
+    if (storage$mode == "keep") log$write(paste("Wrote the pre-rake frame", pre_rake_part))
+  }
+  rm(extended)
   checks_done <- 0L
   check_progress <- log$progress("Benchmark checks")
   if (n_checks) check_progress(0L, n_checks)
@@ -206,7 +221,6 @@ masterp_execute <- function(mother_frame, extensions, n_draws, count_variable, a
       names(diagnostics[[outcome]][[comparison]]) <- names(files)
     }
   }
-  rm(pre_rake_part)
 
   aggregate_progress <- log$progress("Aggregating raked counts")
   if (length(aggregate_by)) aggregate_progress(0L, length(aggregate_by))

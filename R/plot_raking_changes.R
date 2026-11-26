@@ -1,12 +1,17 @@
 # Draw changes on outcome margins left unconstrained by the rake.
 plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file,
                                  count_variable = "N", constrained_by = area, no_vote = NULL) {
-  cell_columns <- setdiff(names(frame), count_variable)
+  population_draws <- prediction_count_draws(frame, count_variable)
+  cell_columns <- setdiff(names(frame), c(count_variable, population_draws))
   row_keys <- c(cell_columns, outcome)
   stopifnot(identical(extended[row_keys], raked[row_keys]),
             all(c(area, constrained_by) %in% cell_columns))
   draws <- extended_frame_draw_columns(extended, count_variable)
-  stopifnot(identical(draws, extended_frame_draw_columns(raked, count_variable)))
+  stopifnot(setequal(draws, extended_frame_draw_columns(raked, count_variable)))
+  if (length(population_draws)) {
+    draws <- prediction_count_draws(extended, count_variable)
+    stopifnot(length(draws) == length(population_draws))
+  }
 
   groupings <- unlist(lapply(seq_along(cell_columns), function(size) {
     combn(cell_columns, size, simplify = FALSE)
@@ -34,9 +39,9 @@ plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file
   # Use the original joint totals as denominators for both versions of the frame.
   summary <- lapply(groupings, function(by) {
     frame_keys <- frame_cell_keys(frame[by], frame[by])
-    population <- as.numeric(rowsum(frame[[count_variable]], frame_keys, reorder = FALSE))
+    population <- raking_plot_population(frame, frame_keys, count_variable, population_draws)
     group <- match(frame_cell_keys(extended[by], frame[by]), unique(frame_keys))
-    joint <- group + (outcome_index - 1L) * length(population)
+    joint <- group + (outcome_index - 1L) * NROW(population)
     first <- !duplicated(joint)
     row_group <- group[first]
     if (!is.null(no_vote)) {
@@ -46,7 +51,10 @@ plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file
       ))))
     }
     changes <- rowsum(count_delta, joint, reorder = FALSE)
-    tv <- 50 * vapply(changes, function(x) sum(abs(x)), numeric(1)) / full_population
+    denominator <- if (length(population_draws)) colSums(population) else full_population
+    absolute_change <- vapply(changes, function(x) sum(abs(x)), numeric(1))
+    tv <- stats::setNames(50 * absolute_change / denominator, count_columns)
+    if (length(population_draws)) population <- population[, 1L]
     outcome_points <- lapply(seq_along(outcomes), function(i) {
       rows <- outcome_index[first] == i & population[row_group] > 0
       point_changes <- numeric(length(population))
@@ -64,16 +72,27 @@ plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file
   invisible(plot_file)
 }
 
+# Use the mean for mean-only frames and the matching population for each paired draw.
+raking_plot_population <- function(frame, groups, count_variable, population_draws) {
+  if (!length(population_draws)) {
+    return(as.numeric(rowsum(frame[[count_variable]], groups, reorder = FALSE)))
+  }
+  as.matrix(rowsum(frame[c(count_variable, population_draws)], groups, reorder = FALSE))
+}
+
 # Return weighted sums so groups from disjoint municipality batches can be combined.
 conditional_raking_summary <- function(extended, raked, joint, group, population,
                                        outcome_index, outcomes, no_vote, variation_on_cvap = FALSE) {
   voted <- outcomes[outcome_index] != no_vote
-  weights <- population[group]
+  if (is.null(dim(population))) {
+    population <- matrix(population, length(population), ncol(extended))
+  }
+  weights <- population[group, , drop = FALSE]
   conditional_shares <- function(totals) {
     by_group <- rowsum(totals[voted, , drop = FALSE], group[voted])
-    turnout <- matrix(0, length(population), ncol(totals))
+    turnout <- matrix(0, nrow(population), ncol(totals))
     turnout[as.integer(rownames(by_group)), ] <- by_group
-    denominator <- matrix(weights, nrow(totals), ncol(totals))
+    denominator <- weights
     denominator[voted, ] <- turnout[group[voted], , drop = FALSE]
     totals[denominator <= 0] <- NA_real_
     totals / denominator
@@ -84,17 +103,17 @@ conditional_raking_summary <- function(extended, raked, joint, group, population
   variation <- if (variation_on_cvap) {
     # CVAP-weighted share changes simplify to count changes divided by total CVAP.
     rbind(change = 50 * colSums(abs(after - before)),
-          population = rep(sum(population), ncol(delta)))
+          population = colSums(population))
   } else vapply(seq_len(ncol(delta)), function(column) {
     valid <- voted & is.finite(delta[, column])
-    c(change = 50 * sum(abs(delta[valid, column]) * weights[valid]),
-      population = sum(population[unique(group[valid])]))
+    c(change = 50 * sum(abs(delta[valid, column]) * weights[valid, column]),
+      population = sum(population[unique(group[valid]), column]))
   }, numeric(2))
   outcome_rows <- lapply(seq_along(outcomes), function(i) {
     which(outcome_index == i & is.finite(delta[, 1L]))
   })
   points <- lapply(outcome_rows, function(rows) unname(100 * delta[rows, 1L]))
-  outcome_weights <- lapply(outcome_rows, function(rows) weights[rows])
+  outcome_weights <- lapply(outcome_rows, function(rows) weights[rows, 1L])
   weighted_changes <- Map(function(x, w) x * w, points, outcome_weights)
   list(points = points, change = vapply(weighted_changes, sum, numeric(1)),
        population = vapply(outcome_weights, sum, numeric(1)), variation = variation)
@@ -115,12 +134,16 @@ plot_partitioned_raking_changes <- function(extended_paths, raked_paths, frame, 
 # Accumulate one partition at a time while both versions of its counts are available.
 partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, groupings = NULL,
                                                variation_on_cvap = FALSE) {
-  cells <- setdiff(names(frame), "N")
+  population_draws <- prediction_count_draws(frame, "N")
+  cells <- setdiff(names(frame), c("N", population_draws))
   if (is.null(groupings)) {
     groupings <- unlist(lapply(seq_along(cells), function(size) {
       combn(cells, size, simplify = FALSE)
     }), recursive = FALSE)
     groupings <- Filter(function(by) !identical(by, area), groupings)
+  }
+  if (!length(groupings)) {
+    return(list(add = function(...) invisible(NULL), plot = function(...) invisible(NULL)))
   }
   local <- vapply(groupings, function(by) area %in% by, logical(1))
   national_groups <- groupings[!local]
@@ -131,19 +154,29 @@ partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, gro
   summarize_margin <- function(extended, raked, population_cells, by) {
     outcomes <- unique(extended[[outcome]])
     keys <- frame_cell_keys(population_cells[by], population_cells[by])
-    population <- as.numeric(rowsum(population_cells$N, keys, reorder = FALSE))
+    population <- raking_plot_population(population_cells, keys, "N", population_draws)
     group <- match(frame_cell_keys(extended[by], population_cells[by]), unique(keys))
     outcome_index <- match(extended[[outcome]], outcomes)
-    joint <- group + (outcome_index - 1L) * length(population)
+    joint <- group + (outcome_index - 1L) * NROW(population)
     first <- !duplicated(joint)
-    columns <- c("N", extended_frame_draw_columns(extended, "N"))
+    columns <- count_columns(extended, raked)
     conditional_raking_summary(extended[columns], raked[columns], joint, group[first],
                                population, outcome_index[first], outcomes, no_vote, variation_on_cvap)
   }
   national_cells <- unique(frame[demographic])
   national_keys <- frame_cell_keys(national_cells, national_cells)
   national_cell <- match(frame_cell_keys(frame[demographic], national_cells), national_keys)
-  national_cells$N <- as.numeric(rowsum(frame$N, national_cell))
+  population_columns <- c("N", population_draws)
+  national_cells[population_columns] <- rowsum(frame[population_columns], national_cell)
+  count_columns <- function(extended, raked) {
+    draws <- extended_frame_draw_columns(extended, "N")
+    stopifnot(setequal(draws, extended_frame_draw_columns(raked, "N")))
+    if (length(population_draws)) {
+      draws <- prediction_count_draws(extended, "N")
+      stopifnot(length(draws) == length(population_draws))
+    }
+    c("N", draws)
+  }
   national_totals <- NULL
   local_summaries <- list()
   outcomes <- NULL
@@ -155,7 +188,7 @@ partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, gro
     observed <- unique(extended[[outcome]])
     if (is.null(outcomes)) outcomes <<- observed
     stopifnot(setequal(outcomes, observed))
-    columns <- c("N", extended_frame_draw_columns(extended, "N"))
+    columns <- count_columns(extended, raked)
     group <- match(frame_cell_keys(extended[demographic], national_cells[demographic]),
                    national_keys)
     ids <- (group - 1L) * length(outcomes) + match(extended[[outcome]], outcomes)

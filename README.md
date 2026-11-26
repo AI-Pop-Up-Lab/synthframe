@@ -5,6 +5,10 @@ outcomes observed in surveys. It fits sequential multilevel models,
 predicts outcome counts for each population cell, and calibrates the
 extended frame to known margins.
 
+Run `Rscript --vanilla tests/integration.R` from the repository root to
+check the fit, prediction, extension, raking, and reporting handoffs on
+a small synthetic example. The check uses the R dependencies listed below.
+
 ## Reproduce a case study
 
 The case studies are on the `package` branch. Each example runs from
@@ -134,7 +138,8 @@ splines, solver control, and stage-specific area covariates. By default,
 predictors are columns shared by the extension's surveys and its input frame.
 Set `register_frame = TRUE` in an extension to register its population
 levels during fitting. Its `predict` list accepts row batching and
-unseen-level options. Predictions stay in memory by default.
+unseen-level options. Predictions stay in memory by default. Give each
+extension that sets `predict$write_files = TRUE` its own `predict$output_dir`.
 
 Each extension supplies one or more named `rake` margins. Use `by` for
 grouping columns from the mother frame, or `character()` for a national
@@ -153,9 +158,9 @@ If the mother frame already has numbered population draws such as
 `i` with population draw `i`. The rake preserves each incoming cell's
 count separately for `N` and each draw. With a mean-only mother frame,
 `n_draws` defaults to 125 and each draw starts from `N`.
-`result$frame` contains the full calibrated frame. MasterP keeps the
-pre-rake frame in memory or temporary storage according to available
-memory. Use
+`result$frame` contains the full calibrated frame. When benchmark checks
+need the pre-rake frame, MasterP keeps it in memory or temporary storage
+according to available memory. Use
 `pre_rake_mode = "keep", pre_rake_dir = "path/to/output"` to save the full
 joint pre-rake frame as `extended_frame.rds`. The `"temporary"` mode uses
 disk after the joint rake and removes the temporary file when the call
@@ -518,7 +523,11 @@ independently.
 Use `check_post_rake()` to compare the raked outcome shares with their
 targets and the raked counts with the original joint cell populations.
 It returns both comparisons and can save a separate identity-line plot
-for each.
+for each. When the mother frame has population draws, the single- and
+multiple-outcome rakes pair counts by draw number. The original-cell plot
+adds each draw's count error to the original mean population, so it
+shows agreement with the paired reference even when the population
+varies across draws.
 
 Use `plot_raking_changes()` with the aligned extended and raked frames
 to generate one diagnostic figure for the outcome margins left
