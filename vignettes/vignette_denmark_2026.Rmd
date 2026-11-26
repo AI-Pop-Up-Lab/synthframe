@@ -27,7 +27,7 @@ no_vote <- "No Vote"
 predictors <- c(area, "gender", "age_group", "education")
 out <- Sys.getenv("VOTEFRAME_DENMARK_OUTPUT_DIR",
                   unset = file.path("data", "output", basename(country)))
-dir.create(out, recursive = TRUE, showWarnings = FALSE)
+outputs <- case_study_outputs(out)
 figure_dir <- file.path("vignettes", "assets", "denmark-2026")
 dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -91,12 +91,12 @@ fit <- withCallingHandlers(
     predictors = predictors, frame = frame, depth = requested_depth,
     splines = TRUE, control = control, minimum_support = minimum_support,
     tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = 100L,
-    interaction_support_log = file.path(out, "interaction_support.csv"),
-    log_file = file.path(out, "fit_log.csv")
+    interaction_support_log = file.path(outputs$diagnostics, "interaction_support.csv"),
+    log_file = file.path(outputs$diagnostics, "fit_log.csv")
   ),
   message = function(m) cat(conditionMessage(m), file = stderr())
 )
-saveRDS(fit, file.path(out, "fit.rds"))
+save_case_study_rds(fit, file.path(outputs$models, "fit.rds"))
 ```
 
 *Snippet 5. Display the selected designs and convergence results for each fitted stage.*
@@ -177,6 +177,7 @@ before <- check_extended_frame(
   no_vote = no_vote, outcome_order = fit$outcome_order,
   plot_file = figure("municipal-before")
 )
+utils::write.csv(before$metrics, file.path(outputs$diagnostics, "before_rake_metrics.csv"))
 knitr::kable(before$metrics, digits = 4)
 ```
 
@@ -209,16 +210,15 @@ raked <- do.call(rbind, raked_parts)
 row_order <- order(rep(unlist(frame_rows, use.names = FALSE), each = length(fit$outcome_order)))
 raked <- raked[row_order, , drop = FALSE]
 rownames(raked) <- NULL
-raked_path <- file.path(out, "raked_frame.rds")
-pending <- paste0(raked_path, ".part")
-saveRDS(raked, pending)
-stopifnot(file.rename(pending, raked_path))
+dir.create(outputs$raked_frame, showWarnings = FALSE)
+raked_path <- file.path(outputs$raked_frame, "part-01.rds")
+save_case_study_rds(raked, raked_path)
 ```
 
 The final raked frame is saved to
-`data/output/denmark 2026/raked_frame.rds`. The pre-rake frame uses memory or temporary
+`data/output/denmark 2026/raked_frame/part-01.rds`. The pre-rake frame uses memory or temporary
 disk according to available memory. Set `VOTEFRAME_PRE_RAKE_STORAGE=keep`
-to save it. Use the saved `fit.rds` and the prediction chunk to recreate it.
+to save it. Use the saved `models/fit.rds` and the prediction chunk to recreate it.
 
 ## Check both margins after raking
 
@@ -235,6 +235,8 @@ after <- check_post_rake(
   outcome_plot_file = figure("municipal-after"),
   joint_plot_file = figure("original-cell-totals")
 )
+utils::write.csv(after$outcome$metrics, file.path(outputs$diagnostics, "after_rake_metrics.csv"))
+utils::write.csv(after$joint$metrics, file.path(outputs$diagnostics, "original_cell_totals_metrics.csv"))
 knitr::kable(after$outcome$metrics, digits = 4)
 ```
 
@@ -291,10 +293,6 @@ knitr::kable(sample_extended_frame(raked, columns), digits = 2, row.names = FALS
 *Snippet 12. Keep the requested output partitions and release the remaining pre-rake storage.*
 
 ```{r cleanup-pre-rake}
-legacy_extended_path <- file.path(out, "extended_frame.rds")
-if (storage$mode != "keep" && file.exists(legacy_extended_path)) {
-  stopifnot(file.remove(legacy_extended_path))
-}
 if (storage$mode == "keep") {
   paths <- unlist(extended_parts, use.names = FALSE)
   prune_geographic_partitions(dirname(paths[1L]), paths, "^part-[0-9]+[.]rds$")

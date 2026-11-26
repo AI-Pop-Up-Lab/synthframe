@@ -672,9 +672,10 @@ for (i in seq_along(audit)) {
 
 The national run uses `r n_draws` posterior draws. Set
 `VOTEFRAME_US_FIT=true` to include the model results and predictions.
-To reuse fitted models from the same inputs and settings, set
+To reuse completed fits from the same inputs and settings, set
 `VOTEFRAME_US_REUSE_FITS=true` and point `VOTEFRAME_US_OUTPUT_DIR` to the
-directory containing `pres_fit.rds` and `house_fit.rds`.
+run directory. The vignette loads each available model from `models/`
+and fits any missing model.
 
 ```{r prefit-stop, include=FALSE}
 # Release the candidate designs before fitting or loading the national models.
@@ -826,11 +827,11 @@ survey-support cutoff.
 # Use the shared country output folder unless the caller specifies a different path.
 out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
                   unset = file.path("data", "output", basename(country)))
-dir.create(out, recursive = TRUE, showWarnings = FALSE)
+outputs <- case_study_outputs(out)
 requested_depth <- 2L
 max_iterations <- 100L
 minimum_support <- 10L
-depth_support_dir <- file.path(out, "depth_support")
+depth_support_dir <- file.path(outputs$diagnostics, "depth_support")
 stage_columns <- c("outcome", "observations", "fitted_depth", "estimated_parameters",
                    "dropped_fixed", "dropped_scalar_random", "dropped_correlated_random",
                    "dropped_smooth", "estimated_retained_parameters", "fixed_condition_after",
@@ -846,11 +847,15 @@ fit_us_model <- function(...) {
   )
 }
 load_or_fit_us_model <- function(filename, extension, ...) {
-  if (!identical(Sys.getenv("VOTEFRAME_US_REUSE_FITS"), "true")) {
-    return(fit_us_model(...))
+  path <- file.path(outputs$models, filename)
+  reuse <- identical(Sys.getenv("VOTEFRAME_US_REUSE_FITS"), "true")
+  if (!reuse || !file.exists(path)) {
+    fit <- fit_us_model(...)
+    save_case_study_rds(fit, path, compress = FALSE)
+    return(fit)
   }
   loadNamespace("gKRLS")
-  fit <- readRDS(file.path(out, filename))
+  fit <- readRDS(path)
   stopifnot(inherits(fit, "voteframe_sequential_logit"),
             identical(fit$extension_variable, extension),
             identical(fit$outcome_order, vote_order),
@@ -865,8 +870,8 @@ pres_fit <- load_or_fit_us_model(
   predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
   tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
   minimum_support = minimum_support, depth_support_dir = depth_support_dir,
-  interaction_support_log = file.path(out, "presidential_interaction_support.csv"),
-  log_file = file.path(out, "presidential_fit_log.csv")
+  interaction_support_log = file.path(outputs$diagnostics, "presidential_interaction_support.csv"),
+  log_file = file.path(outputs$diagnostics, "presidential_fit_log.csv")
 )
 # Report the depth, screening counts, and convergence outcome for each stage.
 knitr::kable(pres_fit$fit_log[stage_columns], format = "pipe")
@@ -926,8 +931,8 @@ house_fit <- load_or_fit_us_model(
   predictors = c(predictors, pres), depth = requested_depth, splines = TRUE, control = control,
   tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
   minimum_support = minimum_support, depth_support_dir = depth_support_dir,
-  interaction_support_log = file.path(out, "house_interaction_support.csv"),
-  log_file = file.path(out, "house_fit_log.csv")
+  interaction_support_log = file.path(outputs$diagnostics, "house_interaction_support.csv"),
+  log_file = file.path(outputs$diagnostics, "house_fit_log.csv")
 )
 # Report the same stage diagnostics and decoded formulas as for the presidential fit.
 knitr::kable(house_fit$fit_log[stage_columns], format = "pipe")
@@ -951,13 +956,19 @@ Republican met the 0.01 tolerance after 95 iterations.
 
 ### Retained coefficients by predictor combination
 
-Each row counts fitted fixed effects, random effects, and spline-basis
-coefficients for a predictor or interaction. Random terms count only
-retained group levels and slopes. Spline coefficients for a global curve
-count under its numeric predictors, and grouped deviations also count
-under the grouping variable. Zero means the fit has no coefficient for
-that combination in that stage. The design-stage estimate can differ
-from the actual count because the solver constructs the final basis.
+Each column is one fitted stage. For example, the House No Vote column
+has **1,117** coefficients for `district_id × vote_pres_2024`. Each is a
+random intercept for one district and presidential-choice combination.
+The House Republican stage has **448** such intercepts. It fits a smaller
+set of respondents because the No Vote and Democratic stages have
+already been handled.
+
+The `state_fips × house_share` row illustrates why a smooth can account
+for many coefficients. In House No Vote, its **1,836** coefficients
+consist of 51 state and DC slopes and 1,785 coefficients for state and
+DC departures from the national curve. The bottom row adds up the fitted
+coefficients in each stage. Use the table to see which terms account for
+most of the model's size.
 
 ```{r coefficient-counts, echo=FALSE, results='asis'}
 stage_counts <- c(
@@ -1021,8 +1032,10 @@ when the fit output directory has limited free space.
 # Apply the same tolerance to election margins and mother-frame cells.
 rake_tolerance <- 0.00000001
 run_rake <- identical(Sys.getenv("VOTEFRAME_US_RAKE", unset = "true"), "true")
-raked_dir <- Sys.getenv("VOTEFRAME_US_RAKED_DIR", unset = file.path(out, "raked_frame"))
-if (run_rake) dir.create(raked_dir, showWarnings = FALSE)
+raked_dir <- Sys.getenv("VOTEFRAME_US_RAKED_DIR", unset = outputs$raked_frame)
+if (run_rake) dir.create(raked_dir, recursive = TRUE, showWarnings = FALSE)
+summary_dir <- file.path(outputs$diagnostics, "pre_rake_totals")
+dir.create(summary_dir, showWarnings = FALSE)
 states <- geographic_batches(frame, "district_id", parent_area, areas_per_batch, rake_by)
 count_columns <- c("N", paste0("N_draw_", seq_len(n_draws)))
 # Estimate the storage requirement before allocating any predicted partitions.
@@ -1072,7 +1085,9 @@ summarize_states <- function() {
     before <- setNames(lapply(names(plot_targets), function(x) plot_totals(joint, x)),
                        names(plot_targets))
     extended_path <- if (storage$mode == "keep") joint_part
-    if (!run_rake) return(list(before = before, extended_path = extended_path))
+    pre_rake <- list(before = before, extended_path = extended_path)
+    save_case_study_rds(pre_rake, file.path(summary_dir, paste0(state, ".rds")))
+    if (!run_rake) return(pre_rake)
     rm(joint)
     # Use the same named configuration for the rake in every block.
     targets <- lapply(names(rake_targets), function(outcome) {
@@ -1092,8 +1107,7 @@ summarize_states <- function() {
     for (change in change_summaries) change$add(extended, raked, original)
     # Publish the verified partition only after the write succeeds.
     path <- file.path(raked_dir, paste0("state_", state, ".rds"))
-    saveRDS(raked, paste0(path, ".tmp"))
-    stopifnot(file.rename(paste0(path, ".tmp"), path))
+    save_case_study_rds(raked, path)
 
     list(before = before, extended_path = extended_path,
          after = setNames(lapply(names(plot_targets), function(x) plot_totals(raked, x)),
@@ -1153,7 +1167,8 @@ for (phase in c("before", if (run_rake) "after")) {
     print(knitr::kable(check$metrics, format = "pipe", digits = 4))
     cat("\n*Table ", 11L + comparison, ". ", caption,
         " – errors and 90% interval coverage against the election benchmarks.*\n\n", sep = "")
-    utils::write.csv(check$metrics, file.path(out, paste0(outcome, "_", phase, "_rake_metrics.csv")))
+    utils::write.csv(check$metrics, file.path(outputs$diagnostics,
+                                             paste0(outcome, "_", phase, "_rake_metrics.csv")))
     figure_caption <- paste(caption, "– benchmark shares versus predictions and 90% intervals.")
     cat("\n![", figure_caption, "](", sub("^vignettes/", "", figure), ")\n\n",
         "*Figure ", 2L + comparison, ". ", figure_caption, "*\n\n", sep = "")
@@ -1179,7 +1194,7 @@ if (run_rake) {
   joint_metrics$cells_checked <- nrow(joint_cells)
   joint_metrics$max_abs_count_error <- max(joint_cells$max_abs_error)
   stopifnot(joint_metrics$max_abs_count_error <= rake_tolerance)
-  utils::write.csv(joint_metrics, file.path(out, "original_cell_totals_metrics.csv"))
+  utils::write.csv(joint_metrics, file.path(outputs$diagnostics, "original_cell_totals_metrics.csv"))
   print(knitr::kable(joint_metrics, format = "pipe", digits = 12))
   cat("\n*Table 16. Agreement between raked and original population counts in every mother-frame cell.*\n\n")
   caption <- "Original cell counts versus raked totals and 90% intervals after summing over both votes."
@@ -1243,7 +1258,8 @@ if (run_rake) {
                        paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
   preview <- sample_extended_frame(raked_paths, preview_columns, partition_sizes)
   prune_geographic_partitions(raked_dir, raked_paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
-  writeLines(normalizePath(raked_dir, mustWork = TRUE), file.path(out, "raked-directory.txt"))
+  writeLines(normalizePath(raked_dir, mustWork = TRUE),
+             file.path(outputs$diagnostics, "raked-directory.txt"))
   print(knitr::kable(preview, digits = 3, row.names = FALSE))
   cat("\n*Table 17. Sample of 100 raked joint rows with the calibrated mean and three draws.*\n\n")
 }

@@ -123,17 +123,6 @@ total. The frame contains 361,920 cells across 290 municipalities, with
 an estimated total of 7,785,905.81 adult citizens. The fallback for
 empty education breakdowns was unused in this build.
 
-### Rebuild the population frame
-
-Download the three archives above into `raw/` under the stated filenames.
-With `election_results.csv` present, run this from the repository root.
-
-```sh
-python3 "data/input/sweden 2026/processing/build_population_frame.py"
-```
-
-The script uses the Python standard library and writes `frame.csv`.
-
 ## Auxiliary survey
 
 [auxiliary_survey.csv](auxiliary_survey.csv) has one row per respondent
@@ -154,7 +143,8 @@ rejected ballots. Missing responses remain empty, and both geography
 fields are empty for the five respondents without a usable municipality.
 
 The extract contains 2,845 respondents, of whom 2,369 have all six fields
-populated. The original study files are private and stored in the
+populated. The vignette reads this checked-in CSV. To work with the original
+study files, obtain them from the study provider and place them in the
 Git-ignored `raw/` folder.
 
 **Data credit.** Oscarsson, H., Karlsson, R., Lindskog, H., and Oleskog
@@ -194,15 +184,23 @@ receives at least 5% of the party's votes in that constituency. Remaining
 seats are filled under the list-order rules.
 [Swedish Parliament election guide](https://www.riksdagen.se/en/how-the-riksdag-works/democracy/elections-to-the-riksdag/)
 
-## Rebuild
+## Rebuild the population frame and election results
 
-Download the Swedish Election Authority (Valmyndigheten) files below into
-`raw/` under the indicated names, then run
-`python3 "data/input/sweden 2026/processing/build_election_results.py"`
-from the repository root. The script uses the standard Python library.
-It reads the 2022 columns of the results workbook and takes
-municipality names and codes from SCB’s `TAB6659_en.zip`, listed under
-Population sources above.
+Download the three SCB archives listed under Population sources and the
+election workbook below into `raw/` using the listed filenames. Run both
+commands from the repository root. They use the Python standard library
+and replace `election_results.csv` and `frame.csv` in this directory.
+
+```sh
+python3 "data/input/sweden 2026/processing/build_election_results.py"
+python3 "data/input/sweden 2026/processing/build_population_frame.py"
+```
+
+The election builder reads the 2022 workbook columns and gets municipality
+codes and names from `TAB6659_en.zip`. The population builder uses the
+reconstructed election file for the municipality and constituency mapping.
+For the survey, use the prepared `auxiliary_survey.csv` and the recoding
+notes above.
 
 | Local filename | Official source |
 | --- | --- |

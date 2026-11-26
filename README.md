@@ -1,102 +1,82 @@
 # VoteFrame
 
-VoteFrame aims to extend a population stratification frame with a categorical
-variable observed in survey data. The planned workflow fits a multilevel model
-using shared covariates and area-level predictors, then uses posterior draws
-to estimate the population count in each cell for each outcome category.
+VoteFrame extends population stratification frames with categorical
+outcomes observed in surveys. It fits sequential multilevel models,
+predicts outcome counts for each population cell, and calibrates the
+extended frame to known margins.
 
-## Country input layout
+## Reproduce a case study
 
-Each country and election cycle has its own folder under [data/input/](data/input/).
-The folder contains three modeling inputs and two subfolders.
+The case studies are on the `package` branch. Each example runs from
+the prepared inputs tracked under
+[`data/input/`](data/input/). Its input guide covers sources, recodes,
+and any upstream steps needed to rebuild those inputs.
 
-| Entry | Contents |
+| Case study | Read the results | Run the source | Input guide |
+| --- | --- | --- | --- |
+| Denmark 2026 | [Vignette](vignettes/vignette_denmark_2026.md) | [R Markdown](vignettes/vignette_denmark_2026.Rmd) | [Denmark inputs](data/input/denmark%202026/README.md) |
+| Sweden 2026 | [Vignette](vignettes/vignette_sweden_2026.md) | [R Markdown](vignettes/vignette_sweden_2026.Rmd) | [Sweden inputs](data/input/sweden%202026/README.md) |
+| US 2026 | [Vignette](vignettes/vignette_us_2026.md) | [R Markdown](vignettes/vignette_us_2026.Rmd) | [US inputs](data/input/us%202026/README.md) |
+
+Install the R packages in your own R library. The figures use Cairo PNG
+support, which you can check with `capabilities("cairo")`.
+
+```r
+install.packages(c("knitr", "vglmer", "gKRLS", "SQUAREM"), repos = "https://cloud.r-project.org")
+```
+
+The saved US results used R 4.3.3, vglmer 1.0.8, gKRLS 1.0.5, SQUAREM 2026.1,
+knitr 1.52, and Matrix 1.6-5. Use a compatible release of Matrix if
+recreating that R 4.3 environment. [CRAN Matrix archive](https://cran.r-project.org/src/contrib/Archive/Matrix/)
+
+From the repository root, set `country` to one of `"denmark"`, `"sweden"`, or
+`"us"` and run the block below. The chunks execute in order and write the
+rendered Markdown beside the R Markdown source.
+
+```r
+country <- "denmark"
+vignette <- file.path("vignettes", paste0("vignette_", country, "_2026"))
+if (country == "us") Sys.setenv(VOTEFRAME_US_FIT = "true")
+knitr::opts_knit$set(root.dir = getwd())
+knitr::opts_chunk$set(error = FALSE)
+knitr::knit(paste0(vignette, ".Rmd"), output = paste0(vignette, ".md"))
+```
+
+### Generated outputs
+
+Each run writes to `data/output/<country> 2026/` using the same layout.
+
+| Directory | Contents |
 | --- | --- |
-| `election_results.csv` | Area-level results from the last general election before the study election |
-| `frame.csv` | Deepest available population stratification frame before extension |
-| `auxiliary_survey.csv` | Processed national election study |
-| `raw/` | Downloaded source extracts and metadata |
-| `processing/` | Recoding code, intermediate files, and candidate rebuilds |
+| `models/` | Fitted models as RDS files |
+| `diagnostics/` | Fit and screening CSVs, benchmark metrics, and original-cell checks |
+| `logs/` | Captured render or run logs and any recovery notes |
+| `raked_frame/` | Calibrated counts for the mean and all 125 draws |
 
-## Sweden 2026
+Denmark writes one `raked_frame/part-01.rds` file. Sweden writes one
+partition per geographic batch, and the US writes one per state and DC.
+The report figures are in each case's matching directory under
+`vignettes/assets/`. Set `VOTEFRAME_PRE_RAKE_STORAGE=keep` to retain the
+optional pre-rake partitions in `extended_frame/`.
+The US example calibrates state presidential and district House margins
+jointly. Its saved national frame occupies about 6.5 GiB. Use
+`VOTEFRAME_US_RAKED_DIR` for a larger disk when needed.
 
-The [Sweden 2026 input guide](data/input/sweden%202026/README.md) documents
-the population frame, municipal Riksdag returns, and the auxiliary survey
-from the Swedish National Election Study 2022 CSES edition, University of
-Gothenburg. [Study citation](https://doi.org/10.5878/2ty4-tk98)
+Denmark and Sweden use 2022 municipal shares of the electoral roll as
+predictors and calibration targets. `No Vote` counts eligible people who
+cast no ballot. `Invalid` includes blank and other rejected ballots in
+official returns. The comparisons use shares among voters for party
+choices and shares of the full population for No Vote.
 
-## Turnout and past vote
+### Reuse completed US fits
 
-Denmark and Sweden use 2022 municipal shares of the official electoral
-roll as covariates and calibration targets. `No Vote` counts people
-who cast no ballot. `Invalid` includes blank and other rejected ballots
-in the official returns. The surveys record reported blank ballots
-under `Invalid`. In vignette comparisons, party shares are conditional
-on casting a ballot and `No Vote` uses the full denominator.
-
-## Denmark 2026
-
-The [Denmark 2026 README](data/input/denmark%202026/README.md) documents the
-population frame, the 2022 election results, and the auxiliary survey. It
-includes the source selections, recoding rules, and rebuild instructions.
-
-[data/output/](data/output/) is the destination for generated modeling files.
-
-The [Denmark 2026 vignette](vignettes/vignette_denmark_2026.md) shows the R code,
-captured results, diagnostic plots, and a preview of the final raked frame.
-Edit the [R Markdown source](vignettes/vignette_denmark_2026.Rmd) and regenerate the
-GitHub view from the repository root with `knitr`. The chunks execute
-the fit, prediction, raking, and diagnostics in order.
-
-```r
-knitr::opts_knit$set(root.dir = getwd())
-knitr::opts_chunk$set(error = FALSE)
-knitr::knit("vignettes/vignette_denmark_2026.Rmd", output = "vignettes/vignette_denmark_2026.md")
-```
-
-## Sweden 2026
-
-The [Sweden 2026 vignette](vignettes/vignette_sweden_2026.md) extends the
-population frame with 2022 Riksdag vote choice. Its
-[R Markdown source](vignettes/vignette_sweden_2026.Rmd) runs the sequential
-fits, municipal checks, raking, and the raking-impact plot. The
-[Sweden input guide](data/input/sweden%202026/README.md) documents the
-population frame, election results, and Swedish National Election Study
-auxiliary survey.
-
-```r
-knitr::opts_knit$set(root.dir = getwd())
-knitr::opts_chunk$set(error = FALSE)
-knitr::knit("vignettes/vignette_sweden_2026.Rmd", output = "vignettes/vignette_sweden_2026.md")
-```
-
-## US 2026
-
-The [US 2026 inputs](data/input/us%202026/README.md) cover 2024 House and
-presidential vote on the 2026 congressional district map.
-The [US 2026 vignette](vignettes/vignette_us_2026.md) extends the frame first
-with presidential vote and then with House vote conditional on it, and
-calibrates both margins jointly. Its [R Markdown source](vignettes/vignette_us_2026.Rmd)
-contains the input preparation and model code.
-
-Regenerate the US walkthrough, including its results and figures, from the
-repository root with `knitr`, `vglmer`, `gKRLS`, and `SQUAREM` installed.
-The full render saves the joint stratification frame in `raked_frame/` under
-`VOTEFRAME_US_OUTPUT_DIR` with the calibrated mean and 125 draws per state
-and DC. The default run output directory is `data/output/us 2026`. Set
-`VOTEFRAME_US_RAKED_DIR` to a directory on a larger disk if needed. To
-render with the saved national models, set `VOTEFRAME_US_OUTPUT_DIR` to
-the fit directory and set `VOTEFRAME_US_REUSE_FITS=true`.
-
-```r
-Sys.setenv(VOTEFRAME_US_FIT = "true")
-knitr::opts_knit$set(root.dir = getwd())
-knitr::opts_chunk$set(error = FALSE)
-knitr::knit("vignettes/vignette_us_2026.Rmd", output = "vignettes/vignette_us_2026.md")
-```
-
-To save or resume the two national fits before rendering, run
-`Rscript "data/output/us 2026/resume.R"` from the repository root.
+For a vignette render that reuses completed fits, set
+`VOTEFRAME_US_REUSE_FITS=true` before knitting. The vignette loads each
+available fit from `models/` and starts a fresh fit for any missing model.
+It saves each completed model before continuing. The default run
+directory is `data/output/us 2026`. Set `VOTEFRAME_US_OUTPUT_DIR` to use
+another run directory. Set `VOTEFRAME_US_RAKE=false` to render only the
+pre-rake benchmark comparison.
 
 ## Fitting the extension variable
 
@@ -504,6 +484,8 @@ can be reordered or subsetted because cell keys match it to the saved draws.
 The collapsed frame keeps just the posterior mean expected count for each
 cell and category. Those means add back to each original cell population.
 
+## Checking and calibrating the extended frame
+
 Use `check_extended_frame(extended_frame, targets, by, extension_variable)`
 to compare expected counts aggregated as shares against target shares on
 the 0–1 scale. Target rows are keyed by the grouping columns in `by`
@@ -521,11 +503,9 @@ frame can be checked with a warning that intervals and coverage are unavailable.
 Use `rake_extended_frame(extended_frame, frame, targets, by, extension_variable)`
 to balance each expected count column to the original joint frame and the
 outcome targets within each group defined by `by`. The solver uses
-`SQUAREM::squarem()` to accelerate the outcome-scaling update, with the
-original cell totals enforced algebraically. On the full Denmark rake,
-the benchmark took 13.4 seconds versus 25.1 seconds for the original
-loop, excluding file I/O. Install `SQUAREM` to run the rake. The
-[mathematical note](raking_method.Rmd) derives the update. Supply target shares
+`SQUAREM::squarem()` to accelerate the outcome-scaling update. Each
+update scales the outcome weights toward their targets and normalizes
+the weights within each original cell to its population. Supply target shares
 or use `target_scale = "count"` for count targets. Supply at least one
 outcome target per group. Untargeted outcomes share the remaining
 population in their group. The function preserves each original cell
@@ -543,13 +523,12 @@ for each.
 Use `plot_raking_changes()` with the aligned extended and raked frames
 to generate one diagnostic figure for the outcome margins left
 unconstrained by a municipality rake. The
-[Denmark vignette](vignettes/vignette_denmark_2026.md#step-10-visualize-changes-on-margins-left-unconstrained)
-defines total variation and explains how to read the figure.
+[Denmark vignette](vignettes/vignette_denmark_2026.md#measure-how-raking-changes-the-estimates)
+explains how to read this figure.
 
 Use `rake_with_diagnostics()` to run the same rake and generate the
 target, original-joint, and unconstrained-margin plots automatically.
-It returns the raked frame and the diagnostics. The Denmark vignette
-uses this entry point.
+It returns the raked frame and the diagnostics.
 
 ### Extending a frame twice
 
