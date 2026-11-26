@@ -59,7 +59,7 @@ validate_prediction_frame <- function(frame, cell_columns, count_variable) {
 
 # Match on cell keys so a reorder or subset of the frame still uses the right draws.
 match_posterior_cells <- function(frame, posterior) {
-  if (!inherits(posterior, "voteframe_posterior")) stop("Supply a posterior probability object.")
+  if (!inherits(posterior, "synthframe_posterior")) stop("Supply a posterior probability object.")
   # Match using the original cell columns even when the supplied frame has extras.
   reference <- posterior$cells
   columns <- names(reference)

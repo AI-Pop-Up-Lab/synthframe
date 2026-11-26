@@ -3,7 +3,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
                                      output_dir = "data/output", allow_missing_levels = TRUE,
                                      new_fixed_sd = NULL, write_files = TRUE,
                                      draw_state = NULL, batch_size = nrow(frame), progress = NULL) {
-  if (!inherits(fit, "voteframe_sequential_logit")) stop("Supply a sequential logit fit.")
+  if (!inherits(fit, "synthframe_sequential_logit")) stop("Supply a sequential logit fit.")
   # Use the fit's population frame unless the caller supplies a different one.
   if (is.null(frame)) stop("Supply a prediction frame or pass frame when fitting the model.")
   frame <- as_plain_frame(frame)
@@ -104,10 +104,10 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
                               new_fixed_sd = new_fixed_sd,
                               posterior_file = if (write_files) paths[1L],
                               extended_frame_file = if (write_files) paths[2L]),
-                         class = "voteframe_posterior")
+                         class = "synthframe_posterior")
   if (!write_files) return(posterior)
   # Finish both files before replacing the previous exports.
-  temporary <- tempfile(".voteframe-stage-", tmpdir = dirname(paths), fileext = c(".rds", ".csv"))
+  temporary <- tempfile(".synthframe-stage-", tmpdir = dirname(paths), fileext = c(".rds", ".csv"))
   on.exit(unlink(temporary), add = TRUE)
   saveRDS(posterior, temporary[1L])
   # Write the full frame in blocks so a second copy of all draws stays off the heap.
@@ -135,7 +135,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
 # Serialize the two renames. Only the RDS needs a backup: the CSV stays at its
 # old path until the last rename succeeds. A hard link avoids copying a large RDS.
 publish_prediction_exports <- function(staged, paths) {
-  lock <- file.path(dirname(paths[1L]), ".voteframe-publish")
+  lock <- file.path(dirname(paths[1L]), ".synthframe-publish")
   if (!dir.create(lock, showWarnings = FALSE)) {
     stop("Cannot acquire the prediction export lock at ", sQuote(lock),
          ". Check for an active or interrupted export before retrying.")
@@ -169,7 +169,7 @@ publish_prediction_exports <- function(staged, paths) {
   })
 }
 
-# Trace the solver's input columns back through VoteFrame's generated terms.
+# Trace the solver's input columns back through SynthFrame's generated terms.
 stage_prediction_columns <- function(stage) {
   model <- stage$fit
   required <- c(model$formula$interpret_gam$pred.names, names(model$reduced_fixed_levels),

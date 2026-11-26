@@ -3,7 +3,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                                  area_covariates = NULL, no_vote = NULL,
                                  depth = 1L, splines = TRUE, predictors = NULL,
                                  control = NULL, log_file = tempfile(
-                                   "voteframe-fit-", tmpdir = ".", fileext = ".csv"),
+                                   "synthframe-fit-", tmpdir = ".", fileext = ".csv"),
                                  frame = NULL, outcome_order = NULL,
                                  no_interactions = character(),
                                  tolerance_parameters = NULL, tolerance_elbo = NULL,
@@ -301,7 +301,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
                  extension_variable = extension_variable, area_covariates = area_covariates,
                  frame = frame, no_interactions = no_interactions,
                  fit_log = fit_log, log_file = normalizePath(log_file)),
-            class = "voteframe_sequential_logit")
+            class = "synthframe_sequential_logit")
 }
 
 # Select the deepest candidate supported by the stage's eligible respondents.

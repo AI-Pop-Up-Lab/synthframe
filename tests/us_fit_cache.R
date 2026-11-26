@@ -43,7 +43,7 @@ check_us_fit_cache <- function() {
                                                       readRDS(path)$us_fit_fingerprint))
   writeLines("incomplete", path)
   repaired <- cache()
-  stopifnot(inherits(repaired, "voteframe_sequential_logit"),
+  stopifnot(inherits(repaired, "synthframe_sequential_logit"),
             identical(repaired$us_fit_fingerprint, migrated$us_fit_fingerprint))
 
   # An unsuccessful refit leaves the previous complete model available.

@@ -140,7 +140,7 @@ prepare_sequential_fit <- function(design) {
       name <- paste0(".vf_knots_", i)
       formula_env[[name]] <- structure(
         list(term = term, knots = stats::quantile(values, probs, names = FALSE)),
-        class = "voteframe_tpf")
+        class = "synthframe_tpf")
       smooth[i] <- paste0("v_s(", term, ', type = "randwalk", knots = ', name,
                           ", by = ", masked_by, ", by_re = FALSE, outer_okay = TRUE)")
     } else {
@@ -188,7 +188,7 @@ mean_varying_slope_support <- function(values, groups, trials) {
 }
 
 register_sequential_spline_basis <- function() {
-  registerS3method("Predict.matrix", "voteframe_tpf", predict_sequential_tpf,
+  registerS3method("Predict.matrix", "synthframe_tpf", predict_sequential_tpf,
                    envir = asNamespace("mgcv"))
 }
 

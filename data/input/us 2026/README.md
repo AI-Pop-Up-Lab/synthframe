@@ -11,7 +11,7 @@ Replacement copies are available in the [upstream handoff directory at `b302fb4`
 To rebuild them, run `Rscript 01_frame/scripts/10_prepare_handoff.R` from
 the upstream repository root with the saved outputs from Steps 05–07 and 09.
 
-From the VoteFrame repository root, verify the three input files against
+From the SynthFrame repository root, verify the three input files against
 the SHA-256 checksums for this handoff.
 
 ```sh
@@ -65,7 +65,7 @@ served in Congress on November 4, 2024, including service in another
 district. This date applies to all three scenarios. Both choice-level
 ballot fields are blank for No Vote.
 
-## Read in VoteFrame
+## Read in SynthFrame
 
 The [US 2026 vignette](../../../vignettes/vignette_us_2026.md) shows how to read
 the three original files and prepare their keys, stage predictors, and

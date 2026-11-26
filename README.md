@@ -1,6 +1,6 @@
-# VoteFrame
+# SynthFrame
 
-VoteFrame extends population stratification frames with categorical survey outcomes.
+SynthFrame extends population stratification frames with categorical survey outcomes.
 
 $$
 \text{sequential multilevel fits} \longrightarrow
@@ -11,7 +11,7 @@ $$
 After installing dependencies or editing code, run `Rscript --vanilla tests/integration.R`
 from the repository root before a long run. It fits a small model, extends a
 synthetic frame, and checks both raking targets and original population totals.
-Install `data.table` to include the keyed-table input checks. VoteFrame accepts
+Install `data.table` to include the keyed-table input checks. SynthFrame accepts
 both base data frames and `data.table` inputs for fitting, prediction and raking.
 The Markdown reports in Table 1 can be read directly. Run their R Markdown
 sources to generate results with the current code.
@@ -56,14 +56,14 @@ rendered Markdown beside the R Markdown source. For the US, the default is
 a pre-fit report covering the inputs and model designs. On a
 memory-limited Codespace, read the completed national report and import the
 saved outputs. To run the full US analysis on a machine with sufficient
-memory and disk space, set `VOTEFRAME_US_FIT=true` before running Snippet 2.
+memory and disk space, set `SYNTHFRAME_US_FIT=true` before running Snippet 2.
 
 *Snippet 2. Render a case study from the repository root.*
 
 ```r
 country <- "denmark"
 vignette <- file.path("vignettes", paste0("vignette_", country, "_2026"))
-prefit <- country == "us" && !identical(Sys.getenv("VOTEFRAME_US_FIT"), "true")
+prefit <- country == "us" && !identical(Sys.getenv("SYNTHFRAME_US_FIT"), "true")
 report <- paste0(vignette, if (prefit) "_prefit.md" else ".md")
 knitr::opts_knit$set(root.dir = getwd())
 knitr::opts_chunk$set(error = FALSE)
@@ -101,18 +101,18 @@ The raking-change plots use the whole eligible population for every choice.
 
 Each render updates the figures it produces under the matching
 `vignettes/assets/` directory, including when you change the data output directory.
-Set `VOTEFRAME_PRE_RAKE_STORAGE=keep` to retain `extended_frame/` partitions and
-`VOTEFRAME_US_RAKED_DIR` to put the US raked frame on another disk.
+Set `SYNTHFRAME_PRE_RAKE_STORAGE=keep` to retain `extended_frame/` partitions and
+`SYNTHFRAME_US_RAKED_DIR` to put the US raked frame on another disk.
 
 ### Reuse completed US fits
 
 The US run saves each completed model under `data/output/us 2026/models/` as
 `pres_fit.rds` or `house_fit.rds`. To reuse a fit on a later full run, set
-both `VOTEFRAME_US_FIT=true` and `VOTEFRAME_US_REUSE_FITS=true` before
+both `SYNTHFRAME_US_FIT=true` and `SYNTHFRAME_US_REUSE_FITS=true` before
 knitting. Each model is checked against
 its inputs, settings and fitting code. A missing, unreadable, unverified or
-mismatched fit triggers a fresh fit for that model. Set `VOTEFRAME_US_OUTPUT_DIR`
-to use another run directory or `VOTEFRAME_US_RAKE=false` to render only the
+mismatched fit triggers a fresh fit for that model. Set `SYNTHFRAME_US_OUTPUT_DIR`
+to use another run directory or `SYNTHFRAME_US_RAKE=false` to render only the
 pre-rake benchmark comparison. When transferring a completed run, copy the
 diagnostics alongside the models. Each saved fit contains its stage log in
 `fit$fit_log` and its producer versions in `fit$us_fit_runtime`. The stored
@@ -212,9 +212,9 @@ also combines all of its raked blocks in memory to write a single file.
 
 | Vignette setting | Behavior |
 | --- | --- |
-| `VOTEFRAME_PRE_RAKE_STORAGE` | `memory`, `temporary`, `keep`, or `auto` (default). Auto compares estimated size to available RAM, including visible Linux container limits. It uses temporary disk when RAM is tight or unknown. |
-| `VOTEFRAME_PRE_RAKE_DIR` | Override storage location. Defaults are R's temporary directory or `extended_frame/` in the output directory for kept files. Disk modes check estimated free space where `df` is available. |
-| `VOTEFRAME_PARENT_AREA` / `VOTEFRAME_AREAS_PER_BATCH` | Choose a parent column / a fixed number of lower-level areas per batch. Default without a usable parent is 10. Denmark and Sweden batch by constituency, the US by state or DC. |
+| `SYNTHFRAME_PRE_RAKE_STORAGE` | `memory`, `temporary`, `keep`, or `auto` (default). Auto compares estimated size to available RAM, including visible Linux container limits. It uses temporary disk when RAM is tight or unknown. |
+| `SYNTHFRAME_PRE_RAKE_DIR` | Override storage location. Defaults are R's temporary directory or `extended_frame/` in the output directory for kept files. Disk modes check estimated free space where `df` is available. |
+| `SYNTHFRAME_PARENT_AREA` / `SYNTHFRAME_AREAS_PER_BATCH` | Choose a parent column / a fixed number of lower-level areas per batch. Default without a usable parent is 10. Denmark and Sweden batch by constituency, the US by state or DC. |
 
 **Batching.** MasterP and `rake_joint_extended_frame()` accept `area_variable`,
 `parent_area_variable`, and `areas_per_batch`. MasterP infers the lower-level area
@@ -378,7 +378,7 @@ effects and interactions. [Goplerud, supplement §A.4](https://mgoplerud.com/pap
    highest interaction order, remove the one giving the lowest $`\kappa`$ after
    hierarchy pruning. Ties remove the later formula column. The rule uses
    predictor variation alone. Belsley, Kuh, and Welsch use about 30 alongside
-   variance-decomposition proportions for linear regression. VoteFrame uses 30
+   variance-decomposition proportions for linear regression. SynthFrame uses 30
    as a logistic pre-fit pruning choice and computes condition indices alone.
    [SAS/STAT guide](https://support.sas.com/documentation/cdl/en/sgug/59902/HTML/default/fit_sect29.htm)
 4. **Hierarchy throughout.** For an interaction with predictor set $`S`$, retain
@@ -414,10 +414,10 @@ $`\lfloor\min(\#\text{distinct values}/4,35)\rfloor`$ columns. Joint kernels cap
 default sketch width at the aggregated cell count. Each by-smooth counts a global
 basis and one per observed group.
 
-**Solver.** VoteFrame fits every stage with `vglmer`. An area random intercept
+**Solver.** SynthFrame fits every stage with `vglmer`. An area random intercept
 requires at least two observed areas. If a stage has no eligible random effect
 or spline after screening, fitting stops and records the reason in the stage
-log. VoteFrame defaults accept
+log. SynthFrame defaults accept
 $`\max|\Delta\theta|<0.01`$ for tracked variational parameters or
 $`0<\Delta\mathrm{ELBO}<10^{-5}`$. A supplied `vglmer_control()` has its own defaults.
 The fitter's `tolerance_parameters` and `tolerance_elbo` override the corresponding

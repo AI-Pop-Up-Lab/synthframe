@@ -77,7 +77,7 @@ pre_rake_storage <- function(mode = "auto", directory = NULL, bytes = 0,
 
 
 vignette_pre_rake_storage <- function(out, bytes, ...) {
-  mode <- Sys.getenv("VOTEFRAME_PRE_RAKE_STORAGE", "auto")
+  mode <- Sys.getenv("SYNTHFRAME_PRE_RAKE_STORAGE", "auto")
   default_directory <- if (mode == "keep") file.path(out, "extended_frame") else tempdir()
-  pre_rake_storage(mode, Sys.getenv("VOTEFRAME_PRE_RAKE_DIR", default_directory), bytes, ...)
+  pre_rake_storage(mode, Sys.getenv("SYNTHFRAME_PRE_RAKE_DIR", default_directory), bytes, ...)
 }

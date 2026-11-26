@@ -24,12 +24,12 @@ us_fit_fingerprint <- function(fit_args, seed) {
 
 # The US case study can resume each national fit independently.
 load_or_fit_us_model <- function(path, fit_args, seed,
-                                 reuse = identical(Sys.getenv("VOTEFRAME_US_REUSE_FITS"), "true")) {
+                                 reuse = identical(Sys.getenv("SYNTHFRAME_US_REUSE_FITS"), "true")) {
   fingerprint <- us_fit_fingerprint(fit_args, seed)
   if (reuse && file.exists(path)) {
     loadNamespace("gKRLS")
     saved <- tryCatch(readRDS(path), error = function(e) NULL)
-    if (inherits(saved, "voteframe_sequential_logit") &&
+    if (inherits(saved, "synthframe_sequential_logit") &&
         identical(saved$extension_variable, fit_args$extension_variable) &&
         identical(names(saved$stages), utils::head(saved$outcome_order, -1L)) &&
         identical(saved$us_fit_fingerprint, fingerprint)) {

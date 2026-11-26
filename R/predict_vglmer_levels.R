@@ -3,7 +3,7 @@
 predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
                                   allow_missing_levels = TRUE, new_fixed_sd = NULL,
                                   draw_state = NULL) {
-  if (!inherits(fit, c("vglmer", "voteframe_fixed_logit"))) stop("Supply a fitted stage.")
+  if (!inherits(fit, c("vglmer", "synthframe_fixed_logit"))) stop("Supply a fitted stage.")
   if (!is.numeric(n_draws) || length(n_draws) != 1L || !is.finite(n_draws) ||
       n_draws < 0 || n_draws != floor(n_draws) || n_draws > .Machine$integer.max) {
     stop("n_draws must be a nonnegative integer.")
@@ -36,7 +36,7 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
     draw_state$coefficients
   } else if (n_draws == 0) {
     t(as.matrix(rbind(fit$beta$mean, fit$alpha$mean)))
-  } else if (inherits(fit, "voteframe_fixed_logit")) {
+  } else if (inherits(fit, "synthframe_fixed_logit")) {
     # Models saved by earlier versions can contain a fitted fixed-only stage.
     draws <- mvtnorm::rmvnorm(n_draws, as.vector(fit$beta$mean), fit$beta$covariance)
     colnames(draws) <- fixed_names
@@ -277,7 +277,7 @@ build_prediction_random_blocks <- function(fit, newdata) {
     # The fitted basis builder lives inside vglmer's namespace.
     build_spline <- utils::getFromNamespace("vglmer_build_spline", "vglmer")
     if (any(vapply(fit$internal_parameters$spline$attr,
-                   function(x) inherits(x$knots, "voteframe_tpf"), logical(1)))) {
+                   function(x) inherits(x$knots, "synthframe_tpf"), logical(1)))) {
       register_sequential_spline_basis()
     }
     for (i in seq_along(smooths)) {

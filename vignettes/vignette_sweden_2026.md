@@ -23,12 +23,12 @@ survey <- read.csv(file.path(country, "auxiliary_survey.csv"), fileEncoding = "U
 frame <- read.csv(file.path(country, "frame.csv"), fileEncoding = "UTF-8")
 election <- read.csv(file.path(country, "election_results.csv"), fileEncoding = "UTF-8")
 area <- "municipality"
-parent_area <- Sys.getenv("VOTEFRAME_PARENT_AREA", "constituency")
+parent_area <- Sys.getenv("SYNTHFRAME_PARENT_AREA", "constituency")
 areas_per_batch <- vignette_areas_per_batch()
 outcome <- "vote_choice_2022"
 no_vote <- "No Vote"
 predictors <- c(area, "sex", "age", "education")
-out <- Sys.getenv("VOTEFRAME_SWEDEN_OUTPUT_DIR",
+out <- Sys.getenv("SYNTHFRAME_SWEDEN_OUTPUT_DIR",
                   unset = file.path("data", "output", basename(country)))
 outputs <- case_study_outputs(out)
 figure_dir <- file.path("vignettes", "assets", "sweden-2026")
@@ -284,7 +284,7 @@ for (i in seq_along(frame_rows)) {
 The final raked frame is stored as RDS partitions under
 `data/output/sweden 2026/raked_frame/`. The pre-rake partitions use memory or temporary disk storage according to
 available memory. Temporary partitions are removed after the raked output
-and diagnostics finish. Set `VOTEFRAME_PRE_RAKE_STORAGE=keep` to save all
+and diagnostics finish. Set `SYNTHFRAME_PRE_RAKE_STORAGE=keep` to save all
 pre-rake partitions. Use the saved
 `models/fit.rds` and the prediction chunk to recreate them.
 

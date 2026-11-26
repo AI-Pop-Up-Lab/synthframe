@@ -1,7 +1,7 @@
 # Run from the repository root with the vignette's R dependencies installed.
 main <- function() {
   for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
-  scratch <- tempfile("voteframe-integration-")
+  scratch <- tempfile("synthframe-integration-")
   dir.create(scratch)
   on.exit(unlink(scratch, recursive = TRUE), add = TRUE)
   set.seed(2026)
@@ -141,6 +141,6 @@ main <- function() {
   check_prediction_design(scratch)
   check_stage_log()
 
-  cat("VoteFrame integration checks passed.\n")
+  cat("SynthFrame integration checks passed.\n")
 }
 main()

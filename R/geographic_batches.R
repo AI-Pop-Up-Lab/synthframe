@@ -66,7 +66,7 @@ geographic_batches <- function(frame, area_variable, parent_area_variable = NULL
 }
 
 vignette_areas_per_batch <- function() {
-  value <- Sys.getenv("VOTEFRAME_AREAS_PER_BATCH")
+  value <- Sys.getenv("SYNTHFRAME_AREAS_PER_BATCH")
   if (nzchar(value)) suppressWarnings(as.numeric(value))
 }
 

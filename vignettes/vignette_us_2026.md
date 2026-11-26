@@ -21,9 +21,9 @@ zero calibrated counts are still included.*
 All three inputs use the 2026 district map (CD120), including DC. The
 [US input guide](../data/input/us%202026/README.md) records the upstream
 commit, checksums, and the rules for observed and modeled House returns.
-Run the chunks from the VoteFrame repository root. The [case-study setup
+Run the chunks from the SynthFrame repository root. The [case-study setup
 instructions](../README.md#reproduce-a-case-study) list the R packages and
-show how to knit the report. VoteFrame screens fixed columns and random-effect
+show how to knit the report. SynthFrame screens fixed columns and random-effect
 levels before calling `vglmer`.
 
 ## 1. Read the survey, district data, and population frame
@@ -39,7 +39,7 @@ modeled scenarios. Agreement with these benchmarks is a calibration check.
 
 
 ``` r
-# Load VoteFrame from this checkout so the audit uses the same functions as the fit.
+# Load SynthFrame from this checkout so the audit uses the same functions as the fit.
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
 
 # Declare the shared input path, join keys, and recorded outcomes.
@@ -49,7 +49,7 @@ demographics <- c("age_cat", "gender_cat", "race_cat", "hispanic_cat", "educ_cat
 pres <- "vote_pres_2024"
 house <- "vote_house_2024"
 # Keep all districts in a state together unless the caller overrides the geography.
-parent_area <- Sys.getenv("VOTEFRAME_PARENT_AREA", "state_fips")
+parent_area <- Sys.getenv("SYNTHFRAME_PARENT_AREA", "state_fips")
 areas_per_batch <- vignette_areas_per_batch()
 # The files use choices as their category order. The model uses vote_order
 # to define its three regressions. The final choice receives the remainder.
@@ -64,7 +64,7 @@ election <- read.csv(file.path(country, "district_election_inputs_cd120.csv"),
                      colClasses = setNames(rep("character", length(fips)), fips),
                      na.strings = "")
 
-# VoteFrame uses one area ID. A district number alone can repeat across states.
+# SynthFrame uses one area ID. A district number alone can repeat across states.
 district_id <- function(data) {
   id <- paste(data$state_fips, data$district_fips, sep = "-")
   # Preserve missing geography so the survey complete-case check can catch it.
@@ -268,7 +268,7 @@ preflight <- lapply(model_specs, prepare_model)
    lowest condition number after enforcing hierarchy. Belsley, Kuh,
    and Welsch use 30 as an inspection flag in
    linear regression, alongside variance-decomposition proportions.
-   VoteFrame uses it as an automatic cutoff for its pre-fit logistic
+   SynthFrame uses it as an automatic cutoff for its pre-fit logistic
    design. The plots below show condition indices. [SAS guide to the
    Belsley diagnostic](https://support.sas.com/documentation/cdl/en/sgug/59902/HTML/default/fit_sect29.htm)
 4. **Enforce hierarchy and check grouping redundancy.** Drop descendants
@@ -312,7 +312,7 @@ back. Survey cells counts distinct eligible predictor rows after
 aggregation. Respondents counts the people represented by those rows.*
 
 † *Spline coefficients added back.* After all fixed and random terms have
-been screened for a candidate depth, VoteFrame checks which eligible
+been screened for a candidate depth, SynthFrame checks which eligible
 overall curves are still supplied by a grouped spline. If no retained
 grouped spline supplies an eligible overall curve, it fits that curve on
 its own. This check runs once per candidate depth, after pruning. No
@@ -528,11 +528,11 @@ a particular predictor or show the order in which we removed terms.
 ## 7. Run the national models
 
 The national run uses 125 posterior draws. Set
-`VOTEFRAME_US_FIT=true` to include the model results and predictions.
+`SYNTHFRAME_US_FIT=true` to include the model results and predictions.
 A fresh full run fits both national models from the three tracked inputs,
 then predicts and calibrates the joint frame. On a memory-limited Codespace,
 you can inspect the completed Markdown report and its figures directly or run
-the pre-fit checks. For a pre-fit render, set `VOTEFRAME_US_FIT=false`
+the pre-fit checks. For a pre-fit render, set `SYNTHFRAME_US_FIT=false`
 immediately before `knitr::knit()` and use
 `output = "vignettes/vignette_us_2026_prefit.md"` to preserve the full report.
 The pre-fit render regenerates the two pre-fit figures in
@@ -540,8 +540,8 @@ The pre-fit render regenerates the two pre-fit figures in
 
 To use fits produced on another machine, place `pres_fit.rds` and
 `house_fit.rds` under `data/output/us 2026/models/`, or in the `models/`
-subdirectory of your `VOTEFRAME_US_OUTPUT_DIR`. Set both
-`VOTEFRAME_US_FIT=true` and `VOTEFRAME_US_REUSE_FITS=true` before knitting.
+subdirectory of your `SYNTHFRAME_US_OUTPUT_DIR`. Set both
+`SYNTHFRAME_US_FIT=true` and `SYNTHFRAME_US_REUSE_FITS=true` before knitting.
 The vignette reuses each model whose inputs, settings and fitting code match.
 A missing or unverified file starts a fresh fit for that model. Reusing the
 fits still runs prediction and, by default, calibration.
@@ -690,7 +690,7 @@ survey-support cutoff.
 
 ``` r
 # Use the shared country output folder unless the caller specifies a different path.
-out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
+out <- Sys.getenv("SYNTHFRAME_US_OUTPUT_DIR",
                   unset = file.path("data", "output", basename(country)))
 outputs <- case_study_outputs(out)
 requested_depth <- 2L
@@ -1097,14 +1097,14 @@ predict_house_state <- function(incoming) {
 The full run scores the pre-rake predictions, calibrates the state
 presidential and district House targets, and saves the joint stratification
 frame under `raked_frame/` in the run's output directory. Set
-`VOTEFRAME_US_RAKE=false` for a pre-rake benchmark-only run. Prediction
+`SYNTHFRAME_US_RAKE=false` for a pre-rake benchmark-only run. Prediction
 and calibration use state or DC batches by default. Statewide
 presidential targets keep every district in a state together, even when
 an override requests smaller batches.
 The current state's pre-rake frame uses memory or temporary disk
-according to available memory. Set `VOTEFRAME_PRE_RAKE_STORAGE=keep`
+according to available memory. Set `SYNTHFRAME_PRE_RAKE_STORAGE=keep`
 to save all joint pre-rake partitions.
-Set `VOTEFRAME_US_RAKED_DIR` to use a different partition directory
+Set `SYNTHFRAME_US_RAKED_DIR` to use a different partition directory
 when the fit output directory has limited free space.
 
 *Snippet 11. Predict by state, jointly calibrate both vote margins, and save each verified partition.*
@@ -1112,8 +1112,8 @@ when the fit output directory has limited free space.
 ``` r
 # Apply the same tolerance to election margins and mother-frame cells.
 rake_tolerance <- 0.00000001
-run_rake <- identical(Sys.getenv("VOTEFRAME_US_RAKE", unset = "true"), "true")
-raked_dir <- Sys.getenv("VOTEFRAME_US_RAKED_DIR", unset = outputs$raked_frame)
+run_rake <- identical(Sys.getenv("SYNTHFRAME_US_RAKE", unset = "true"), "true")
+raked_dir <- Sys.getenv("SYNTHFRAME_US_RAKED_DIR", unset = outputs$raked_frame)
 if (run_rake) dir.create(raked_dir, recursive = TRUE, showWarnings = FALSE)
 summary_dir <- file.path(outputs$diagnostics, "pre_rake_totals")
 dir.create(summary_dir, showWarnings = FALSE)
@@ -1122,7 +1122,7 @@ count_columns <- c("N", paste0("N_draw_", seq_len(n_draws)))
 # Estimate the storage requirement before allocating any predicted partitions.
 state_bytes <- pre_rake_frame_bytes(lengths(states) * length(choices)^2,
                                     n_draws, ncol(frame) + 1L)
-pre_rake_mode <- Sys.getenv("VOTEFRAME_PRE_RAKE_STORAGE", "auto")
+pre_rake_mode <- Sys.getenv("SYNTHFRAME_PRE_RAKE_STORAGE", "auto")
 storage <- vignette_pre_rake_storage(
   out, if (pre_rake_mode == "keep") sum(state_bytes) else max(state_bytes),
   final_directory = if (run_rake) raked_dir else out,

@@ -30,7 +30,7 @@ check_prediction_exports <- function(scratch) {
   # makes the second OS rename fail after the first has replaced the public RDS.
   remove_csv <- function(done, total, detail) {
     if (done == total && startsWith(detail, "exported cells ")) {
-      staged <- list.files(directory, pattern = "^\\.voteframe-stage-.*\\.csv$", all.files = TRUE,
+      staged <- list.files(directory, pattern = "^\\.synthframe-stage-.*\\.csv$", all.files = TRUE,
                            full.names = TRUE)
       stopifnot(length(staged) == 1L, file.remove(staged))
     }

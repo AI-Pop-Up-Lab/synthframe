@@ -21,26 +21,26 @@ process_area_covariates <- function(area_data, area_variable,
   }
   # Tag the tables so the fitter can distinguish them from ready-to-use matrices.
   if (multiple) {
-    totals <- structure(totals, class = "voteframe_area_covariate_list")
+    totals <- structure(totals, class = "synthframe_area_covariate_list")
   } else {
-    totals <- structure(totals[[1L]], class = c("voteframe_area_covariate", "matrix", "array"))
+    totals <- structure(totals[[1L]], class = c("synthframe_area_covariate", "matrix", "array"))
   }
   # The fitter can supply the outcome order later.
   if (is.null(outcome_order)) return(totals)
   shares <- conditional_area_shares(totals, outcome_order)
   # Preserve the denominators' source if fitting later changes the stage order.
-  attr(shares, "voteframe_share_source") <- list(order = as.character(outcome_order),
+  attr(shares, "synthframe_share_source") <- list(order = as.character(outcome_order),
                                                  totals = totals)
   shares
 }
 
 resolve_stage_area_covariates <- function(area_covariates, outcomes) {
-  if (inherits(area_covariates, c("voteframe_area_covariate", "voteframe_area_covariate_list"))) {
+  if (inherits(area_covariates, c("synthframe_area_covariate", "synthframe_area_covariate_list"))) {
     return(conditional_area_shares(area_covariates, outcomes))
   }
-  source <- attr(area_covariates, "voteframe_share_source", exact = TRUE)
+  source <- attr(area_covariates, "synthframe_share_source", exact = TRUE)
   if (is.null(source)) return(area_covariates)
-  attr(area_covariates, "voteframe_share_source") <- NULL
+  attr(area_covariates, "synthframe_share_source") <- NULL
   if (identical(source$order, outcomes)) return(area_covariates)
 
   if (!identical(area_covariates, conditional_area_shares(source$totals, source$order))) {
@@ -95,7 +95,7 @@ area_outcome_values <- function(area_data, area_variable, outcome_variable, valu
 }
 
 conditional_area_shares <- function(totals, outcome_order) {
-  datasets <- if (inherits(totals, "voteframe_area_covariate_list")) {
+  datasets <- if (inherits(totals, "synthframe_area_covariate_list")) {
     totals
   } else {
     list(area_covariate = totals)
