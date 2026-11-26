@@ -66,11 +66,10 @@ plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file
 
 # Return weighted sums so groups from disjoint municipality batches can be combined.
 conditional_raking_summary <- function(extended, raked, joint, group, population,
-                                       outcome_index, outcomes, no_vote) {
+                                       outcome_index, outcomes, no_vote, variation_on_cvap = FALSE) {
   voted <- outcomes[outcome_index] != no_vote
   weights <- population[group]
-  conditional_shares <- function(counts) {
-    totals <- as.matrix(rowsum(counts, joint, reorder = FALSE))
+  conditional_shares <- function(totals) {
     by_group <- rowsum(totals[voted, , drop = FALSE], group[voted])
     turnout <- matrix(0, length(population), ncol(totals))
     turnout[as.integer(rownames(by_group)), ] <- by_group
@@ -79,8 +78,14 @@ conditional_raking_summary <- function(extended, raked, joint, group, population
     totals[denominator <= 0] <- NA_real_
     totals / denominator
   }
-  delta <- conditional_shares(raked) - conditional_shares(extended)
-  variation <- vapply(seq_len(ncol(delta)), function(column) {
+  before <- as.matrix(rowsum(extended, joint, reorder = FALSE))
+  after <- as.matrix(rowsum(raked, joint, reorder = FALSE))
+  delta <- conditional_shares(after) - conditional_shares(before)
+  variation <- if (variation_on_cvap) {
+    # CVAP-weighted share changes simplify to count changes divided by total CVAP.
+    rbind(change = 50 * colSums(abs(after - before)),
+          population = rep(sum(population), ncol(delta)))
+  } else vapply(seq_len(ncol(delta)), function(column) {
     valid <- voted & is.finite(delta[, column])
     c(change = 50 * sum(abs(delta[valid, column]) * weights[valid]),
       population = sum(population[unique(group[valid])]))
@@ -108,7 +113,8 @@ plot_partitioned_raking_changes <- function(extended_paths, raked_paths, frame, 
 }
 
 # Accumulate one partition at a time while both versions of its counts are available.
-partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, groupings = NULL) {
+partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, groupings = NULL,
+                                               variation_on_cvap = FALSE) {
   cells <- setdiff(names(frame), "N")
   if (is.null(groupings)) {
     groupings <- unlist(lapply(seq_along(cells), function(size) {
@@ -132,7 +138,7 @@ partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, gro
     first <- !duplicated(joint)
     columns <- c("N", extended_frame_draw_columns(extended, "N"))
     conditional_raking_summary(extended[columns], raked[columns], joint, group[first],
-                               population, outcome_index[first], outcomes, no_vote)
+                               population, outcome_index[first], outcomes, no_vote, variation_on_cvap)
   }
   national_cells <- unique(frame[demographic])
   national_keys <- frame_cell_keys(national_cells, national_cells)
@@ -179,8 +185,9 @@ partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, gro
     labels <- vapply(c(national_groups, local_groups), function(by) {
       paste(gsub("_", " ", by, fixed = TRUE), collapse = " × ")
     }, character(1))
-    draw_raking_change_panels(c(national_summaries, local), labels, outcomes,
-                              plot_file, "Total variation among voters")
+    title <- if (variation_on_cvap) "Total variation across all citizen adults" else
+      "Total variation among voters"
+    draw_raking_change_panels(c(national_summaries, local), labels, outcomes, plot_file, title)
     invisible(plot_file)
   }
   list(add = add, plot = plot)

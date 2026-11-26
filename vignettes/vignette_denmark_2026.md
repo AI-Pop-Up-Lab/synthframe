@@ -10,6 +10,8 @@ source data and outcome recodes.
 ## Read and inspect the inputs
 
 
+*Snippet 1. Read the population frame, survey, and election results and check their keys.*
+
 ``` r
 knitr::opts_chunk$set(error = FALSE)
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
@@ -41,6 +43,8 @@ cells <- aggregate_extension_survey(
 ## Warning: Removed 221 incomplete survey rows before aggregation.
 ```
 
+*Snippet 2. Report how many respondents and population cells enter the example.*
+
 ``` r
 c(survey_rows = nrow(survey), complete_respondents = sum(cells$counts),
   omitted_respondents = cells$omitted, population_cells = nrow(frame),
@@ -62,6 +66,8 @@ share for its own outcome. The first stage models nonvoting. Later
 stages use respondents whose choices remain after removing the earlier
 outcomes. The final choice receives the remaining probability.
 
+
+*Snippet 3. Build municipality-level predictors from the earlier election.*
 
 ``` r
 historical <- process_area_covariates(election, area, outcome, "share_eligible")
@@ -94,6 +100,8 @@ at the iteration cap, so inspect the solver status before interpreting
 its results.
 
 
+*Snippet 4. Fit and save the sequential vote-choice stages.*
+
 ``` r
 requested_depth <- 4L
 minimum_support <- 10L
@@ -114,6 +122,8 @@ fit <- withCallingHandlers(
 saveRDS(fit, file.path(out, "fit.rds"))
 ```
 
+
+*Snippet 5. Display the selected designs and convergence results for each fitted stage.*
 
 ``` r
 fields <- c("outcome", "observations", "fitted_depth", "retained_order",
@@ -139,6 +149,8 @@ knitr::kable(fit$fit_log[fields])
 |Æ: Danmarksdemokraterne         |          190|            1|              1|                            39|             0|                    81|                         0|              0|              4.407712|              16|            0.0086571|returned |
 |Invalid                         |           39|            4|              2|                            28|             0|                    39|                       741|           2688|             16.719593|              11|            0.0075036|returned |
 
+*Table 1. Fitted stages, with sample sizes, retained design, screened coefficients, and convergence diagnostics.*
+
 The Invalid stage accepted candidate depth 4. Its largest retained terms
 combine gender and 2022 vote share, so its retained order is 2.
 
@@ -163,6 +175,8 @@ measures agreement with the calibration targets. Prediction and raking
 batch by constituency by default, keeping each municipality intact.
 
 
+*Snippet 6. Predict vote choice in geographic batches and expand population counts into choice categories.*
+
 ``` r
 n_draws <- 125L
 frame_rows <- geographic_batches(frame, area, parent_area, areas_per_batch)
@@ -186,6 +200,8 @@ extended_parts <- lapply(seq_along(frame_rows), function(i) {
 rm(draw_state)
 ```
 
+
+*Snippet 7. Pool the predicted counts by municipality and compare their shares with the targets.*
 
 ``` r
 figure <- function(name) file.path(figure_dir, paste0(name, ".png"))
@@ -222,11 +238,11 @@ knitr::kable(before$metrics, digits = 4)
 |Invalid                         |   0.0477|  0.3672|   0.7012|        100.0000|
 |Other                           |   0.3555|  0.3925|   0.0859|         97.9592|
 
-``` r
-knitr::include_graphics(sub("^vignettes/", "", figure("municipal-before")), error = FALSE)
-```
+*Table 2. Before-rake municipal vote-share errors and 90% interval coverage against the election benchmarks.*
 
-![plot of chunk before-rake](assets/denmark-2026/municipal-before.png)
+![Before raking, predicted municipal shares and 90% draw intervals against the election benchmarks.](assets/denmark-2026/municipal-before.png)
+
+*Figure 1. Before raking, predicted municipal shares and 90% draw intervals against the election benchmarks.*
 
 ## Rake to the municipal targets
 
@@ -235,6 +251,8 @@ reallocates counts across vote choices within each demographic cell,
 preserving that cell's total. The same constraints apply to the mean
 counts and each posterior draw.
 
+
+*Snippet 8. Calibrate each municipality’s vote totals while preserving the original population cells.*
 
 ``` r
 rake_tolerance <- 1e-8
@@ -267,6 +285,8 @@ to save it. Use the saved `fit.rds` and the prediction chunk to recreate it.
 denominators and checks every original joint demographic cell's total.
 
 
+*Snippet 9. Check the calibrated election margins and compare counts with the original stratification joint.*
+
 ``` r
 after <- check_post_rake(
   raked, frame, election, by = area, extension_variable = outcome, target_variable = "share_eligible",
@@ -295,17 +315,15 @@ knitr::kable(after$outcome$metrics, digits = 4)
 |Invalid                         |       0|       0|        1|             100|
 |Other                           |       0|       0|        1|             100|
 
-``` r
-knitr::include_graphics(sub("^vignettes/", "", figure("municipal-after")), error = FALSE)
-```
+*Table 3. After-rake municipal vote-share errors and 90% interval coverage against the same benchmarks.*
 
-![plot of chunk after-rake](assets/denmark-2026/municipal-after.png)
+![After raking, calibrated municipal shares and 90% draw intervals against the election benchmarks.](assets/denmark-2026/municipal-after.png)
 
-``` r
-knitr::include_graphics(sub("^vignettes/", "", figure("original-cell-totals")), error = FALSE)
-```
+*Figure 2. After raking, calibrated municipal shares and 90% draw intervals against the election benchmarks.*
 
-![plot of chunk after-rake](assets/denmark-2026/original-cell-totals.png)
+![Raked counts and 90% draw intervals versus the mother-frame population in each original cell.](assets/denmark-2026/original-cell-totals.png)
+
+*Figure 3. Raked counts and 90% draw intervals versus the mother-frame population in each original cell.*
 
 ## Measure how raking changes the estimates
 
@@ -320,21 +338,26 @@ whole distribution among voters. Its dots are posterior draws and its
 square uses the mean counts.
 
 
+*Snippet 10. Compare pre-rake and post-rake vote shares across demographic groupings.*
+
 ``` r
-change_plot <- plot_partitioned_raking_changes(
+plot_partitioned_raking_changes(
   extended_parts, raked_parts, frame[c(predictors, "N")], frame_rows,
   area = area, outcome = outcome, no_vote = no_vote, plot_file = figure("raking-changes"),
   read_extended = storage$get, read_raked = identity
 )
-knitr::include_graphics(sub("^vignettes/", "", change_plot), error = FALSE)
 ```
 
-![plot of chunk raking-changes](assets/denmark-2026/raking-changes.png)
+![Changes in vote shares after raking across demographic and municipal groupings.](assets/denmark-2026/raking-changes.png)
+
+*Figure 4. Changes in vote shares after raking across demographic and municipal groupings.*
 
 ## Inspect the extended frame
 
 The table shows 100 randomly selected rows from the raked frame.
 
+
+*Snippet 11. Sample 100 rows from the raked stratification frame.*
 
 ``` r
 set.seed(2029)
@@ -446,6 +469,10 @@ knitr::kable(sample_extended_frame(raked, columns), digits = 2, row.names = FALS
 |Sorø              |Women  |35-39     |H50 Vocational bachelors educations                                 |Other - Right                   |  18.89|    28.38|    16.09|
 |Stevns            |Men    |80-84     |H1020 Primary school 7th-9th grade                                  |Other - Right                   |  25.29|    36.60|    23.92|
 |Roskilde          |Men    |50-54     |H40 Short cycle higher education                                    |F: SF - Socialistisk Folkeparti |  13.14|    12.34|     5.99|
+
+*Table 4. Sample of 100 raked joint rows with their calibrated mean and two posterior draws.*
+
+*Snippet 12. Keep the requested output partitions and release the remaining pre-rake storage.*
 
 ``` r
 legacy_extended_path <- file.path(out, "extended_frame.rds")

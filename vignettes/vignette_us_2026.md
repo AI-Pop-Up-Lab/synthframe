@@ -34,7 +34,7 @@ shares repeat within each state and choice, while House shares belong to
 individual districts. Some House shares on the 2026 map come from upstream
 modeled scenarios. Agreement with these benchmarks is a calibration check.
 
-*Read the three inputs, build district IDs, and check that every input uses CD120.*
+*Snippet 1. Read the three inputs, build district IDs, and check that every input uses CD120.*
 
 
 ``` r
@@ -121,7 +121,7 @@ Include `on_ballot` in the party-stage candidate designs so the support,
 collinearity, and hierarchy rules decide whether its main effect and
 interactions enter each fitted stage.
 
-*Prepare district predictors for each stage and election benchmarks for calibration.*
+*Snippet 2. Prepare district predictors for each stage and election benchmarks for calibration.*
 
 
 ``` r
@@ -196,7 +196,7 @@ Identical predictor rows are grouped into binomial successes and failures.
 At each stage, respondents who chose an earlier outcome leave the risk set.
 The counts below refer to eligible respondents at that stage.
 
-*Build the candidate binomial designs and screen them before any solver iterations.*
+*Snippet 3. Build the candidate binomial designs and screen them before any solver iterations.*
 
 
 ``` r
@@ -539,6 +539,8 @@ The next snippet defines two reporting functions. They translate the fitted
 formula's group labels back to the predictor names and use the fitted
 coefficient vectors to count the effects each stage actually estimated.
 
+*Snippet 4. Decode fitted formula labels and count actual coefficient rows by predictor combination.*
+
 
 ``` r
 group_variables <- function(stage, group) {
@@ -664,13 +666,13 @@ partitions in a compressed format if the analysis needs the full draws.
 For the diagnostic plots, keep only the state presidential and district
 House totals per draw and calculate intervals from those totals.
 
-*Fit or load the presidential stages, then report convergence and the terms that entered each fit.*
-
 The formulas show the solver terms after screening. Each stage compares
 successes for its named outcome with the remaining eligible respondents.
 A crossed group displays both predictors, such as `district_id × age_cat`.
 `[supported levels]` marks groups fitted only at levels that cleared the
 survey-support cutoff.
+
+*Snippet 5. Fit or load the presidential stages, then report convergence and the terms that entered each fit.*
 
 
 ``` r
@@ -720,19 +722,21 @@ pres_fit <- load_or_fit_us_model(
   log_file = file.path(out, "presidential_fit_log.csv")
 )
 # Report the depth, screening counts, and convergence outcome for each stage.
-knitr::kable(pres_fit$fit_log[stage_columns], format = "pipe",
-             caption = "Table 9. Presidential stage design and convergence diagnostics.")
+knitr::kable(pres_fit$fit_log[stage_columns], format = "pipe")
 ```
 
 
-
-Table: Table 9. Presidential stage design and convergence diagnostics.
 
 |outcome    | observations| fitted_depth| estimated_parameters| dropped_fixed| dropped_scalar_random| dropped_correlated_random| dropped_smooth| estimated_retained_parameters| fixed_condition_after| iterations_used| max_parameter_change|
 |:----------|------------:|------------:|--------------------:|-------------:|---------------------:|-------------------------:|--------------:|-----------------------------:|---------------------:|---------------:|--------------------:|
 |No Vote    |        57603|            2|                41860|             0|                  6109|                       923|          21338|                         13489|              18.46013|              27|            0.0069440|
 |Democratic |        52767|            2|                43534|             0|                  6609|                      1801|          21843|                         13277|              26.91919|              47|            0.0069129|
 |Republican |        23922|            2|                42535|             0|                  9391|                      1852|          21838|                          9450|              24.63738|              80|            0.0046068|
+
+*Table 9. Presidential stage design and convergence diagnostics.*
+
+*Snippet 6. Display the three fitted presidential formulas with crossed groups named explicitly.*
+
 
 ``` r
 # Show the formula used after screening, with original names for crossed groups.
@@ -819,7 +823,7 @@ for (stage in names(pres_fit$stages)) {
 The three presidential stages met the maximum parameter-change tolerance
 of 0.01 in the saved national fit.
 
-*Expand presidential choice within one state and reuse the same coefficient draws across states.*
+*Snippet 7. Expand presidential choice within one state and reuse the same coefficient draws across states.*
 
 
 ``` r
@@ -848,7 +852,7 @@ interaction levels found only in the population frame, prediction draws
 from the fitted variance distribution and reuses the sampled effect
 whenever that level appears again.
 
-*Fit or load House choice conditional on presidential choice, then report convergence and fitted terms.*
+*Snippet 8. Fit or load House choice conditional on presidential choice, then report convergence and fitted terms.*
 
 
 ``` r
@@ -863,19 +867,21 @@ house_fit <- load_or_fit_us_model(
   log_file = file.path(out, "house_fit_log.csv")
 )
 # Report the same stage diagnostics and decoded formulas as for the presidential fit.
-knitr::kable(house_fit$fit_log[stage_columns], format = "pipe",
-             caption = "Table 10. House stage design and convergence diagnostics.")
+knitr::kable(house_fit$fit_log[stage_columns], format = "pipe")
 ```
 
 
-
-Table: Table 10. House stage design and convergence diagnostics.
 
 |outcome    | observations| fitted_depth| estimated_parameters| dropped_fixed| dropped_scalar_random| dropped_correlated_random| dropped_smooth| estimated_retained_parameters| fixed_condition_after| iterations_used| max_parameter_change|
 |:----------|------------:|------------:|--------------------:|-------------:|---------------------:|-------------------------:|--------------:|-----------------------------:|---------------------:|---------------:|--------------------:|
 |No Vote    |        55413|            2|                44164|             0|                  6949|                       923|          21348|                         14943|              18.46600|             100|            0.4310780|
 |Democratic |        48330|            2|                45570|             0|                  7716|                      1801|          21863|                         14186|              28.02934|             100|            0.3070906|
 |Republican |        21552|            2|                43894|             0|                 10163|                      1897|          21838|                          9991|              19.13335|              95|            0.0074460|
+
+*Table 10. House stage design and convergence diagnostics.*
+
+*Snippet 9. Display the three fitted House formulas with crossed groups named explicitly.*
+
 
 ``` r
 for (stage in names(house_fit$stages)) {
@@ -987,8 +993,6 @@ that combination in that stage. The design-stage estimate can differ
 from the actual count because the solver constructs the final basis.
 
 
-Table: Table 11. Actual fitted coefficients by predictor combination and stage.
-
 |Combination                   | Pres. No Vote| Pres. Democratic| Pres. Republican| House No Vote| House Democratic| House Republican|
 |:-----------------------------|-------------:|----------------:|----------------:|-------------:|----------------:|----------------:|
 |state_fips × house_share      |         1,836|            1,836|            1,836|         1,836|            1,836|            1,836|
@@ -1072,7 +1076,9 @@ Table: Table 11. Actual fitted coefficients by predictor combination and stage.
 |on_ballot                     |             0|                1|                1|             0|                1|                0|
 |**Total**                     |        13,489|           13,135|            9,450|        14,943|           14,040|            9,991|
 
-*Expand House choice within each presidential category while keeping draw indices paired.*
+*Table 11. Actual fitted coefficients by predictor combination and stage.*
+
+*Snippet 10. Expand House choice within each presidential category while keeping draw indices paired.*
 
 
 ``` r
@@ -1103,7 +1109,7 @@ to save all joint pre-rake partitions.
 Set `VOTEFRAME_US_RAKED_DIR` to use a different partition directory
 when the fit output directory has limited free space.
 
-*Predict by state, jointly calibrate both vote margins, and save each verified partition.*
+*Snippet 11. Predict by state, jointly calibrate both vote margins, and save each verified partition.*
 
 ``` r
 # Apply the same tolerance to election margins and mother-frame cells.
@@ -1138,7 +1144,8 @@ change_summaries <- if (run_rake) {
   district_groups <- list(c("district_id", "age_cat"), c("district_id", "educ_cat"))
   setNames(lapply(c(pres, house), function(outcome) {
     groups <- c(groupings, if (outcome == pres) list("district_id"), district_groups)
-    partitioned_raking_change_summary(frame, "district_id", outcome, "No Vote", groups)
+    partitioned_raking_change_summary(frame, "district_id", outcome, "No Vote", groups,
+                                      variation_on_cvap = TRUE)
   }), c(pres, house))
 }
 
@@ -1214,13 +1221,14 @@ population denominator. The rake still uses population-share targets.
 The default benchmarks also enter model fitting as area predictors, so
 agreement with them measures calibration.
 
-*Compare the predicted shares and draw intervals with election benchmarks before and after calibration.*
+*Snippet 12. Compare the predicted shares and draw intervals with election benchmarks before and after calibration.*
 
 ``` r
 figure_dir <- file.path("vignettes", "assets", "us-2026")
 dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
 fits <- setNames(list(pres_fit, house_fit), c(pres, house))
 elections <- setNames(c("Presidential vote", "House vote"), c(pres, house))
+comparison <- 0L
 for (phase in c("before", if (run_rake) "after")) {
   for (outcome in names(plot_targets)) {
     # Pool counts at the benchmark geography for this election.
@@ -1234,18 +1242,18 @@ for (phase in c("before", if (run_rake) "after")) {
       plot_file = figure, coverage_tolerance = if (phase == "after") rake_tolerance else 0
     )
     # Pair the table and figure by election and calibration step.
+    comparison <- comparison + 1L
     caption <- paste(elections[[outcome]], phase, "raking")
-    print(knitr::kable(check$metrics, format = "pipe", digits = 4,
-                       caption = paste(caption, "– errors and 90% interval coverage against the election benchmarks.")))
+    print(knitr::kable(check$metrics, format = "pipe", digits = 4))
+    cat("\n*Table ", 11L + comparison, ". ", caption,
+        " – errors and 90% interval coverage against the election benchmarks.*\n\n", sep = "")
     utils::write.csv(check$metrics, file.path(out, paste0(outcome, "_", phase, "_rake_metrics.csv")))
     figure_caption <- paste(caption, "– benchmark shares versus predictions and 90% intervals.")
     cat("\n![", figure_caption, "](", sub("^vignettes/", "", figure), ")\n\n",
-        "*", figure_caption, "*\n\n", sep = "")
+        "*Figure ", 2L + comparison, ". ", figure_caption, "*\n\n", sep = "")
   }
 }
 ```
-
-Table: Presidential vote before raking – errors and 90% interval coverage against the election benchmarks.
 
 |           |  bias_pp| RMSE_pp| spearman| coverage_90_pct|
 |:----------|--------:|-------:|--------:|---------------:|
@@ -1255,13 +1263,12 @@ Table: Presidential vote before raking – errors and 90% interval coverage agai
 |Republican |  -8.3992|  9.0804|   0.9679|          5.8824|
 |Other      |   2.0082|  2.1371|   0.6831|         11.7647|
 
+*Table 12. Presidential vote before raking – errors and 90% interval coverage against the election benchmarks.*
 ![Presidential vote before raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_pres_2024_before_rake.png)
 
-*Presidential vote before raking – benchmark shares versus predictions and 90% intervals.*
+*Figure 3. Presidential vote before raking – benchmark shares versus predictions and 90% intervals.*
 
 
-
-Table: House vote before raking – errors and 90% interval coverage against the election benchmarks.
 
 |           |  bias_pp| RMSE_pp| spearman| coverage_90_pct|
 |:----------|--------:|-------:|--------:|---------------:|
@@ -1271,13 +1278,12 @@ Table: House vote before raking – errors and 90% interval coverage against the
 |Republican |  -6.7374|  9.3177|   0.9659|         21.5596|
 |Other      |   0.7244|  2.8768|   0.6328|         17.8899|
 
+*Table 13. House vote before raking – errors and 90% interval coverage against the election benchmarks.*
 ![House vote before raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_house_2024_before_rake.png)
 
-*House vote before raking – benchmark shares versus predictions and 90% intervals.*
+*Figure 4. House vote before raking – benchmark shares versus predictions and 90% intervals.*
 
 
-
-Table: Presidential vote after raking – errors and 90% interval coverage against the election benchmarks.
 
 |           | bias_pp| RMSE_pp| spearman| coverage_90_pct|
 |:----------|-------:|-------:|--------:|---------------:|
@@ -1287,13 +1293,12 @@ Table: Presidential vote after raking – errors and 90% interval coverage again
 |Republican |       0|       0|        1|             100|
 |Other      |       0|       0|        1|             100|
 
+*Table 14. Presidential vote after raking – errors and 90% interval coverage against the election benchmarks.*
 ![Presidential vote after raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_pres_2024_after_rake.png)
 
-*Presidential vote after raking – benchmark shares versus predictions and 90% intervals.*
+*Figure 5. Presidential vote after raking – benchmark shares versus predictions and 90% intervals.*
 
 
-
-Table: House vote after raking – errors and 90% interval coverage against the election benchmarks.
 
 |           | bias_pp| RMSE_pp| spearman| coverage_90_pct|
 |:----------|-------:|-------:|--------:|---------------:|
@@ -1303,9 +1308,10 @@ Table: House vote after raking – errors and 90% interval coverage against the 
 |Republican |       0|       0|        1|             100|
 |Other      |       0|       0|        1|             100|
 
+*Table 15. House vote after raking – errors and 90% interval coverage against the election benchmarks.*
 ![House vote after raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_house_2024_after_rake.png)
 
-*House vote after raking – benchmark shares versus predictions and 90% intervals.*
+*Figure 6. House vote after raking – benchmark shares versus predictions and 90% intervals.*
 
 ## 12. Check the original joint stratification cells
 
@@ -1314,7 +1320,7 @@ cell. Compare its raked mean and every draw with the population in the
 mother frame. The plot shows the mean and 90% draw interval against the
 original count. The maximum error also checks every draw outside that interval.
 
-*Combine the checks for all mother-frame cells and report the largest count discrepancy.*
+*Snippet 13. Combine the checks for all mother-frame cells and report the largest count discrepancy.*
 
 ``` r
 if (run_rake) {
@@ -1326,37 +1332,40 @@ if (run_rake) {
   joint_metrics$max_abs_count_error <- max(joint_cells$max_abs_error)
   stopifnot(joint_metrics$max_abs_count_error <= rake_tolerance)
   utils::write.csv(joint_metrics, file.path(out, "original_cell_totals_metrics.csv"))
-  print(knitr::kable(joint_metrics, format = "pipe", digits = 12,
-                     caption = "Agreement between raked and original population counts in every mother-frame cell."))
+  print(knitr::kable(joint_metrics, format = "pipe", digits = 12))
+  cat("\n*Table 16. Agreement between raked and original population counts in every mother-frame cell.*\n\n")
   caption <- "Original cell counts versus raked totals and 90% intervals after summing over both votes."
   cat("\n![", caption, "](", sub("^vignettes/", "", figure), ")\n\n",
-      "*", caption, "*\n\n", sep = "")
+      "*Figure 7. ", caption, "*\n\n", sep = "")
 }
 ```
-
-Table: Agreement between raked and original population counts in every mother-frame cell.
 
 |                   | bias_count| RMSE_count|  spearman| coverage_90_pct| cells_checked| max_abs_count_error|
 |:------------------|----------:|----------:|---------:|---------------:|-------------:|-------------------:|
 |All original cells |          0|          0| 0.9999999|             100|        497550|             1.5e-11|
 
+*Table 16. Agreement between raked and original population counts in every mother-frame cell.*
 ![Original cell counts versus raked totals and 90% intervals after summing over both votes.](assets/us-2026/original-cell-totals.png)
 
-*Original cell counts versus raked totals and 90% intervals after summing over both votes.*
+*Figure 7. Original cell counts versus raked totals and 90% intervals after summing over both votes.*
 
 ## 13. Measure how raking changes vote shares
+
+**Figure status.** Figures 8 and 9 below were generated with the earlier voter-only total variation. The code and explanation in this section describe the revised CVAP measure. Updated national figures are being generated.
 
 Each row shows a demographic or district grouping. The outcome panels
 show subgroup changes in percentage points as dots and population-weighted
 averages as squares. Green marks increases and red marks decreases.
-Party shares use voters as the denominator, while
-No Vote uses the full population. The total variation panel summarizes
-the change in the distribution among voters for each draw and for the mean
-counts. The presidential plot includes districts because that calibration
+The individual party panels use voters as the denominator, while No Vote
+uses the full citizen voting-age population (CVAP). Total variation includes
+all four choices. It is half the sum of their absolute changes in CVAP shares,
+in percentage points, weighted across subgroups by CVAP. Its dots show
+the paired draws and its square shows the mean-count result.
+The presidential plot includes districts because that calibration
 target is statewide. The House plot includes district-by-demographic
 groups because the district target covers all demographics together.
 
-*Plot before-to-after vote-share changes by demographic group and district using paired draws.*
+*Snippet 14. Plot before-to-after vote-share changes by demographic group and district using paired draws.*
 
 ``` r
 if (run_rake) {
@@ -1370,19 +1379,19 @@ if (run_rake) {
     change_summaries[[outcome]]$plot(figure)
     caption <- captions[[outcome]]
     cat("\n![", caption, "](", sub("^vignettes/", "", figure), ")\n\n",
-        "*", caption, "*\n\n", sep = "")
+        "*Figure ", 7L + match(outcome, c(pres, house)), ". ", caption, "*\n\n", sep = "")
   }
 }
 ```
 
 ![Presidential vote share changes across demographic and district groupings.](assets/us-2026/vote_pres_2024_raking_changes.png)
 
-*Presidential vote share changes across demographic and district groupings.*
+*Figure 8. Presidential vote share changes across demographic and district groupings.*
 
 
 ![House vote share changes across demographic and district-by-demographic groupings.](assets/us-2026/vote_house_2024_raking_changes.png)
 
-*House vote share changes across demographic and district-by-demographic groupings.*
+*Figure 9. House vote share changes across demographic and district-by-demographic groupings.*
 
 ## 14. Inspect the final frame
 
@@ -1393,7 +1402,7 @@ the national joint frame in a later analysis. The table shows 100 rows
 sampled across the state and DC partitions, with both vote outcomes and
 three draw counts.
 
-*Sample 100 rows from the saved joint frame and record where the partitions are stored.*
+*Snippet 15. Sample 100 rows from the saved joint frame and record where the partitions are stored.*
 
 ``` r
 if (run_rake) {
@@ -1407,12 +1416,10 @@ if (run_rake) {
   preview <- sample_extended_frame(raked_paths, preview_columns, partition_sizes)
   prune_geographic_partitions(raked_dir, raked_paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
   writeLines(normalizePath(raked_dir, mustWork = TRUE), file.path(out, "raked-directory.txt"))
-  knitr::kable(preview, digits = 3, row.names = FALSE,
-               caption = "Sample of 100 raked joint rows with the calibrated mean and three draws.")
+  print(knitr::kable(preview, digits = 3, row.names = FALSE))
+  cat("\n*Table 17. Sample of 100 raked joint rows with the calibrated mean and three draws.*\n\n")
 }
 ```
-
-Table: Sample of 100 raked joint rows with the calibrated mean and three draws.
 
 |state_fips |district_id |age_cat |gender_cat |race_cat        |hispanic_cat |educ_cat     |vote_pres_2024 |vote_house_2024 |       N| N_draw_1| N_draw_63| N_draw_125|
 |:----------|:-----------|:-------|:----------|:---------------|:------------|:------------|:--------------|:---------------|-------:|--------:|---------:|----------:|
@@ -1516,3 +1523,5 @@ Table: Sample of 100 raked joint rows with the calibrated mean and three draws.
 |34         |34-07       |43-47   |Female     |Black           |Not Hispanic |Post-grad    |Other          |Republican      |   1.043|    0.857|     0.846|      0.661|
 |28         |28-03       |43-47   |Male       |Asian           |Not Hispanic |No HS        |Republican     |Other           |   0.000|    0.000|     0.000|      0.000|
 |19         |19-02       |23-27   |Male       |Other/Multi     |Hispanic     |HS grad      |No Vote        |Other           |   0.191|    0.188|     0.197|      0.134|
+
+*Table 17. Sample of 100 raked joint rows with the calibrated mean and three draws.*
