@@ -20,6 +20,8 @@ the prepared inputs tracked under
 [`data/input/`](data/input/). Its input guide covers sources, recodes,
 and any upstream steps needed to rebuild those inputs.
 
+*Table 1. Case-study reports, runnable vignettes, and input guides.*
+
 | Case study | Read the results | Run the source | Input guide |
 | --- | --- | --- | --- |
 | Denmark 2026 | [Vignette](vignettes/vignette_denmark_2026.md) | [R Markdown](vignettes/vignette_denmark_2026.Rmd) | [Denmark inputs](data/input/denmark%202026/README.md) |
@@ -28,6 +30,8 @@ and any upstream steps needed to rebuild those inputs.
 
 Install the R packages in your own R library. The figures use Cairo PNG
 support, which you can check with `capabilities("cairo")`.
+
+*Snippet 1. Install the R packages used by the vignettes.*
 
 ```r
 install.packages(c("knitr", "vglmer", "gKRLS", "SQUAREM"), repos = "https://cloud.r-project.org")
@@ -42,6 +46,8 @@ From the repository root, set `country` to one of `"denmark"`, `"sweden"`, or
 rendered Markdown beside the R Markdown source. For the US, obtain the saved
 fits and place them in the run directory as described below before running
 this block.
+
+*Snippet 2. Render a case study from the repository root, checking for saved fits for the US.*
 
 ```r
 country <- "denmark"
@@ -63,12 +69,16 @@ knitr::knit(paste0(vignette, ".Rmd"), output = paste0(vignette, ".md"))
 
 Each run writes to `data/output/<country> 2026/` using the same layout.
 
+*Table 2. Files written to each case study’s output directory.*
+
 | Directory | Contents |
 | --- | --- |
 | `models/` | Fitted models as RDS files |
 | `diagnostics/` | Fit and screening CSVs, benchmark metrics, and original-cell checks |
 | `logs/` | Captured render or run logs and any recovery notes |
 | `raked_frame/` | Calibrated counts for the mean and all 125 draws |
+
+*Table 3. Raked-frame partitions and calibration margins by case study.*
 
 | Case | Raked partitions | Calibration |
 | --- | --- | --- |
@@ -111,6 +121,8 @@ outcome column. An extension can use one auxiliary survey or pool a list of
 surveys by stacking respondents. The selected columns must have harmonized
 names and coding across surveys. Later fits can use previous outcomes as
 predictors when their surveys contain those outcomes.
+
+*Snippet 3. Fit two extensions with MasterP, jointly rake their margins, and return population summaries.*
 
 ```r
 result <- MasterP(                                        # Fit, extend, and jointly rake the frame.
@@ -160,6 +172,8 @@ result$frame                                              # Inspect the full cal
 result$aggregates$state_presidential                      # Inspect the presidential summary by state.
 ```
 
+*Table 4. MasterP settings, progress reporting, and returned objects.*
+
 | Setting or output | Meaning |
 | --- | --- |
 | Progress | Current step and completed fit stages, prediction batches, and raking batches/draws. ETA starts after the first unit and updates with observed pace. |
@@ -184,6 +198,8 @@ as `extended_frame.rds`. Mode `"temporary"` stores it on disk after joint raking
 and removes it at exit. MasterP requires the full frame in RAM for joint raking.
 Vignettes require the active prediction or raking block in RAM.
 
+*Table 5. Vignette settings for pre-rake storage and geographic batching.*
+
 | Vignette setting | Behavior |
 | --- | --- |
 | `VOTEFRAME_PRE_RAKE_STORAGE` | `memory`, `temporary`, `keep`, or `auto` (default). Auto compares estimated size to available RAM, including visible Linux container limits. It uses temporary disk when RAM is tight or unknown. |
@@ -199,6 +215,8 @@ whole state, and crossing margins with no safe geographic grouping use one batch
 ### Fit one extension directly
 
 Load the R functions from the repository root with `vglmer` installed.
+
+*Snippet 4. Fit a single sequential-logit extension using the Denmark inputs.*
 
 ```r
 for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
@@ -265,6 +283,8 @@ $$
 Counts and shares with a common within-area denominator give the same result.
 Pass `outcome_order` to return the stage matrices directly or let the fitter supply
 its order. Use custom stage matrices to preserve original scales.
+
+*Table 6. Model terms available at each candidate depth.*
 
 | Candidate depth | Design |
 | --- | --- |
@@ -362,6 +382,8 @@ Override with `tolerance_parameters` or `tolerance_elbo` (zero disables that
 criterion) and `max_iterations` per stage. At the cap the solver can return with
 a non-convergence message.
 
+*Table 7. Fit audit options and the files they produce.*
+
 | Audit option | Output |
 | --- | --- |
 | `interaction_support_log` | CSV of nonzero stage respondents by outcome for categorical interactions and varying slopes, including within-group slope variation and counts differing from the modal value. |
@@ -374,6 +396,8 @@ Set these fit and screening options in the extension's `fit` list with MasterP.
 (intercept $0$, main effect or area intercept $1$, two-way interaction $2$).
 
 ## Predicting and extending the frame
+
+*Snippet 5. Draw posterior probabilities and summarize expected counts at two levels of detail.*
 
 ```r
 set.seed(123)
@@ -435,6 +459,8 @@ of the incoming draw counts for a paired frame.
 
 ## Checking and calibrating the extended frame
 
+*Table 8. Functions for checking targets, original cell totals, and changes from raking.*
+
 | Function | Purpose |
 | --- | --- |
 | `check_extended_frame(extended_frame, targets, by, extension_variable)` | Compare aggregate shares with targets in $[0,1]$, keyed by `by` and outcome. Set `target_variable`, `plot_file` for identity-line PNGs, and `outcome_order = fit$outcome_order` for the fitted order. Returns matched estimates, pooled and outcome-level bias, RMSE, Spearman correlation, and 90% coverage. Mean-only inputs warn that intervals and coverage are unavailable. |
@@ -482,6 +508,8 @@ After the second extension, rake to both outcome margins in one call with
 the **original** stratification frame. Supply target tables named for the
 extension variables. Use a shared `by` vector or name a grouping vector for
 each target table.
+
+*Snippet 6. Predict a second outcome and jointly calibrate both outcomes against the original frame.*
 
 ```r
 second <- predict_sequential_logit(
