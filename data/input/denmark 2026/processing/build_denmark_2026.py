@@ -2,21 +2,22 @@
 import argparse
 import csv
 import io
-from importlib import import_module
 import json
 from pathlib import Path
 import shutil
-import sys
 from urllib.parse import urlencode
 from urllib.request import urlopen
 from zipfile import ZipFile
+
+import recodes as process
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--refresh", action="store_true", help="Download fresh source extracts.")
     args = parser.parse_args()
-    country = Path(__file__).resolve().parent
+    processing = Path(__file__).resolve().parent
+    country = processing.parent
     raw = country / "raw"
     raw.mkdir(exist_ok=True)
 
@@ -85,10 +86,7 @@ def main():
     with ZipFile(archive) as bundle, bundle.open("Data/CSV/Dataset.csv") as source:
         survey = list(csv.DictReader(io.TextIOWrapper(source, encoding="cp1252", newline="")))
 
-    # The processing module lives alongside the country inputs it builds.
-    sys.path.insert(0, str(country / "processing"))
-    process = import_module("recodes")
-    output = country / "processing" / "rebuilt"
+    output = processing / "rebuilt"
     output.mkdir(exist_ok=True)
     print("Building frame.csv", flush=True)
     frame = process.build_frame(population, attainment, metadata["HFUDD11"]["HFUDD"])

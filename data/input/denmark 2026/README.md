@@ -17,10 +17,10 @@ survey responses both refer to the preceding parliamentary election on
 Run this command from the repository root with Python 3.10 or later.
 
 ```sh
-python3 "data/input/denmark 2026/build_denmark_2026.py"
+python3 "data/input/denmark 2026/processing/build_denmark_2026.py"
 ```
 
-The [build script](build_denmark_2026.py) downloads source extracts and
+The [build script](processing/build_denmark_2026.py) downloads source extracts and
 Statbank table metadata into `raw/`. It passes the inputs to
 [recodes.py](processing/recodes.py), which transforms them into CSVs in
 `processing/rebuilt/`. The checked-in input files and the rebuild outputs
