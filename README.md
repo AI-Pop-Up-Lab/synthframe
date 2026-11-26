@@ -39,12 +39,21 @@ recreating that R 4.3 environment. [CRAN Matrix archive](https://cran.r-project.
 
 From the repository root, set `country` to one of `"denmark"`, `"sweden"`, or
 `"us"` and run the block below. The chunks execute in order and write the
-rendered Markdown beside the R Markdown source.
+rendered Markdown beside the R Markdown source. For the US, obtain the saved
+fits and place them in the run directory as described below before running
+this block.
 
 ```r
 country <- "denmark"
 vignette <- file.path("vignettes", paste0("vignette_", country, "_2026"))
-if (country == "us") Sys.setenv(VOTEFRAME_US_FIT = "true")
+if (country == "us") {
+  run_dir <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR", unset = "data/output/us 2026")
+  fits <- file.path(run_dir, "models", c("pres_fit.rds", "house_fit.rds"))
+  if (!all(file.exists(fits))) {
+    stop("Place both saved US fits in ", file.path(run_dir, "models"), " before knitting.")
+  }
+  Sys.setenv(VOTEFRAME_US_FIT = "true", VOTEFRAME_US_REUSE_FITS = "true")
+}
 knitr::opts_knit$set(root.dir = getwd())
 knitr::opts_chunk$set(error = FALSE)
 knitr::knit(paste0(vignette, ".Rmd"), output = paste0(vignette, ".md"))
@@ -78,12 +87,18 @@ choices and shares of the full population for No Vote.
 
 ### Reuse completed US fits
 
-For a vignette render that reuses completed fits, set
-`VOTEFRAME_US_REUSE_FITS=true` before knitting. The vignette loads each
-available fit from `models/` and starts a fresh fit for any missing model.
-It saves each completed model before continuing. The default run
-directory is `data/output/us 2026`. Set `VOTEFRAME_US_OUTPUT_DIR` to use
-another run directory. Set `VOTEFRAME_US_RAKE=false` to render only the
+Reuse the saved presidential and House fits for the published inputs and
+model settings. Budget roughly 12 hours or more just for model fitting on
+a GitHub Codespace with 16 GB RAM and 32 GB of storage. Prediction and
+raking take additional time.
+
+The fit files are stored outside Git. Obtain copies of `pres_fit.rds` and
+`house_fit.rds` and place them in `data/output/us 2026/models/`. If you set
+`VOTEFRAME_US_OUTPUT_DIR`, use the `models/` folder in that run directory.
+The example above checks for both files and enables reuse. When knitting
+directly with `VOTEFRAME_US_REUSE_FITS=true`, a missing file triggers a fresh
+fit for that model. Set `VOTEFRAME_US_REUSE_FITS=false` for an intentional
+refit of both models. Set `VOTEFRAME_US_RAKE=false` to render only the
 pre-rake benchmark comparison.
 
 ## Fitting the extension variable

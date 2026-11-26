@@ -527,10 +527,16 @@ a particular predictor or show the order in which we removed terms.
 
 The national run uses 125 posterior draws. Set
 `VOTEFRAME_US_FIT=true` to include the model results and predictions.
-To reuse completed fits from the same inputs and settings, set
-`VOTEFRAME_US_REUSE_FITS=true` and point `VOTEFRAME_US_OUTPUT_DIR` to the
-run directory. The vignette loads each available model from `models/`
-and fits any missing model.
+Reuse the saved presidential and House fits for the published inputs and
+model settings. Budget roughly 12 hours or more for model fitting alone
+on a GitHub Codespace with 16 GB RAM and 32 GB of storage. Prediction and
+raking take additional time.
+
+Set `VOTEFRAME_US_REUSE_FITS=true` and check that both `pres_fit.rds` and
+`house_fit.rds` are in `data/output/us 2026/models/` before knitting.
+If you set `VOTEFRAME_US_OUTPUT_DIR`, check its `models/` folder instead.
+A missing file triggers a fresh fit for that model. Set
+`VOTEFRAME_US_REUSE_FITS=false` to intentionally refit both models.
 
 ### Read the fitted formulas and coefficient counts
 
