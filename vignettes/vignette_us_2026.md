@@ -528,16 +528,16 @@ a particular predictor or show the order in which we removed terms.
 
 The national run uses 125 posterior draws. Set
 `VOTEFRAME_US_FIT=true` to include the model results and predictions.
-Reuse the saved presidential and House fits for the published inputs and
-model settings. Budget roughly 12 hours or more for model fitting alone
-on a GitHub Codespace with 16 GB RAM and 32 GB of storage. Prediction and
-raking take additional time.
+A fresh run fits the presidential and House models from the three tracked
+inputs. Budget roughly 12 hours or more for fitting alone on a GitHub
+Codespace with 16 GB RAM and 32 GB of storage. Prediction and raking take
+additional time.
 
-Set `VOTEFRAME_US_REUSE_FITS=true` and check that both `pres_fit.rds` and
-`house_fit.rds` are in `data/output/us 2026/models/` before knitting.
-If you set `VOTEFRAME_US_OUTPUT_DIR`, check its `models/` folder instead.
-A missing file triggers a fresh fit for that model. Set
-`VOTEFRAME_US_REUSE_FITS=false` to intentionally refit both models.
+Each completed model is saved under `data/output/us 2026/models/` as
+`pres_fit.rds` or `house_fit.rds`. Set `VOTEFRAME_US_OUTPUT_DIR` to use
+another run directory. To reuse verified fits, set `VOTEFRAME_US_REUSE_FITS=true`
+before knitting. Each model is refitted if its file is missing or cannot be
+verified against the current inputs, settings and fitting code.
 
 ### Read the fitted formulas and coefficient counts
 
@@ -688,6 +688,7 @@ out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
 outputs <- case_study_outputs(out)
 requested_depth <- 2L
 max_iterations <- 100L
+parameter_tolerance <- 0.01
 minimum_support <- 10L
 depth_support_dir <- file.path(outputs$diagnostics, "depth_support")
 stage_columns <- c("outcome", "observations", "fitted_depth", "estimated_parameters",
@@ -695,42 +696,20 @@ stage_columns <- c("outcome", "observations", "fitted_depth", "estimated_paramet
                    "dropped_smooth", "estimated_retained_parameters", "fixed_condition_after",
                    "iterations_used", "max_parameter_change")
 control <- vglmer::vglmer_control(quiet = FALSE, quiet_rho = FALSE, print_prog = 1L)
-# Stream diagnostics to the console while knitr also records them in the vignette.
-fit_us_model <- function(...) {
-  if (!isTRUE(getOption("knitr.in.progress"))) return(fit_sequential_logit(...))
-  withCallingHandlers(
-    fit_sequential_logit(...),
-    message = function(m) cat(conditionMessage(m), file = stderr()),
-    warning = function(w) cat("Warning: ", conditionMessage(w), "\n", sep = "", file = stderr())
+# Both elections use the same fitting specification with their own survey columns and seed.
+fit_us_model <- function(filename, extension, predictors, seed, label) {
+  args <- list(
+    auxiliary_survey = survey, extension_variable = extension, area_variable = "district_id",
+    area_covariates = area_covariates, no_vote = "No Vote", outcome_order = vote_order,
+    predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
+    tolerance_parameters = parameter_tolerance, tolerance_elbo = 0, max_iterations = max_iterations,
+    minimum_support = minimum_support, depth_support_dir = depth_support_dir,
+    interaction_support_log = file.path(outputs$diagnostics, paste0(label, "_interaction_support.csv")),
+    log_file = file.path(outputs$diagnostics, paste0(label, "_fit_log.csv"))
   )
+  load_or_fit_us_model(file.path(outputs$models, filename), args, seed)
 }
-load_or_fit_us_model <- function(filename, extension, ...) {
-  path <- file.path(outputs$models, filename)
-  reuse <- identical(Sys.getenv("VOTEFRAME_US_REUSE_FITS"), "true")
-  if (!reuse || !file.exists(path)) {
-    fit <- fit_us_model(...)
-    save_case_study_rds(fit, path, compress = FALSE)
-    return(fit)
-  }
-  loadNamespace("gKRLS")
-  fit <- readRDS(path)
-  stopifnot(inherits(fit, "voteframe_sequential_logit"),
-            identical(fit$extension_variable, extension),
-            identical(fit$outcome_order, vote_order),
-            identical(names(fit$stages), head(vote_order, -1L)))
-  fit
-}
-set.seed(2026)
-
-pres_fit <- load_or_fit_us_model(
-  "pres_fit.rds", pres,
-  survey, pres, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
-  predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
-  tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
-  minimum_support = minimum_support, depth_support_dir = depth_support_dir,
-  interaction_support_log = file.path(outputs$diagnostics, "presidential_interaction_support.csv"),
-  log_file = file.path(outputs$diagnostics, "presidential_fit_log.csv")
-)
+pres_fit <- fit_us_model("pres_fit.rds", pres, predictors, 2026L, "presidential")
 # Report the depth, screening counts, and convergence outcome for each stage.
 knitr::kable(pres_fit$fit_log[stage_columns], format = "pipe")
 ```
@@ -866,16 +845,12 @@ whenever that level appears again.
 
 
 ``` r
-set.seed(2027)
-house_fit <- load_or_fit_us_model(
-  "house_fit.rds", house,
-  survey, house, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
-  predictors = c(predictors, pres), depth = requested_depth, splines = TRUE, control = control,
-  tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
-  minimum_support = minimum_support, depth_support_dir = depth_support_dir,
-  interaction_support_log = file.path(outputs$diagnostics, "house_interaction_support.csv"),
-  log_file = file.path(outputs$diagnostics, "house_fit_log.csv")
-)
+# Release the saved presidential fit while fitting the House stages.
+rm(pres_fit)
+invisible(gc())
+house_fit <- fit_us_model("house_fit.rds", house, c(predictors, pres), 2027L, "house")
+# Both models are needed for the coefficient table and joint prediction.
+pres_fit <- readRDS(file.path(outputs$models, "pres_fit.rds"))
 # Report the same stage diagnostics and decoded formulas as for the presidential fit.
 knitr::kable(house_fit$fit_log[stage_columns], format = "pipe")
 ```
@@ -1436,8 +1411,7 @@ if (run_rake) {
                        paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
   preview <- sample_extended_frame(raked_paths, preview_columns, partition_sizes)
   prune_geographic_partitions(raked_dir, raked_paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
-  writeLines(normalizePath(raked_dir, mustWork = TRUE),
-             file.path(outputs$diagnostics, "raked-directory.txt"))
+  writeLines(raked_dir, file.path(outputs$diagnostics, "raked-directory.txt"))
   print(knitr::kable(preview, digits = 3, row.names = FALSE))
   cat("\n*Table 17. Sample of 100 raked joint rows with the calibrated mean and three draws.*\n\n")
 }

@@ -6,6 +6,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   if (!inherits(fit, "voteframe_sequential_logit")) stop("Supply a sequential logit fit.")
   # Use the fit's population frame unless the caller supplies a different one.
   if (is.null(frame)) stop("Supply a prediction frame or pass frame when fitting the model.")
+  frame <- as_plain_frame(frame)
   count_draws <- prediction_count_draws(frame, count_variable)
   if (missing(n_draws) && length(count_draws)) n_draws <- length(count_draws)
   if (!is.numeric(n_draws) || length(n_draws) != 1L || !is.finite(n_draws) ||
@@ -27,7 +28,6 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
   # Counts and count draws are payload, so only other columns identify a cell.
   cell_columns <- setdiff(names(frame), c(count_variable, count_draws))
   validate_prediction_frame(frame, cell_columns, count_variable)
-  frame <- as.data.frame(frame)
   cells <- frame[, cell_columns, drop = FALSE]
   outcomes <- fit$outcome_order
   if (is.null(draw_state) && batch_size < nrow(frame)) draw_state <- new.env(parent = emptyenv())
@@ -88,7 +88,10 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
 
   paths <- NULL
   if (write_files) {
-    if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+    if (!dir.exists(output_dir) &&
+        !dir.create(output_dir, recursive = TRUE, showWarnings = FALSE) && !dir.exists(output_dir)) {
+      stop("Could not create prediction output directory ", sQuote(output_dir), ".")
+    }
     paths <- file.path(normalizePath(output_dir, mustWork = TRUE),
                        c("posterior_probabilities.rds", "extended_frame.csv"))
   }
@@ -104,7 +107,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
                          class = "voteframe_posterior")
   if (!write_files) return(posterior)
   # Finish both files before replacing the previous exports.
-  temporary <- tempfile(tmpdir = dirname(paths), fileext = c(".rds", ".csv"))
+  temporary <- tempfile(".voteframe-stage-", tmpdir = dirname(paths), fileext = c(".rds", ".csv"))
   on.exit(unlink(temporary), add = TRUE)
   saveRDS(posterior, temporary[1L])
   # Write the full frame in blocks so a second copy of all draws stays off the heap.
@@ -119,14 +122,51 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
                                     population_draws = if (length(count_draws)) {
                                       as.matrix(frame[rows, count_draws, drop = FALSE])
                                     })
-    utils::write.table(block, temporary[2L], sep = ",", row.names = FALSE,
+    utils::write.table(block, temporary[2L], sep = ",", qmethod = "double", row.names = FALSE,
                        col.names = start == 1L, append = start != 1L)
     if (!is.null(progress)) {
       progress(batch, length(starts), sprintf("exported cells %d–%d", start, tail(rows, 1L)))
     }
   }
-  if (!all(file.rename(temporary, paths))) stop("Could not publish the posterior and frame files.")
+  publish_prediction_exports(temporary, paths)
   posterior
+}
+
+# Serialize the two renames. Only the RDS needs a backup: the CSV stays at its
+# old path until the last rename succeeds. A hard link avoids copying a large RDS.
+publish_prediction_exports <- function(staged, paths) {
+  lock <- file.path(dirname(paths[1L]), ".voteframe-publish")
+  if (!dir.create(lock, showWarnings = FALSE)) {
+    stop("Cannot acquire the prediction export lock at ", sQuote(lock),
+         ". Check for an active or interrupted export before retrying.")
+  }
+  cleanup <- TRUE
+  on.exit(if (cleanup) unlink(lock, recursive = TRUE), add = TRUE)
+  if (any(file.exists(paths) & !utils::file_test("-f", paths))) {
+    stop("Prediction export destinations must be regular files: ", paste(paths, collapse = ", "), ".")
+  }
+  previous <- file.exists(paths[1L])
+  backup <- file.path(lock, basename(paths[1L]))
+  if (previous && !suppressWarnings(file.link(paths[1L], backup)) &&
+      !suppressWarnings(file.copy(paths[1L], backup))) {
+    stop("Could not back up the previous posterior at ", sQuote(backup), ".")
+  }
+  suspendInterrupts({
+    if (!suppressWarnings(file.rename(staged[1L], paths[1L]))) {
+      stop("Could not publish the posterior file at ", sQuote(paths[1L]), ".")
+    }
+    if (!suppressWarnings(file.rename(staged[2L], paths[2L]))) {
+      restored <- if (previous) suppressWarnings(file.rename(backup, paths[1L])) else
+        suppressWarnings(file.remove(paths[1L]))
+      if (!restored) {
+        cleanup <- FALSE
+        stop("Could not roll back an incomplete prediction export at ", sQuote(paths[1L]),
+             ". Recovery directory: ", sQuote(lock), ".")
+      }
+      stop("Could not publish the frame CSV at ", sQuote(paths[2L]),
+           ". The posterior change was rolled back.")
+    }
+  })
 }
 
 # Trace the solver's input columns back through VoteFrame's generated terms.
@@ -163,7 +203,7 @@ prepare_prediction_stage <- function(fit, stage, outcome, frame, unique_rows = F
   if (anyNA(newdata)) stop("Frame predictors for ", sQuote(outcome), " must be complete.")
   if (unique_rows) newdata <- unique(newdata)
   if (length(area_columns)) {
-    covariates <- fit$area_covariates[[outcome]]
+    covariates <- as_plain_frame(fit$area_covariates[[outcome]])
     missing <- setdiff(area_columns, colnames(covariates))
     if (length(missing)) {
       stop("Missing area covariates for ", sQuote(outcome), ": ", paste(missing, collapse = ", "), ".")

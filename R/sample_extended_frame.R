@@ -1,6 +1,7 @@
 # Uniform sample of rows, loading only partitions selected by the sample.
 sample_extended_frame <- function(frame, columns, partition_sizes = NULL, size = 100L) {
   if (is.data.frame(frame)) {
+    frame <- as_plain_frame(frame)
     rows <- sample.int(nrow(frame), min(size, nrow(frame)))
     return(frame[rows, columns, drop = FALSE])
   }
@@ -14,7 +15,7 @@ sample_extended_frame <- function(frame, columns, partition_sizes = NULL, size =
   positions <- split(seq_along(rows), partition)
   samples <- lapply(positions, function(index) {
     part <- partition[index[1L]]
-    data <- readRDS(frame[[part]])
+    data <- as_plain_frame(readRDS(frame[[part]]))
     stopifnot(nrow(data) == partition_sizes[part])
     data[rows[index] - boundaries[part], columns, drop = FALSE]
   })

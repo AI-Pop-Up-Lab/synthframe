@@ -6,6 +6,9 @@ rake_with_diagnostics <- function(extended_frame, frame, targets, by, extension_
                                   area = by, tolerance = 0.000000000001,
                                   max_iterations = 1000L, no_vote = NULL) {
   target_scale <- match.arg(target_scale)
+  extended_frame <- as_plain_frame(extended_frame)
+  frame <- as_plain_frame(frame)
+  targets <- as_plain_frame(targets)
   if (!is.character(area) || anyNA(area) ||
       !all(area %in% setdiff(names(frame), count_variable))) {
     stop("Specify area columns from the original frame.")

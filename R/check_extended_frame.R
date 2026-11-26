@@ -3,6 +3,8 @@ check_extended_frame <- function(extended_frame, targets, by, extension_variable
                                  target_variable = "target", count_variable = "N",
                                  plot_file = NULL, outcome_order = NULL,
                                  coverage_tolerance = 0, no_vote = NULL, draw_plot = TRUE) {
+  extended_frame <- as_plain_frame(extended_frame)
+  targets <- as_plain_frame(targets)
   keys <- c(by, extension_variable)
   result_names <- c("estimate", "lower_90", "upper_90")
   if (!is.character(by) || !is.character(extension_variable) ||

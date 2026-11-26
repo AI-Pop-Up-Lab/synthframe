@@ -1,6 +1,6 @@
 # Use posterior mean counts so each cell's outcome counts add to its population.
 collapse_extended_frame <- function(frame, posterior) {
-  frame <- as.data.frame(frame)
+  frame <- as_plain_frame(frame, coerce = TRUE)
   rows <- match_posterior_cells(frame, posterior)
   cell_columns <- setdiff(names(frame), c(posterior$count_variable,
                                         extended_frame_draw_columns(frame, posterior$count_variable)))

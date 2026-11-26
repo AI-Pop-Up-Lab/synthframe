@@ -4,6 +4,7 @@ check_post_rake <- function(raked_frame, frame, targets, by, extension_variable,
                             outcome_order = NULL, outcome_plot_file = NULL,
                             joint_plot_file = NULL, share_tolerance = 0.000000000002,
                             count_tolerance = 0.00000001, no_vote = NULL) {
+  raked_frame <- as_plain_frame(raked_frame)
   margins <- check_extended_frame(
     raked_frame, targets, by, extension_variable, target_variable, count_variable,
     plot_file = outcome_plot_file, outcome_order = outcome_order,
@@ -17,6 +18,8 @@ check_post_rake <- function(raked_frame, frame, targets, by, extension_variable,
 
 post_rake_cell_comparison <- function(raked_frame, frame, extension_variable, count_variable = "N",
                                      include_max_error = FALSE) {
+  raked_frame <- as_plain_frame(raked_frame)
+  frame <- as_plain_frame(frame)
   population_draws <- prediction_count_draws(frame, count_variable)
   cell_columns <- setdiff(names(frame), c(count_variable, population_draws))
   validate_prediction_frame(frame, cell_columns, count_variable)

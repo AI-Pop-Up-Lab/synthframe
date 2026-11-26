@@ -1,5 +1,6 @@
 # Define the scope of each fitted effect on the population frame.
 register_frame_levels <- function(fit, frame_data) {
+  frame_data <- as_plain_frame(frame_data)
   # Build the frame design using the fitted contrasts, slopes, and spline bases.
   fixed <- build_prediction_fixed_matrix(fit, frame_data, allow_missing_levels = TRUE)
   blocks <- build_prediction_random_blocks(fit, restore_screened_random(fit, frame_data))

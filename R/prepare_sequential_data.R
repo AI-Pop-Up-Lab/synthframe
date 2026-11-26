@@ -7,7 +7,7 @@ aggregate_extension_survey <- function(survey, extension_variable, predictors, n
       !all(columns %in% names(survey))) {
     stop("Supply distinct predictor and extension columns in auxiliary_survey.")
   }
-  survey <- as.data.frame(survey)[, columns, drop = FALSE]
+  survey <- as_plain_frame(survey)[, columns, drop = FALSE]
   # Treat empty strings in the selected columns as missing.
   for (name in columns) {
     if (is.factor(survey[[name]])) survey[[name]] <- as.character(survey[[name]])

@@ -415,8 +415,10 @@ audit_table <- function(field) {
 }
 totals <- audit_table("totals")
 reasons <- audit_table("reasons")
-table <- function(x) knitr::kable(x, format = "pipe", row.names = FALSE,
-                                  format.args = list(big.mark = ",", scientific = FALSE))
+audit_kable <- function(x) {
+  knitr::kable(x, format = "pipe", row.names = FALSE,
+               format.args = list(big.mark = ",", scientific = FALSE))
+}
 ```
 
 ## 5. Account for every removed coefficient
@@ -430,7 +432,7 @@ They exclude variance and covariance parameters. The solver may use a
 smaller kernel spline basis after its rank checks.
 
 ```{r prefit-totals, echo=FALSE}
-table(totals)
+audit_kable(totals)
 ```
 
 *Table 4. One row per model and stage. The coefficients to fit equal the
@@ -442,8 +444,8 @@ aggregation. Respondents counts the people represented by those rows.*
 been screened for a candidate depth, VoteFrame checks which eligible
 overall curves are still supplied by a grouped spline. If no retained
 grouped spline supplies an eligible overall curve, it fits that curve on
-its own. This check runs once per candidate depth, after pruning. No
-spline columns were added back in this audit.
+its own. This check runs once per candidate depth, after pruning. The
+six stages added back `r sum(totals[["Spline coefficients added back†"]])` spline columns.
 
 The biggest cut came from dropping district-specific curves for vote
 shares. Everyone in a district is assigned the same district vote share,
@@ -459,7 +461,7 @@ estimate its own effect. The table counts the coefficients we dropped
 for each reason. One dropped curve can account for many coefficients.
 
 ```{r prefit-causes, echo=FALSE}
-table(reasons)
+audit_kable(reasons)
 ```
 
 *Table 5. Why coefficients were dropped.* Each row identifies the **model**
@@ -490,7 +492,7 @@ Their sum matches the dropped-coefficient count in Table 4.
   curve still has fitted deviations for the groups that qualified.
 
 ```{r prefit-terms, echo=FALSE}
-table(audit_table("terms"))
+audit_kable(audit_table("terms"))
 ```
 
 *Table 6. Names of the affected terms. One term can account for many
@@ -504,7 +506,7 @@ which coefficients are involved. The figures below show how far pruning
 moves each stage away from the cutoff of 30.
 
 ```{r prefit-conditioning, echo=FALSE}
-table(audit_table("diagnostic"))
+audit_kable(audit_table("diagnostic"))
 ```
 
 *Table 7. Maximum condition index for each stage’s weighted fixed design
@@ -518,7 +520,7 @@ singular value divided by the singular value for that direction. A
 larger index means a weaker direction.
 
 ```{r prefit-condition-components, echo=FALSE}
-table(audit_table("components"))
+audit_kable(audit_table("components"))
 ```
 
 *Table 8. Share of each coefficient's estimation variance accounted for
@@ -673,16 +675,16 @@ for (i in seq_along(audit)) {
 
 The national run uses `r n_draws` posterior draws. Set
 `VOTEFRAME_US_FIT=true` to include the model results and predictions.
-Reuse the saved presidential and House fits for the published inputs and
-model settings. Budget roughly 12 hours or more for model fitting alone
-on a GitHub Codespace with 16 GB RAM and 32 GB of storage. Prediction and
-raking take additional time.
+A fresh run fits the presidential and House models from the three tracked
+inputs. Budget roughly 12 hours or more for fitting alone on a GitHub
+Codespace with 16 GB RAM and 32 GB of storage. Prediction and raking take
+additional time.
 
-Set `VOTEFRAME_US_REUSE_FITS=true` and check that both `pres_fit.rds` and
-`house_fit.rds` are in `data/output/us 2026/models/` before knitting.
-If you set `VOTEFRAME_US_OUTPUT_DIR`, check its `models/` folder instead.
-A missing file triggers a fresh fit for that model. Set
-`VOTEFRAME_US_REUSE_FITS=false` to intentionally refit both models.
+Each completed model is saved under `data/output/us 2026/models/` as
+`pres_fit.rds` or `house_fit.rds`. Set `VOTEFRAME_US_OUTPUT_DIR` to use
+another run directory. To reuse verified fits, set `VOTEFRAME_US_REUSE_FITS=true`
+before knitting. Each model is refitted if its file is missing or cannot be
+verified against the current inputs, settings and fitting code.
 
 ```{r prefit-stop, include=FALSE}
 # Release the candidate designs before fitting or loading the national models.
@@ -837,6 +839,7 @@ out <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR",
 outputs <- case_study_outputs(out)
 requested_depth <- 2L
 max_iterations <- 100L
+parameter_tolerance <- 0.01
 minimum_support <- 10L
 depth_support_dir <- file.path(outputs$diagnostics, "depth_support")
 stage_columns <- c("outcome", "observations", "fitted_depth", "estimated_parameters",
@@ -844,42 +847,20 @@ stage_columns <- c("outcome", "observations", "fitted_depth", "estimated_paramet
                    "dropped_smooth", "estimated_retained_parameters", "fixed_condition_after",
                    "iterations_used", "max_parameter_change")
 control <- vglmer::vglmer_control(quiet = FALSE, quiet_rho = FALSE, print_prog = 1L)
-# Stream diagnostics to the console while knitr also records them in the vignette.
-fit_us_model <- function(...) {
-  if (!isTRUE(getOption("knitr.in.progress"))) return(fit_sequential_logit(...))
-  withCallingHandlers(
-    fit_sequential_logit(...),
-    message = function(m) cat(conditionMessage(m), file = stderr()),
-    warning = function(w) cat("Warning: ", conditionMessage(w), "\n", sep = "", file = stderr())
+# Both elections use the same fitting specification with their own survey columns and seed.
+fit_us_model <- function(filename, extension, predictors, seed, label) {
+  args <- list(
+    auxiliary_survey = survey, extension_variable = extension, area_variable = "district_id",
+    area_covariates = area_covariates, no_vote = "No Vote", outcome_order = vote_order,
+    predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
+    tolerance_parameters = parameter_tolerance, tolerance_elbo = 0, max_iterations = max_iterations,
+    minimum_support = minimum_support, depth_support_dir = depth_support_dir,
+    interaction_support_log = file.path(outputs$diagnostics, paste0(label, "_interaction_support.csv")),
+    log_file = file.path(outputs$diagnostics, paste0(label, "_fit_log.csv"))
   )
+  load_or_fit_us_model(file.path(outputs$models, filename), args, seed)
 }
-load_or_fit_us_model <- function(filename, extension, ...) {
-  path <- file.path(outputs$models, filename)
-  reuse <- identical(Sys.getenv("VOTEFRAME_US_REUSE_FITS"), "true")
-  if (!reuse || !file.exists(path)) {
-    fit <- fit_us_model(...)
-    save_case_study_rds(fit, path, compress = FALSE)
-    return(fit)
-  }
-  loadNamespace("gKRLS")
-  fit <- readRDS(path)
-  stopifnot(inherits(fit, "voteframe_sequential_logit"),
-            identical(fit$extension_variable, extension),
-            identical(fit$outcome_order, vote_order),
-            identical(names(fit$stages), head(vote_order, -1L)))
-  fit
-}
-set.seed(2026)
-
-pres_fit <- load_or_fit_us_model(
-  "pres_fit.rds", pres,
-  survey, pres, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
-  predictors = predictors, depth = requested_depth, splines = TRUE, control = control,
-  tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
-  minimum_support = minimum_support, depth_support_dir = depth_support_dir,
-  interaction_support_log = file.path(outputs$diagnostics, "presidential_interaction_support.csv"),
-  log_file = file.path(outputs$diagnostics, "presidential_fit_log.csv")
-)
+pres_fit <- fit_us_model("pres_fit.rds", pres, predictors, 2026L, "presidential")
 # Report the depth, screening counts, and convergence outcome for each stage.
 knitr::kable(pres_fit$fit_log[stage_columns], format = "pipe")
 ```
@@ -897,8 +878,9 @@ for (stage in names(pres_fit$stages)) {
 }
 ```
 
-The three presidential stages met the maximum parameter-change tolerance
-of 0.01 in the saved national fit.
+In the presidential fit, `r sum(pres_fit$fit_log$max_parameter_change < parameter_tolerance, na.rm = TRUE)`
+of `r nrow(pres_fit$fit_log)` stages recorded a final maximum parameter
+change below `r parameter_tolerance`.
 
 *Snippet 7. Expand presidential choice within one state and reuse the same coefficient draws across states.*
 
@@ -931,16 +913,12 @@ whenever that level appears again.
 *Snippet 8. Fit or load House choice conditional on presidential choice, then report convergence and fitted terms.*
 
 ```{r house-fit}
-set.seed(2027)
-house_fit <- load_or_fit_us_model(
-  "house_fit.rds", house,
-  survey, house, "district_id", area_covariates, no_vote = "No Vote", outcome_order = vote_order,
-  predictors = c(predictors, pres), depth = requested_depth, splines = TRUE, control = control,
-  tolerance_parameters = 0.01, tolerance_elbo = 0, max_iterations = max_iterations,
-  minimum_support = minimum_support, depth_support_dir = depth_support_dir,
-  interaction_support_log = file.path(outputs$diagnostics, "house_interaction_support.csv"),
-  log_file = file.path(outputs$diagnostics, "house_fit_log.csv")
-)
+# Release the saved presidential fit while fitting the House stages.
+rm(pres_fit)
+invisible(gc())
+house_fit <- fit_us_model("house_fit.rds", house, c(predictors, pres), 2027L, "house")
+# Both models are needed for the coefficient table and joint prediction.
+pres_fit <- readRDS(file.path(outputs$models, "pres_fit.rds"))
 # Report the same stage diagnostics and decoded formulas as for the presidential fit.
 knitr::kable(house_fit$fit_log[stage_columns], format = "pipe")
 ```
@@ -957,25 +935,14 @@ for (stage in names(house_fit$stages)) {
 }
 ```
 
-In the saved national House fit, No Vote and Democratic reached the
-100-iteration cap with maximum parameter changes of 0.43108 and 0.30709.
-Republican met the 0.01 tolerance after 95 iterations.
+In the House fit, `r sum(house_fit$fit_log$max_parameter_change < parameter_tolerance, na.rm = TRUE)`
+of `r nrow(house_fit$fit_log)` stages recorded a final maximum parameter
+change below `r parameter_tolerance`. Table 10 gives the iteration count
+and final change for each stage.
 
 ### Retained coefficients by predictor combination
 
-Each column is one fitted stage. For example, the House No Vote column
-has **1,117** coefficients for `district_id × vote_pres_2024`. Each is a
-random intercept for one district and presidential-choice combination.
-The House Republican stage has **448** such intercepts. It fits a smaller
-set of respondents because the No Vote and Democratic stages have
-already been handled.
-
-The `state_fips × house_share` row illustrates why a smooth can account
-for many coefficients. In House No Vote, its **1,836** coefficients
-consist of 51 state and DC slopes and 1,785 coefficients for state and
-DC departures from the national curve. The bottom row adds up the fitted
-coefficients in each stage. Use the table to see which terms account for
-most of the model's size.
+Each column is one fitted stage. The bottom row totals its fitted coefficients.
 
 ```{r coefficient-counts, echo=FALSE, results='asis'}
 stage_counts <- c(
@@ -990,6 +957,9 @@ counts <- vapply(stage_counts, function(stage) {
   values <- as.integer(stage[combinations])
   replace(values, is.na(values), 0L)
 }, integer(length(combinations)))
+report_count <- function(combination, stage) {
+  format(sum(counts[combinations == combination, stage]), big.mark = ",")
+}
 # Put the largest contributions first and show the actual total at the bottom.
 totals <- colSums(counts)
 rows <- order(-rowSums(counts), combinations)
@@ -1002,6 +972,14 @@ knitr::kable(count_table, format = "pipe", row.names = FALSE,
 ```
 
 *Table 11. Actual fitted coefficients by predictor combination and stage.*
+
+The House No Vote stage has **`r report_count("district_id × vote_pres_2024", "House No Vote")`**
+district-by-presidential-choice random intercepts. The House Republican stage
+has **`r report_count("district_id × vote_pres_2024", "House Republican")`**
+after the earlier stages have removed respondents from its risk set.
+For `state_fips × house_share`, the House No Vote stage retains
+**`r report_count("state_fips × house_share", "House No Vote")`** coefficients,
+counting both state-specific slopes and any fitted spline deviations.
 
 *Snippet 10. Expand House choice within each presidential category while keeping draw indices paired.*
 
@@ -1263,8 +1241,7 @@ if (run_rake) {
                        paste0("N_draw_", c(1L, ceiling(n_draws / 2), n_draws)))
   preview <- sample_extended_frame(raked_paths, preview_columns, partition_sizes)
   prune_geographic_partitions(raked_dir, raked_paths, "^state_([0-9]+|batch-[0-9]+)[.]rds$")
-  writeLines(normalizePath(raked_dir, mustWork = TRUE),
-             file.path(outputs$diagnostics, "raked-directory.txt"))
+  writeLines(raked_dir, file.path(outputs$diagnostics, "raked-directory.txt"))
   print(knitr::kable(preview, digits = 3, row.names = FALSE))
   cat("\n*Table 17. Sample of 100 raked joint rows with the calibrated mean and three draws.*\n\n")
 }

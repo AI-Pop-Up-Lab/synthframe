@@ -143,9 +143,14 @@ rejected ballots. Missing responses remain empty, and both geography
 fields are empty for the five respondents without a usable municipality.
 
 The extract contains 2,845 respondents, of whom 2,369 have all six fields
-populated. The vignette reads this checked-in CSV. To work with the original
-study files, obtain them from the study provider and place them in the
-Git-ignored `raw/` folder.
+populated. Use this checked-in CSV to reproduce the vignette. The study
+provider publishes the source codebook and questionnaire and handles requests
+for restricted respondent data. The repository records the source variables
+and recoding decisions above. An exact rebuild of the survey CSV would also
+require the original respondent and municipality files, the education
+code-to-label mapping, and the rules used to resolve missing or conflicting
+vote and turnout responses. The original survey-preparation script is
+unavailable here. [Version 1 study files and documentation](https://researchdata.se/en/catalogue/dataset/2024-490/1)
 
 **Data credit.** Oscarsson, H., Karlsson, R., Lindskog, H., and Oleskog
 Tryggvason, P. (2024). *The Swedish National Election Study 2022 – CSES
@@ -157,9 +162,8 @@ Program. [Dataset DOI](https://doi.org/10.5878/2ty4-tk98)
 
 [election_results.csv](election_results.csv) contains the final 2022
 parliamentary returns for all 290 municipalities. There is one row
-per municipality and `vote_choice_2022`. Join on the four-character
-`municipality_code`, keeping leading zeros. The file includes each
-municipality's Riksdag constituency name.
+per municipality and `vote_choice_2022`. The file supplies each
+municipality's four-character `municipality_code` and Riksdag constituency.
 
 The eight parliamentary parties have separate rows. `Other` pools valid
 votes for other participating parties. `Invalid` includes blank ballots
@@ -171,6 +175,45 @@ can deliberately cast a blank ballot, but the combined invalid count
 does not tell us which ballots were deliberate. The 11 shares are
 fractions from 0 to 1 and sum to one within each municipality.
 [Swedish Election Authority ballot guide](https://www.val.se/det-svenska-valsystemet/sa-funkar-rostning-i-svenska-val/sa-funkar-valsedlar-och-personrostning)
+
+### Join the prepared files by municipality
+
+The frame, survey and election results share the exact `municipality` name.
+Use the name for joins between the prepared files. To attach an official
+code to each respondent or population cell, first take the unique municipal
+geography from the election results. Joining the full results on municipality
+alone would repeat each matched row once per election outcome.
+
+Run this example from the repository root. Read the codes as text to preserve
+leading zeros such as `0114` (Upplands Väsby).
+
+```r
+country <- file.path("data", "input", "sweden 2026")
+read_input <- function(file, ...) {
+  read.csv(file.path(country, file), fileEncoding = "UTF-8", na.strings = c("", "NA"), ...)
+}
+survey <- read_input("auxiliary_survey.csv")
+frame <- read_input("frame.csv")
+results <- read_input("election_results.csv", colClasses = c(municipality_code = "character"))
+places <- unique(results[c("municipality", "municipality_code", "constituency")])
+stopifnot(nrow(places) == 290L, !anyNA(places),
+          !anyDuplicated(places$municipality), !anyDuplicated(places$municipality_code),
+          all(grepl("^[0-9]{4}$", places$municipality_code)))
+
+survey_row <- match(survey$municipality, places$municipality)
+frame_row <- match(frame$municipality, places$municipality)
+stopifnot(identical(is.na(survey_row), is.na(survey$municipality)), !anyNA(frame_row),
+          identical(survey$constituency, places$constituency[survey_row]),
+          identical(frame$constituency, places$constituency[frame_row]))
+survey$municipality_code <- places$municipality_code[survey_row]
+frame$municipality_code <- places$municipality_code[frame_row]
+```
+
+The lookup keeps all 2,845 survey rows in their original order. It matches
+2,840 respondents across 275 municipalities. The five respondents with
+missing municipality keep a missing code. All 361,920 population cells
+match across 290 municipalities. For an outcome-specific election share,
+join the results using both `municipality` and `vote_choice_2022`.
 
 ## Constituencies and candidate lists
 
@@ -199,8 +242,7 @@ python3 "data/input/sweden 2026/processing/build_population_frame.py"
 The election builder reads the 2022 workbook columns and gets municipality
 codes and names from `TAB6659_en.zip`. The population builder uses the
 reconstructed election file for the municipality and constituency mapping.
-For the survey, use the prepared `auxiliary_survey.csv` and the recoding
-notes above.
+The vignette reads the prepared [survey extract](#auxiliary-survey).
 
 | Local filename | Official source |
 | --- | --- |

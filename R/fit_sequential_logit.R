@@ -59,7 +59,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     if (!is.data.frame(frame) || !nrow(frame) || anyDuplicated(names(frame))) {
       stop("Supply a nonempty frame with unique column names.")
     }
-    frame <- as.data.frame(frame)
+    frame <- as_plain_frame(frame)
   }
   survey <- aggregate_extension_survey(auxiliary_survey, extension_variable,
                                        predictors, no_vote, outcome_order = outcome_order)
@@ -71,11 +71,14 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     area_covariates <- resolve_stage_area_covariates(area_covariates, outcomes)
   }
   # At depths that use area predictors, every fitted outcome needs its own matrix.
-  if (depth >= 0.75 && !is.null(area_covariates) &&
-      (!is.list(area_covariates) || anyDuplicated(names(area_covariates)) ||
-       !all(stages %in% names(area_covariates)) ||
-       any(vapply(area_covariates[stages], is.null, logical(1))))) {
-    stop("Supply an area covariate matrix named for each fitted outcome.")
+  area_covariates <- as_plain_frame(area_covariates)
+  if (depth >= 0.75 && !is.null(area_covariates)) {
+    if (!is.list(area_covariates) || anyDuplicated(names(area_covariates)) ||
+        !all(stages %in% names(area_covariates)) ||
+        any(vapply(area_covariates[stages], is.null, logical(1)))) {
+      stop("Supply an area covariate matrix named for each fitted outcome.")
+    }
+    area_covariates[stages] <- lapply(area_covariates[stages], as_plain_frame)
   }
   stage_covariates <- if (is.list(area_covariates)) {
     unlist(lapply(area_covariates[intersect(stages, names(area_covariates))], colnames),

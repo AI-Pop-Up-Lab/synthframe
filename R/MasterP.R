@@ -19,10 +19,10 @@ masterp_execute <- function(mother_frame, extensions, n_draws, count_variable, a
   if (pre_rake_mode == "keep" && is.null(pre_rake_dir)) {
     stop("Set pre_rake_dir to keep the pre-rake frame.")
   }
+  mother_frame <- as_plain_frame(mother_frame)
   population_draws <- prediction_count_draws(mother_frame, count_variable)
   keys <- setdiff(names(mother_frame), c(count_variable, population_draws))
   validate_prediction_frame(mother_frame, keys, count_variable)
-  mother_frame <- as.data.frame(mother_frame)
   masterp_named_list(extensions, "extensions", allow_empty = FALSE)
   masterp_named_list(aggregate_by, "aggregate_by")
   outcomes <- names(extensions)
@@ -63,7 +63,11 @@ masterp_execute <- function(mother_frame, extensions, n_draws, count_variable, a
       if (!is.character(path) || length(path) != 1L || is.na(path) || !nzchar(path)) {
         stop("Supply a prediction output directory for ", sQuote(outcome), ".")
       }
-      path <- normalizePath(path.expand(path), mustWork = FALSE)
+      # Resolve aliases even when the requested export directory is new.
+      path <- path.expand(path)
+      if (!dir.exists(path)) dir.create(path, recursive = TRUE, showWarnings = FALSE)
+      if (!dir.exists(path)) stop("Could not create prediction output directory ", sQuote(path), ".")
+      path <- normalizePath(path, mustWork = TRUE)
       if (path %in% prediction_dirs) {
         stop("Use a separate predict$output_dir for each extension that writes predictions.")
       }
@@ -118,7 +122,7 @@ masterp_execute <- function(mother_frame, extensions, n_draws, count_variable, a
       stop("Every survey must contain the outcome and the selected predictors available in the frame for ",
            sQuote(outcome), ".")
     }
-    survey <- do.call(rbind, lapply(surveys, function(x) as.data.frame(x)[columns]))
+    survey <- do.call(rbind, lapply(surveys, function(x) as_plain_frame(x)[columns]))
     fit_args$predictors <- predictors
     if (is.null(fit_args$log_file)) {
       fit_args$log_file <- paste0(log$path, "-fit-", i, ".csv")

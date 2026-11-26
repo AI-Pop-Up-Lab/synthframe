@@ -96,6 +96,9 @@ main <- function() {
     spec$predict$write_files <- TRUE
     spec
   })
+  # Both spellings refer to the same directory, which has not been created yet.
+  duplicate_exports$vote$predict$output_dir <- file.path(scratch, "predictions")
+  duplicate_exports$second_vote$predict$output_dir <- file.path(scratch, ".", "predictions")
   message <- tryCatch(MasterP(frame, duplicate_exports,
                               log_file = file.path(scratch, "duplicate-exports.log")),
                       error = conditionMessage)
@@ -120,6 +123,16 @@ main <- function() {
   source("tests/structural_zeros.R", local = TRUE)
   source("tests/raking_paths.R", local = TRUE)
   source("tests/benchmark_validation.R", local = TRUE)
+  source("tests/data_table_inputs.R", local = TRUE)
+  source("tests/data_table_raking.R", local = TRUE)
+  source("tests/us_fit_cache.R", local = TRUE)
+  source("tests/prediction_exports.R", local = TRUE)
+  if (requireNamespace("data.table", quietly = TRUE)) {
+    check_data_table_inputs(scratch)
+    check_data_table_raking(scratch)
+  } else message("Skipping data.table input checks. Install data.table to run them.")
+  check_us_fit_cache()
+  check_prediction_exports(scratch)
   check_structural_zeros()
   check_raking_paths()
   check_benchmark_validation()

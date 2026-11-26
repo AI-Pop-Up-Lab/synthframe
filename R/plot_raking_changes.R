@@ -1,9 +1,9 @@
 # Draw changes on outcome margins left unconstrained by the rake.
 plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file,
                                  count_variable = "N", constrained_by = area, no_vote = NULL) {
-  frame <- as.data.frame(frame)
-  extended <- as.data.frame(extended)
-  raked <- as.data.frame(raked)
+  frame <- as_plain_frame(frame, coerce = TRUE)
+  extended <- as_plain_frame(extended, coerce = TRUE)
+  raked <- as_plain_frame(raked, coerce = TRUE)
   population_draws <- prediction_count_draws(frame, count_variable)
   cell_columns <- setdiff(names(frame), c(count_variable, population_draws))
   row_keys <- c(cell_columns, outcome)
@@ -104,7 +104,7 @@ combine_raking_changes <- function(parts, outcomes) {
 plot_partitioned_raking_changes <- function(extended_paths, raked_paths, frame, frame_rows,
                                             area, outcome, no_vote, plot_file, read_extended = readRDS,
                                             read_raked = readRDS) {
-  frame <- as.data.frame(frame)
+  frame <- as_plain_frame(frame, coerce = TRUE)
   summary <- partitioned_raking_change_summary(frame, area, outcome, no_vote)
   for (i in seq_along(frame_rows)) {
     summary$add(read_extended(extended_paths[[i]]), read_raked(raked_paths[[i]]),
@@ -115,7 +115,7 @@ plot_partitioned_raking_changes <- function(extended_paths, raked_paths, frame, 
 
 # Accumulate one partition at a time while both versions of its counts are available.
 partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, groupings = NULL) {
-  frame <- as.data.frame(frame)
+  frame <- as_plain_frame(frame, coerce = TRUE)
   population_draws <- prediction_count_draws(frame, "N")
   cells <- setdiff(names(frame), c("N", population_draws))
   if (is.null(groupings)) {
@@ -144,9 +144,9 @@ partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, gro
   outcomes <- NULL
   count_columns <- NULL
   add <- function(extended, raked, population_cells) {
-    extended <- as.data.frame(extended)
-    raked <- as.data.frame(raked)
-    population_cells <- as.data.frame(population_cells)
+    extended <- as_plain_frame(extended, coerce = TRUE)
+    raked <- as_plain_frame(raked, coerce = TRUE)
+    population_cells <- as_plain_frame(population_cells, coerce = TRUE)
     stopifnot(identical(extended[c(cells, outcome)], raked[c(cells, outcome)]))
     observed <- unique(as.character(extended[[outcome]]))
     new_outcomes <- setdiff(observed, outcomes)

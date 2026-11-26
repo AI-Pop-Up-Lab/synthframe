@@ -11,6 +11,8 @@ $$
 After installing dependencies or editing code, run `Rscript --vanilla tests/integration.R`
 from the repository root before a long run. It fits a small model, extends a
 synthetic frame, and checks both raking targets and original population totals.
+Install `data.table` to include the keyed-table input checks. VoteFrame accepts
+both base data frames and `data.table` inputs for fitting, prediction and raking.
 Skip it if you're reading the vignettes. Run the relevant vignette to reproduce published results.
 
 ## Reproduce a case study
@@ -39,7 +41,7 @@ support, which you can check with `capabilities("cairo")`.
 *Snippet 1. Install the R packages used by the vignettes.*
 
 ```r
-install.packages(c("knitr", "vglmer", "gKRLS", "SQUAREM"), repos = "https://cloud.r-project.org")
+install.packages(c("knitr", "vglmer", "gKRLS", "SQUAREM", "digest"), repos = "https://cloud.r-project.org")
 ```
 
 The saved US results used R 4.3.3, vglmer 1.0.8, gKRLS 1.0.5, SQUAREM 2026.1,
@@ -48,23 +50,17 @@ recreating that R 4.3 environment. [CRAN Matrix archive](https://cran.r-project.
 
 From the repository root, set `country` to one of `"denmark"`, `"sweden"`, or
 `"us"` and run the block below. The chunks execute in order and write the
-rendered Markdown beside the R Markdown source. For the US, obtain the saved
-fits and place them in the run directory as described below before running
-this block.
+rendered Markdown beside the R Markdown source. A fresh US run fits both
+national models from the tracked inputs. Budget roughly 12 hours or more for
+fitting alone on a GitHub Codespace with 16 GB RAM and 32 GB of storage.
+Prediction and raking take additional time.
 
-*Snippet 2. Render a case study from the repository root, checking for saved fits for the US.*
+*Snippet 2. Render a case study from the repository root.*
 
 ```r
 country <- "denmark"
 vignette <- file.path("vignettes", paste0("vignette_", country, "_2026"))
-if (country == "us") {
-  run_dir <- Sys.getenv("VOTEFRAME_US_OUTPUT_DIR", unset = "data/output/us 2026")
-  fits <- file.path(run_dir, "models", c("pres_fit.rds", "house_fit.rds"))
-  if (!all(file.exists(fits))) {
-    stop("Place both saved US fits in ", file.path(run_dir, "models"), " before knitting.")
-  }
-  Sys.setenv(VOTEFRAME_US_FIT = "true", VOTEFRAME_US_REUSE_FITS = "true")
-}
+if (country == "us") Sys.setenv(VOTEFRAME_US_FIT = "true")
 knitr::opts_knit$set(root.dir = getwd())
 knitr::opts_chunk$set(error = FALSE)
 knitr::knit(paste0(vignette, ".Rmd"), output = paste0(vignette, ".md"))
@@ -102,18 +98,12 @@ Set `VOTEFRAME_PRE_RAKE_STORAGE=keep` to retain `extended_frame/` partitions and
 
 ### Reuse completed US fits
 
-Reuse the saved presidential and House fits for the published inputs and
-model settings. Budget roughly 12 hours or more just for model fitting on
-a GitHub Codespace with 16 GB RAM and 32 GB of storage. Prediction and
-raking take additional time.
-
-The fit files are stored outside Git. Obtain copies of `pres_fit.rds` and
-`house_fit.rds` and place them in `data/output/us 2026/models/`. If you set
-`VOTEFRAME_US_OUTPUT_DIR`, use the `models/` folder in that run directory.
-The example above checks for both files and enables reuse. When knitting
-directly with `VOTEFRAME_US_REUSE_FITS=true`, a missing file triggers a fresh
-fit for that model. Set `VOTEFRAME_US_REUSE_FITS=false` for an intentional
-refit of both models. Set `VOTEFRAME_US_RAKE=false` to render only the
+The US run saves each completed model under `data/output/us 2026/models/` as
+`pres_fit.rds` or `house_fit.rds`. To reuse a fit on a later run, set
+`VOTEFRAME_US_REUSE_FITS=true` before knitting. Each model is checked against
+its inputs, settings and fitting code. A missing, unreadable, unverified or
+mismatched fit triggers a fresh fit for that model. Set `VOTEFRAME_US_OUTPUT_DIR`
+to use another run directory or `VOTEFRAME_US_RAKE=false` to render only the
 pre-rake benchmark comparison.
 
 ## Fitting the extension variable
@@ -469,7 +459,10 @@ coefficient means and zero for new coefficients.
 **Exports and batching.** `predict_sequential_logit()` replaces
 `posterior_probabilities.rds` (cell × outcome × draw probabilities and frame keys)
 and `extended_frame.csv` under `data/output/`. Override with `output_dir` or use
-`write_files = FALSE` for the same posterior in memory.
+`write_files = FALSE` for the same posterior in memory. An export that fails
+while publishing the CSV rolls back the posterior file. When importing the
+CSV, declare identifier columns as character to preserve leading zeros and set
+`check.names = FALSE` to retain the original column names.
 `batch_size` limits rows per stage design. Share one initially empty
 `draw_state` environment across calls with the same fit to reuse fitted draws
 and frame-only effects. Use a separate environment per fit.
@@ -565,9 +558,9 @@ each target table.
 
 ```r
 second <- predict_sequential_logit(
-  second_fit, frame = first_extended, output_dir = "data/output/second-extension"
+  second_fit, frame = first_extended, write_files = FALSE
 )
-twice_extended <- read.csv(second$extended_frame_file)
+twice_extended <- aggregate_extended_frame(first_extended, second, by = names(second$cells))
 final <- rake_joint_extended_frame(
   twice_extended, original_frame,
   targets = list(first_outcome = first_targets, second_outcome = second_targets),

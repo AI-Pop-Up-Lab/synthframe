@@ -31,6 +31,9 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
       max_iterations > .Machine$integer.max) {
     stop("Supply a target column, a tolerance between zero and one, and a positive iteration limit.")
   }
+  extended_frame <- as_plain_frame(extended_frame)
+  frame <- as_plain_frame(frame)
+  targets <- lapply(targets, as_plain_frame)
   population_draws <- prediction_count_draws(frame, count_variable)
   keys <- setdiff(names(frame), c(count_variable, population_draws))
   validate_prediction_frame(frame, keys, count_variable)

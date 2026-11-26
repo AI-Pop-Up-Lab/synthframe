@@ -12,6 +12,9 @@ rake_extended_frame <- function(extended_frame, frame, targets, by, extension_va
   if (!all(vapply(list(extension_variable, target_variable, count_variable), function(x) {
     is.character(x) && length(x) == 1L && !is.na(x) && nzchar(x)
   }, logical(1)))) stop("Supply valid outcome, target, and count column names.")
+  extended_frame <- as_plain_frame(extended_frame)
+  frame <- as_plain_frame(frame)
+  targets <- as_plain_frame(targets)
   population_draws <- prediction_count_draws(frame, count_variable)
   # The joint solver already pairs each count draw with its original population.
   if (length(population_draws)) {

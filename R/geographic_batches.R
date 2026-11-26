@@ -1,6 +1,7 @@
 # Partition original row indices without splitting any raking target group.
 geographic_batches <- function(frame, area_variable, parent_area_variable = NULL,
                                areas_per_batch = NULL, rake_by = list(area_variable)) {
+  frame <- as_plain_frame(frame)
   valid_area <- function(column) {
     is.character(column) && length(column) == 1L && !is.na(column) &&
       column %in% names(frame) && !anyNA(frame[[column]]) &&

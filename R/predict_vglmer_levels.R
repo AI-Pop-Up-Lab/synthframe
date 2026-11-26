@@ -16,7 +16,7 @@ predict_vglmer_levels <- function(fit, newdata, n_draws = 125L,
     stop("new_fixed_sd must be a positive log-odds standard deviation.")
   }
 
-  newdata <- restore_screened_random(fit, as.data.frame(newdata))
+  newdata <- restore_screened_random(fit, as_plain_frame(newdata, coerce = TRUE))
   missing <- setdiff(fit$formula$interpret_gam$pred.names, names(newdata))
   if (length(missing)) stop("Prediction data is missing: ", paste(missing, collapse = ", "), ".")
   if (!nrow(newdata) || anyNA(newdata[fit$formula$interpret_gam$pred.names])) {

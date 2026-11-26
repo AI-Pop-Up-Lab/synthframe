@@ -1,6 +1,6 @@
 # Sum expected counts by group within each draw, keeping the extension category.
 aggregate_extended_frame <- function(frame, posterior, by = character()) {
-  frame <- as.data.frame(frame)
+  frame <- as_plain_frame(frame, coerce = TRUE)
   # Locate each requested cell in the saved probability array.
   rows <- match_posterior_cells(frame, posterior)
   if (!is.character(by) || anyNA(by) || anyDuplicated(by) ||
@@ -130,7 +130,8 @@ prediction_count_draws <- function(frame, count_variable) {
     stop("Population draws must be numbered consecutively from 1.")
   }
   columns <- columns[order(index)]
-  if (!all(vapply(frame[columns], function(x) {
+  if (!all(vapply(columns, function(column) {
+    x <- frame[[column]]
     is.numeric(x) && all(is.finite(x) & x >= 0)
   }, logical(1)))) stop("Population draws must be finite and nonnegative.")
   columns
