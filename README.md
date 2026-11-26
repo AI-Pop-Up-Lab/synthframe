@@ -13,7 +13,8 @@ from the repository root before a long run. It fits a small model, extends a
 synthetic frame, and checks both raking targets and original population totals.
 Install `data.table` to include the keyed-table input checks. VoteFrame accepts
 both base data frames and `data.table` inputs for fitting, prediction and raking.
-Skip it if you're reading the vignettes. Run the relevant vignette to reproduce published results.
+The Markdown reports in Table 1 can be read directly. Run their R Markdown
+sources to generate results with the current code.
 
 ## Reproduce a case study
 
@@ -33,7 +34,8 @@ and any upstream steps needed to rebuild those inputs.
 The published Nordic results predate the two-supported-level rule for random
 effects. With the checked-in inputs, current screening drops the education
 intercept for Denmark's Invalid stage, the municipality intercept for Sweden's
-KD stage, and the sex intercept for Sweden's Other stage.
+KD stage, and the sex intercept for Sweden's Other stage. The captions on
+the archived raking-change figures identify the denominators used in each report.
 
 Install the R packages in your own R library. The figures use Cairo PNG
 support, which you can check with `capabilities("cairo")`.
@@ -44,31 +46,34 @@ support, which you can check with `capabilities("cairo")`.
 install.packages(c("knitr", "vglmer", "gKRLS", "SQUAREM", "digest"), repos = "https://cloud.r-project.org")
 ```
 
-The saved US results used R 4.3.3, vglmer 1.0.8, gKRLS 1.0.5, SQUAREM 2026.1,
+The original published US run used R 4.3.3, vglmer 1.0.8, gKRLS 1.0.5, SQUAREM 2026.1,
 knitr 1.52, and Matrix 1.6-5. Use a compatible release of Matrix if
 recreating that R 4.3 environment. [CRAN Matrix archive](https://cran.r-project.org/src/contrib/Archive/Matrix/)
 
 From the repository root, set `country` to one of `"denmark"`, `"sweden"`, or
 `"us"` and run the block below. The chunks execute in order and write the
-rendered Markdown beside the R Markdown source. A fresh US run fits both
-national models from the tracked inputs. Budget roughly 12 hours or more for
-fitting alone on a GitHub Codespace with 16 GB RAM and 32 GB of storage.
-Prediction and raking take additional time.
+rendered Markdown beside the R Markdown source. For the US, the default is
+a pre-fit report covering the inputs and model designs. On a
+memory-limited Codespace, read the completed national report and import the
+saved outputs. To run the full US analysis on a machine with sufficient
+memory and disk space, set `VOTEFRAME_US_FIT=true` before running Snippet 2.
 
 *Snippet 2. Render a case study from the repository root.*
 
 ```r
 country <- "denmark"
 vignette <- file.path("vignettes", paste0("vignette_", country, "_2026"))
-if (country == "us") Sys.setenv(VOTEFRAME_US_FIT = "true")
+prefit <- country == "us" && !identical(Sys.getenv("VOTEFRAME_US_FIT"), "true")
+report <- paste0(vignette, if (prefit) "_prefit.md" else ".md")
 knitr::opts_knit$set(root.dir = getwd())
 knitr::opts_chunk$set(error = FALSE)
-knitr::knit(paste0(vignette, ".Rmd"), output = paste0(vignette, ".md"))
+knitr::knit(paste0(vignette, ".Rmd"), output = report)
 ```
 
 ### Generated outputs
 
-Each run writes to `data/output/<country> 2026/` using the same layout.
+Full runs use `data/output/<country> 2026/` for the files below. The US
+pre-fit run writes the report and design figures before fitting begins.
 
 *Table 2. Files written to each case study’s output directory.*
 
@@ -76,7 +81,7 @@ Each run writes to `data/output/<country> 2026/` using the same layout.
 | --- | --- |
 | `models/` | Fitted models as RDS files |
 | `diagnostics/` | Fit and screening CSVs, benchmark metrics, and original-cell checks |
-| `logs/` | Captured render or run logs and any recovery notes |
+| `logs/` | Directory for render logs or recovery notes you choose to save |
 | `raked_frame/` | Calibrated counts for the mean and all 125 draws |
 
 *Table 3. Raked-frame partitions and calibration margins by case study.*
@@ -85,26 +90,33 @@ Each run writes to `data/output/<country> 2026/` using the same layout.
 | --- | --- | --- |
 | Denmark | One file, `raked_frame/part-01.rds` | 2022 municipal shares of the electoral roll |
 | Sweden | One per geographic batch | 2022 municipal shares of the electoral roll |
-| US | One per state and DC, about 6.5 GiB nationwide | Joint calibration to 2024 state-level presidential and district-level House margins, accounting for redistricting. [Redistricting methods](https://github.com/robertocerinaprojects/polling-without-people) |
+| US | By default, one per state and DC, about 6.5 GiB nationwide. A batch-size override can group whole states. | Joint calibration to 2024 state-level presidential and district-level House margins, accounting for redistricting. [Redistricting methods](https://github.com/robertocerinaprojects/polling-without-people) |
 
 Denmark and Sweden also use these shares as predictors. `No Vote` is eligible
 people who cast no ballot. `Invalid` includes blank and other rejected ballots
-in official returns. In comparisons, $s_{\mathrm{No\ Vote}}=N_{\mathrm{No\ Vote}}/N$
+in official returns. In benchmark plots with `no_vote` set,
+$s_{\mathrm{No\ Vote}}=N_{\mathrm{No\ Vote}}/N$
 and $s_{\mathrm{party}}=N_{\mathrm{party}}/(N-N_{\mathrm{No\ Vote}})$.
+The raking-change plots use the whole eligible population for every choice.
 
-Figures are under the matching `vignettes/assets/` directory.
+Each render updates the figures it produces under the matching
+`vignettes/assets/` directory, including when you change the data output directory.
 Set `VOTEFRAME_PRE_RAKE_STORAGE=keep` to retain `extended_frame/` partitions and
 `VOTEFRAME_US_RAKED_DIR` to put the US raked frame on another disk.
 
 ### Reuse completed US fits
 
 The US run saves each completed model under `data/output/us 2026/models/` as
-`pres_fit.rds` or `house_fit.rds`. To reuse a fit on a later run, set
-`VOTEFRAME_US_REUSE_FITS=true` before knitting. Each model is checked against
+`pres_fit.rds` or `house_fit.rds`. To reuse a fit on a later full run, set
+both `VOTEFRAME_US_FIT=true` and `VOTEFRAME_US_REUSE_FITS=true` before
+knitting. Each model is checked against
 its inputs, settings and fitting code. A missing, unreadable, unverified or
 mismatched fit triggers a fresh fit for that model. Set `VOTEFRAME_US_OUTPUT_DIR`
 to use another run directory or `VOTEFRAME_US_RAKE=false` to render only the
-pre-rake benchmark comparison.
+pre-rake benchmark comparison. When transferring a completed run, copy the
+diagnostics alongside the models. Each saved fit contains its stage log in
+`fit$fit_log` and its producer versions in `fit$us_fit_runtime`. The stored
+`fit$log_file` path points to the machine where the model was fitted.
 
 ## Fitting the extension variable
 
@@ -127,6 +139,7 @@ result <- MasterP(                                        # Fit, extend, and joi
       survey = presidential_survey,                       # Survey with a matching presidential column.
       fit = list(                                         # Specify the presidential model.
         area_variable = "district_id",                     # Match area covariates by district.
+        no_vote = "No Vote",                               # Model nonvoting before party choice.
         depth = 2,                                        # Request interactions up to order two.
         no_interactions = c("district_id", "state_fips"),   # Keep these predictors out of interactions.
         area_covariates = presidential_covariates           # Supply district covariates for the vote stages.
@@ -137,7 +150,7 @@ result <- MasterP(                                        # Fit, extend, and joi
         by = "state_fips"                                  # Calibrate separately in each state.
       )),                                                 # End the presidential raking options.
       plots = list(district = list(                        # Compare predictions with district benchmarks.
-        targets = presidential_district_benchmarks,        # Supply the benchmark shares.
+        targets = presidential_district_benchmarks,        # Population shares, including No Vote.
         by = "district_id",                                # Compare within each district.
         after_file = "presidential_district.png"             # Save the after-rake comparison plot.
       ))                                                  # End the presidential benchmark options.
@@ -146,6 +159,7 @@ result <- MasterP(                                        # Fit, extend, and joi
       survey = list(house_survey_1, house_survey_2),         # Pool two surveys with matching House columns.
       fit = list(                                         # Specify the House model.
         area_variable = "district_id",                     # Match area covariates by district.
+        no_vote = "No Vote",                               # Use the same nonvoter label for House.
         depth = 2,                                        # Request interactions up to order two.
         no_interactions = c("district_id", "state_fips"),   # Keep these predictors out of interactions.
         area_covariates = house_covariates                  # Supply district covariates for the vote stages.
@@ -191,7 +205,8 @@ for $N$ and every draw.
 MasterP's `pre_rake_mode = "keep"` and `pre_rake_dir` save the joint pre-rake frame
 as `extended_frame.rds`. Mode `"temporary"` stores it on disk after joint raking
 and removes it at exit. MasterP requires the full frame in RAM for joint raking.
-Vignettes require the active prediction or raking block in RAM.
+Each vignette holds the active prediction or raking block in RAM. Denmark
+also combines all of its raked blocks in memory to write a single file.
 
 *Table 5. Vignette settings for pre-rake storage and geographic batching.*
 
@@ -210,6 +225,10 @@ whole state, and crossing margins with no safe geographic grouping use one batch
 ### Fit one extension directly
 
 Load the R functions from the repository root with `vglmer` installed.
+This example uses conditional historical shares and the default support and
+stopping settings. The Denmark vignette uses each party's share of the
+electoral roll, sets `minimum_support = 10L`, disables ELBO stopping, and caps
+each stage at 100 iterations.
 
 *Snippet 4. Fit a single sequential-logit extension using the Denmark inputs.*
 
@@ -330,8 +349,9 @@ effects and interactions. [Goplerud, supplement §A.4](https://mgoplerud.com/pap
    (e.g. district × state when district determines state). The fit log lists
    these groups under `redundant_random_groups`. Keep independent unpenalized
    fixed columns, including when a product duplicates a main effect, and warn
-   and log omitted predictors and columns at the selected stage. This rank
-   check leaves hierarchical interaction and spline bases intact.
+   and log omitted predictors and columns at the selected stage. The rank
+   check uses the unpenalized fixed design. Removing a parent term can also
+   remove dependent interactions and splines under the hierarchy rule below.
    For `minimum_support = 10L`, require $`s_j=\sum_i t_i\mathbf{1}(X_{ij}\ne0)\ge10`$
    for fixed columns and random-intercept levels, where $`t_i`$ is the aggregated
    row's binomial trial count. The intercept is protected. `-1L` (default) and
@@ -400,9 +420,10 @@ or spline after screening, fitting stops and records the reason in the stage
 log. VoteFrame defaults accept
 $`\max|\Delta\theta|<0.01`$ for tracked variational parameters or
 $`0<\Delta\mathrm{ELBO}<10^{-5}`$. A supplied `vglmer_control()` has its own defaults.
-Override with `tolerance_parameters` or `tolerance_elbo` (zero disables that
-criterion) and `max_iterations` per stage. At the cap the solver can return with
-a non-convergence message.
+The fitter's `tolerance_parameters` and `tolerance_elbo` override the corresponding
+control values. Zero disables that criterion. A positive `tolerance_rel_elbo`
+in `vglmer_control()` also enables relative ELBO stopping. Set `max_iterations`
+to cap each stage. At the cap the solver can return with a non-convergence message.
 
 *Table 7. Fit audit options and the files they produce.*
 
@@ -463,9 +484,11 @@ and `extended_frame.csv` under `data/output/`. Override with `output_dir` or use
 while publishing the CSV rolls back the posterior file. When importing the
 CSV, declare identifier columns as character to preserve leading zeros and set
 `check.names = FALSE` to retain the original column names.
-`batch_size` limits rows per stage design. Share one initially empty
-`draw_state` environment across calls with the same fit to reuse fitted draws
-and frame-only effects. Use a separate environment per fit.
+`batch_size` limits how many cells enter each design-matrix calculation. The
+posterior array still holds all cells supplied in one call. To limit its size,
+predict on partitions of the frame. Pass the same initially empty `draw_state`
+environment to each call with the same fit, draw count, and `new_fixed_sd` so
+fitted coefficients and frame-only effects reuse their draws across partitions.
 
 **Counts.** For cell $x$, outcome $k$, and draw $d$, the CSV stores one row
 per $(x,k)$ with
@@ -533,13 +556,17 @@ $`i`$ to $`10i`$. The unique solution assigns every cell entirely to its own
 outcome. At the default settings both solvers report a failure to match the targets.
 
 Mean and draw columns are raked independently. With incoming population draws,
-both solvers pair columns by draw number. The original-cell plot centers draw
-errors on the original mean so the plot measures agreement with the paired
-population even when that population varies across draws:
+both solvers pair columns by draw number. For the original-cell plot, let
+$N_x^{\mathrm{input}}$ be the value in the original frame's count column
+(`N` by default). The 90% interval uses the 5th and 95th percentiles of
+the following values across draws.
 
 $$
-\text{plotted count}^{(d)}_x=\bar N_x+\left(\sum_k R^{(d)}_{xk}-N_x^{(d)}\right).
+\text{plotted count}^{(d)}_x=N_x^{\mathrm{input}}+\left(\sum_k R^{(d)}_{xk}-N_x^{(d)}\right).
 $$
+
+For example, if the original `N` is 100 and two population draws are 80
+and 160, a rake that preserves both draw totals places both interval limits at 100.
 
 ### Extending a frame twice
 

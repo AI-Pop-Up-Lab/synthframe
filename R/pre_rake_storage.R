@@ -65,10 +65,7 @@ pre_rake_storage <- function(mode = "auto", directory = NULL, bytes = 0,
   if (mode == "temporary" && !dir.create(directory)) stop("Could not create temporary pre-rake storage.")
   put <- function(frame, name) {
     path <- file.path(directory, paste0(name, ".rds"))
-    pending <- tempfile(".pre-rake-", tmpdir = directory)
-    on.exit(unlink(pending))
-    saveRDS(frame, pending)
-    if (!file.rename(pending, path)) stop("Could not publish pre-rake frame: ", path)
+    save_case_study_rds(frame, path)
     path
   }
   list(mode = mode, put = put, get = readRDS, cleanup = function() {

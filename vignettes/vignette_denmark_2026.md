@@ -96,9 +96,10 @@ cells$outcome_order
 It screens support, prunes collinear fixed columns while preserving
 hierarchy, and reduces depth if the retained design exceeds the
 respondent budget. The fit log records the selected designs, the
-columns removed, and the solver diagnostics. A stage can return a fit
-at the iteration cap, so inspect the solver status before interpreting
-its results.
+columns removed, and the solver diagnostics. In Table 1, `returned` means
+the solver produced a model. With the settings below, convergence requires
+`max_parameter_change` to fall below 0.01. If a stage reaches 100
+iterations at or above that threshold, its predictions use the last iterate.
 
 *Snippet 4. Fit and save the sequential vote-choice stages.*
 
@@ -152,14 +153,14 @@ knitr::kable(fit$fit_log[fields])
 
 *Table 1. Fitted stages, with sample sizes, retained design, screened coefficients, and convergence diagnostics.*
 
-The Invalid stage accepted candidate depth 4. Its largest retained terms
-combine gender and 2022 vote share, so its retained order is 2.
+The published fit predates the rule requiring two supported levels for
+a random effect. In that fit, the Invalid stage accepted candidate depth 4.
+Its largest retained terms combine gender and 2022 vote share, giving a
+retained order of 2.
 
-In this run, the No Vote stage reached the 100-iteration cap with a
-maximum parameter change of 0.02414 against the 0.01 threshold. The
-remaining nine fitted stages converged. The diagnostics below use the
-returned No Vote fit, so its estimates should be read with that
-convergence result in mind.
+The No Vote stage reached the 100-iteration cap with a maximum parameter
+change of 0.02414. The other nine stages met the 0.01 threshold. The
+diagnostics below use the last No Vote iterate.
 
 ## Predict and check municipal vote shares before raking
 
@@ -206,14 +207,7 @@ rm(draw_state)
 
 ``` r
 figure <- function(name) file.path(figure_dir, paste0(name, ".png"))
-municipal_counts <- do.call(rbind, lapply(extended_parts, function(part) {
-  counts <- storage$get(part)
-  keys <- counts[c(area, outcome)]
-  group <- frame_cell_keys(keys, keys)
-  columns <- c("N", extended_frame_draw_columns(counts, "N"))
-  cbind(keys[!duplicated(group), , drop = FALSE],
-        rowsum(counts[columns], group, reorder = FALSE))
-}))
+municipal_counts <- municipal_partition_counts(extended_parts, storage$get, area, outcome)
 before <- check_extended_frame(
   municipal_counts, election, by = area, extension_variable = outcome, target_variable = "share_eligible",
   no_vote = no_vote, outcome_order = fit$outcome_order,

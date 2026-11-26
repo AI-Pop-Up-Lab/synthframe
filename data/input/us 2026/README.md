@@ -6,14 +6,16 @@ House and presidential vote outcomes. The source is the
 
 ## Transfer
 
-The three published files are in this directory under their original names.
-To reproduce this version, download from the same commit under
-`01_frame/data/output/10_handoff/`. To
-rebuild them, run `Rscript 01_frame/scripts/10_prepare_handoff.R` from the
-upstream repository root with the saved outputs from Steps 05–07 and 09.
-Verify the files against the SHA-256 checksums recorded from that commit.
+The three published files are tracked here under their original names.
+Replacement copies are available in the [upstream handoff directory at `b302fb4`](https://github.com/robertocerinaprojects/polling-without-people/tree/b302fb476c710896f53f7583ac5528bf31ce2524/01_frame/data/output/10_handoff).
+To rebuild them, run `Rscript 01_frame/scripts/10_prepare_handoff.R` from
+the upstream repository root with the saved outputs from Steps 05–07 and 09.
+
+From the VoteFrame repository root, verify the three input files against
+the SHA-256 checksums for this handoff.
 
 ```sh
+cd 'data/input/us 2026'
 sha256sum -c <<'CHECKSUMS'
 e29d5b82786dd1331526dd473ec906f175f63229086824b365fcaeb0c426ad6f  ces_2024_harmonized.rds
 24eedb7512adbb7ae13f7e3156400f7807da9ae40925e13c1a38cfa13ada74d9  district_election_inputs_cd120.csv

@@ -19,3 +19,15 @@ save_case_study_rds <- function(object, path, compress = TRUE) {
   if (!file.rename(pending, path)) stop("Could not publish ", sQuote(path), ".")
   invisible(path)
 }
+
+# Each municipality belongs to one partition. Retain the first-seen group and draw orders.
+municipal_partition_counts <- function(parts, read_part, area, outcome) {
+  do.call(rbind, lapply(parts, function(part) {
+    counts <- as_plain_frame(read_part(part))
+    keys <- counts[c(area, outcome)]
+    group <- frame_cell_keys(keys, keys)
+    columns <- c("N", extended_frame_draw_columns(counts, "N"))
+    cbind(keys[!duplicated(group), , drop = FALSE],
+          rowsum(counts[columns], group, reorder = FALSE))
+  }))
+}

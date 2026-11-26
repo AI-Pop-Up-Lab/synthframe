@@ -78,9 +78,10 @@ cells$outcome_order
 It screens support, prunes collinear fixed columns while preserving
 hierarchy, and reduces depth if the retained design exceeds the
 respondent budget. The fit log records the selected designs, the
-columns removed, and the solver diagnostics. A stage can return a fit
-at the iteration cap, so inspect the solver status before interpreting
-its results.
+columns removed, and the solver diagnostics. In Table 1, `returned` means
+the solver produced a model. With the settings below, convergence requires
+`max_parameter_change` to fall below 0.01. If a stage reaches 100
+iterations at or above that threshold, its predictions use the last iterate.
 
 Age enters the model in years, with 95 representing ages 95 and older.
 With splines enabled, the fitter considers a smooth age effect and
@@ -122,11 +123,9 @@ knitr::kable(fit$fit_log[fields])
 
 *Table 1. Fitted stages, with sample sizes, retained design, screened coefficients, and convergence diagnostics.*
 
-In this run, the No Vote, S, M, and SD stages kept age curves by sex,
-education, and supported municipalities. Each reached the 100-iteration
-cap above the 0.01 maximum parameter change threshold. The other six
-stages converged and kept a global age curve. The joint smooth of age
-and municipal vote share did not survive screening in any stage.
+To see which age curves survived screening, inspect the fitted formula
+for the stage of interest, for example `fit$stages[["No Vote"]]$formula`
+for nonvoting.
 
 ## Predict and check municipal vote shares before raking
 
@@ -182,18 +181,9 @@ rm(draw_state)
 
 ```{r before-rake}
 figure <- function(name) file.path(figure_dir, paste0(name, ".png"))
-municipal_counts <- function(parts, read_part = readRDS) {
-  do.call(rbind, lapply(parts, function(part) {
-    counts <- read_part(part)
-    keys <- counts[c(area, outcome)]
-    group <- frame_cell_keys(keys, keys)
-    columns <- c("N", extended_frame_draw_columns(counts, "N"))
-    cbind(keys[!duplicated(group), , drop = FALSE],
-          rowsum(counts[columns], group, reorder = FALSE))
-  }))
-}
+municipal_counts <- municipal_partition_counts(extended_parts, storage$get, area, outcome)
 before <- check_extended_frame(
-  municipal_counts(extended_parts, storage$get), election, by = area, extension_variable = outcome,
+  municipal_counts, election, by = area, extension_variable = outcome,
   target_variable = "share_eligible", no_vote = no_vote, outcome_order = fit$outcome_order,
   plot_file = figure("municipal-before")
 )
@@ -249,7 +239,8 @@ demographic cell.
 
 ```{r after-rake}
 after <- check_extended_frame(
-  municipal_counts(raked_paths), election, by = area, extension_variable = outcome,
+  municipal_partition_counts(raked_paths, readRDS, area, outcome),
+  election, by = area, extension_variable = outcome,
   target_variable = "share_eligible", no_vote = no_vote, outcome_order = fit$outcome_order,
   coverage_tolerance = 2 * rake_tolerance, plot_file = figure("municipal-after")
 )

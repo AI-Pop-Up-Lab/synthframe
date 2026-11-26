@@ -21,9 +21,10 @@ zero calibrated counts are still included.*
 All three inputs use the 2026 district map (CD120), including DC. The
 [US input guide](../data/input/us%202026/README.md) records the upstream
 commit, checksums, and the rules for observed and modeled House returns.
-Run the chunks from the repository root with `vglmer` 1.0.8, `gKRLS`, and
-`SQUAREM` installed. VoteFrame screens fixed columns and random-effect levels before
-calling `vglmer`.
+Run the chunks from the VoteFrame repository root. The [case-study setup
+instructions](../README.md#reproduce-a-case-study) list the R packages and
+show how to knit the report. VoteFrame screens fixed columns and random-effect
+levels before calling `vglmer`.
 
 ## 1. Read the survey, district data, and population frame
 
@@ -675,16 +676,22 @@ for (i in seq_along(audit)) {
 
 The national run uses `r n_draws` posterior draws. Set
 `VOTEFRAME_US_FIT=true` to include the model results and predictions.
-A fresh run fits the presidential and House models from the three tracked
-inputs. Budget roughly 12 hours or more for fitting alone on a GitHub
-Codespace with 16 GB RAM and 32 GB of storage. Prediction and raking take
-additional time.
+A fresh full run fits both national models from the three tracked inputs,
+then predicts and calibrates the joint frame. On a memory-limited Codespace,
+you can inspect the completed Markdown report and its figures directly or run
+the pre-fit checks. For a pre-fit render, set `VOTEFRAME_US_FIT=false`
+immediately before `knitr::knit()` and use
+`output = "vignettes/vignette_us_2026_prefit.md"` to preserve the full report.
+The pre-fit render regenerates the two pre-fit figures in
+`vignettes/assets/us-2026/`. A full render writes its figures there as well.
 
-Each completed model is saved under `data/output/us 2026/models/` as
-`pres_fit.rds` or `house_fit.rds`. Set `VOTEFRAME_US_OUTPUT_DIR` to use
-another run directory. To reuse verified fits, set `VOTEFRAME_US_REUSE_FITS=true`
-before knitting. Each model is refitted if its file is missing or cannot be
-verified against the current inputs, settings and fitting code.
+To use fits produced on another machine, place `pres_fit.rds` and
+`house_fit.rds` under `data/output/us 2026/models/`, or in the `models/`
+subdirectory of your `VOTEFRAME_US_OUTPUT_DIR`. Set both
+`VOTEFRAME_US_FIT=true` and `VOTEFRAME_US_REUSE_FITS=true` before knitting.
+The vignette reuses each model whose inputs, settings and fitting code match.
+A missing or unverified file starts a fresh fit for that model. Reusing the
+fits still runs prediction and, by default, calibration.
 
 ```{r prefit-stop, include=FALSE}
 # Release the candidate designs before fitting or loading the national models.
