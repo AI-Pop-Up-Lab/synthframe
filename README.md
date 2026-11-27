@@ -30,9 +30,10 @@ $$
 
 ## Install the R package
 
-Download the `synthframe_0.1.0.tar.gz` source package and run the following
-in R from the folder containing the archive. SynthFrame requires R 4.1 or
-later.
+Download the [SynthFrame 0.1.0 source package](https://github.com/AI-Pop-Up-Lab/synthframe/releases/download/v0.1.0/synthframe_0.1.0.tar.gz)
+from the [package release](https://github.com/AI-Pop-Up-Lab/synthframe/releases/tag/v0.1.0).
+Run the following in R from the folder containing the archive. SynthFrame
+requires R 4.1 or later.
 
 ```r
 install.packages(c("CholWishart", "gKRLS", "Matrix", "mgcv", "mvtnorm",
