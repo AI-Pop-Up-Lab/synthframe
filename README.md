@@ -18,10 +18,9 @@ sources to generate results with the current code.
 
 ## Reproduce a case study
 
-The case studies are on the `package` branch. Each example runs from
-the prepared inputs tracked under
-[`data/input/`](data/input/). Its input guide covers sources, recodes,
-and any upstream steps needed to rebuild those inputs.
+Run each case study from the repository root on `main`. The prepared inputs
+are tracked under [`data/input/`](data/input/). Each input guide covers
+sources, recodes, and any upstream steps needed to rebuild those inputs.
 
 *Table 1. Case-study reports, runnable vignettes, and input guides.*
 
@@ -31,11 +30,9 @@ and any upstream steps needed to rebuild those inputs.
 | Sweden 2026 | [Vignette](vignettes/vignette_sweden_2026.md) | [R Markdown](vignettes/vignette_sweden_2026.Rmd) | [Sweden inputs](data/input/sweden%202026/README.md) |
 | US 2026 | [Vignette](vignettes/vignette_us_2026.md) | [R Markdown](vignettes/vignette_us_2026.Rmd) | [US inputs](data/input/us%202026/README.md) |
 
-The published Nordic results predate the two-supported-level rule for random
-effects. With the checked-in inputs, current screening drops the education
-intercept for Denmark's Invalid stage, the municipality intercept for Sweden's
-KD stage, and the sex intercept for Sweden's Other stage. The captions on
-the archived raking-change figures identify the denominators used in each report.
+The Denmark and Sweden reports use fresh fits. The US report uses the saved
+fits and refreshed predictions and calibration. The raking-change figures
+express each outcome, including nonvoting, as a share of the eligible population.
 
 Install the R packages in your own R library. The figures use Cairo PNG
 support, which you can check with `capabilities("cairo")`.
