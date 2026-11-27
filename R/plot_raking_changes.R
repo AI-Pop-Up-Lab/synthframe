@@ -29,7 +29,7 @@ plot_raking_changes <- function(extended, raked, frame, area, outcome, plot_file
     )), outcomes)
   })
   labels <- vapply(groupings, function(by) {
-    paste(gsub("_", " ", by, fixed = TRUE), collapse = " × ")
+    paste(gsub("_", " ", by, fixed = TRUE), collapse = " \u00d7 ")
   }, character(1))
   draw_raking_change_panels(summary, labels, outcomes, plot_file)
   invisible(plot_file)
@@ -196,7 +196,7 @@ partitioned_raking_change_summary <- function(frame, area, outcome, no_vote, gro
       combine_raking_changes(lapply(local_summaries, `[[`, i), outcomes)
     })
     labels <- vapply(c(national_groups, local_groups), function(by) {
-      paste(gsub("_", " ", by, fixed = TRUE), collapse = " × ")
+      paste(gsub("_", " ", by, fixed = TRUE), collapse = " \u00d7 ")
     }, character(1))
     draw_raking_change_panels(c(national_summaries, local), labels, outcomes, plot_file)
     invisible(plot_file)

@@ -152,7 +152,7 @@ sequential_stage_design <- function(data, area_variable, depth, splines,
                               smooth_predictors[keep_smooth])
   combinations <- vapply(combination_predictors, function(variables) {
     if (!length(variables)) return("(Intercept)")
-    paste(names(predictor_names)[predictor_names %in% variables], collapse = " × ")
+    paste(names(predictor_names)[predictor_names %in% variables], collapse = " \u00d7 ")
   }, character(1))
   combination_counts <- tapply(c(fixed_design$coefficient_counts, random_counts$counts,
                                   smooth_width[keep_smooth]), combinations, sum)

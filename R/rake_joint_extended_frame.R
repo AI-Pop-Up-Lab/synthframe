@@ -109,7 +109,7 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
     batches <- geographic_batches(frame, area_variable, parent_area_variable, areas_per_batch, by)
     if (length(batches) > 1L) {
       work <- length(batches) * length(count_columns)
-      if (!is.null(progress)) progress(0L, work, sprintf("%d geographic batches × %d count columns",
+      if (!is.null(progress)) progress(0L, work, sprintf("%d geographic batches \u00d7 %d count columns",
                                                         length(batches), length(count_columns)))
       target_keys <- lapply(margin_names, function(margin) {
         columns <- by[[margin]]
@@ -126,7 +126,7 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
       raked <- extended_frame
       for (i in seq_along(batches)) {
         if (isTRUE(solver_trace)) {
-          cat("Geographic raking batch ", i, "/", length(batches), " — ", names(batches)[i],
+          cat("Geographic raking batch ", i, "/", length(batches), " \u2014 ", names(batches)[i],
               "\n", sep = "")
         }
         original <- frame[batches[[i]], , drop = FALSE]
@@ -139,7 +139,7 @@ rake_joint_extended_frame <- function(extended_frame, frame, targets, by,
         }), margin_names)
         batch_progress <- if (!is.null(progress)) function(done, total, detail) {
           if (done > 0L) progress((i - 1L) * length(count_columns) + done, work,
-                                  paste0("batch ", names(batches)[i], " — ", detail))
+                                  paste0("batch ", names(batches)[i], " \u2014 ", detail))
         }
         block <- rake_block(extended_frame[rows, , drop = FALSE], original, batch_targets,
                             match(cell[rows], batches[[i]]), batch_progress)
@@ -288,7 +288,7 @@ fit_joint_rake <- function(seed, cell, cell_share, margins, tolerance, max_itera
   }
   # A complete cycle updates all extension margins in one fixed-point solve.
   initial <- numeric(offset)
-  if (isTRUE(solver_trace)) cat("SQUAREM — calibrating ", column, "\n", sep = "")
+  if (isTRUE(solver_trace)) cat("SQUAREM \u2014 calibrating ", column, "\n", sep = "")
   solution <- tryCatch(
     SQUAREM::squarem(initial, update, control = list(tol = tolerance / 2,
                                                    maxiter = max_iterations,

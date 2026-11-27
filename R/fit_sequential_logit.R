@@ -117,7 +117,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
   for (i in seq_along(stages)) {
     outcome <- stages[i]
     stage_label <- paste0("Stage ", i, "/", length(stages), " ", sQuote(outcome))
-    message(stage_label, " — preparing data and selecting depth.")
+    message(stage_label, " \u2014 preparing data and selecting depth.")
     # The current outcome is a success. Every later outcome is a failure.
     successes <- as.numeric(survey$counts[, i])
     failures <- rowSums(survey$counts[, seq.int(i + 1L, length(outcomes)), drop = FALSE])
@@ -221,7 +221,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
         if (prepared$joint_smooth && !requireNamespace("gKRLS", quietly = TRUE)) {
           stop("Install gKRLS to fit joint smooths of multiple continuous predictors.")
         }
-        message(stage_label, " — fitting at depth ", candidate,
+        message(stage_label, " \u2014 fitting at depth ", candidate,
                 if (candidate < depth) paste0(" (requested ", depth, ")"),
                 " with ", observations, " eligible respondents and ", prepared$estimated_parameters,
                 " estimated coefficients.")
@@ -248,7 +248,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
         }
         design$prediction_columns <- stage_prediction_columns(design)
         if (!is.null(frame)) {
-          message(stage_label, " — registering frame levels.")
+          message(stage_label, " \u2014 registering frame levels.")
           # With zero survey trials, frame-only effects have no likelihood contribution.
           # Integrate them out during fitting and draw them from their term at prediction.
           frame_stage <- prepare_prediction_stage(prediction_inputs, design, outcome, frame,
@@ -282,7 +282,7 @@ fit_sequential_logit <- function(auxiliary_survey, extension_variable, area_vari
     fit_log$status[i] <- "returned"
     utils::write.csv(fit_log, log_file, row.names = FALSE)
     fits[[outcome]] <- design
-    message(stage_label, " — model returned (", i, " of ", length(stages), " completed).")
+    message(stage_label, " \u2014 model returned (", i, " of ", length(stages), " completed).")
     if (!is.null(progress)) {
       detail <- sprintf("%s, %s iterations, max parameter change %s",
                         outcome, fit_log$iterations_used[i],
@@ -371,7 +371,7 @@ sequential_interaction_support <- function(design, outcome) {
       }
       rows[[length(rows) + 1L]] <- data.frame(
         outcome = outcome,
-        interaction = paste(labels[c(group_predictors, predictors)], collapse = " × "),
+        interaction = paste(labels[c(group_predictors, predictors)], collapse = " \u00d7 "),
         level = names(group_rows),
         successes = support[, "successes"],
         failures = support[, "failures"],

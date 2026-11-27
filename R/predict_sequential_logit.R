@@ -79,7 +79,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
       remaining[rows, ] <- remaining[rows, , drop = FALSE] * stats::plogis(-logits)
       if (!is.null(progress)) {
         progress((i - 1L) * length(starts) + batch, total_batches,
-                 sprintf("%s, cells %d–%d", outcome, start, tail(rows, 1L)))
+                 sprintf("%s, cells %d\u2013%d", outcome, start, tail(rows, 1L)))
       }
     }
   }
@@ -125,7 +125,7 @@ predict_sequential_logit <- function(fit, frame = fit$frame, n_draws = 125L, cou
     utils::write.table(block, temporary[2L], sep = ",", qmethod = "double", row.names = FALSE,
                        col.names = start == 1L, append = start != 1L)
     if (!is.null(progress)) {
-      progress(batch, length(starts), sprintf("exported cells %d–%d", start, tail(rows, 1L)))
+      progress(batch, length(starts), sprintf("exported cells %d\u2013%d", start, tail(rows, 1L)))
     }
   }
   publish_prediction_exports(temporary, paths)

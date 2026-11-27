@@ -211,7 +211,7 @@ stop_unestimable_stage <- function(design, area_variable, minimum_support) {
     labels <- names(design$predictor_names)[match(columns, design$predictor_names)]
     counts <- rowsum(trials, data[[group]])[, 1L]
     sprintf("%s: %d of %d observed levels meet the cutoff",
-            paste(labels, collapse = " × "), sum(counts >= minimum_support), length(counts))
+            paste(labels, collapse = " \u00d7 "), sum(counts >= minimum_support), length(counts))
   }, character(1))
   stop("No estimable random effect or spline for vglmer at depth ", design$depth,
        " with ", successes + failures, " eligible respondents (", successes, " successes, ",

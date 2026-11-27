@@ -55,8 +55,8 @@ masterp_logger <- function(log_file, verbose) {
         paste("completed in", duration(elapsed))
       }
       console <- verbose || done <= 1L || done == total || elapsed - last_update >= 5
-      write(paste0(label, " ", done, "/", total, " — ", status,
-                   if (nzchar(detail)) paste0(" — ", detail)), console)
+      write(paste0(label, " ", done, "/", total, " \u2014 ", status,
+                   if (nzchar(detail)) paste0(" \u2014 ", detail)), console)
       if (console) last_update <<- elapsed
       invisible(NULL)
     }
@@ -89,12 +89,12 @@ masterp_logger <- function(log_file, verbose) {
         write(paste("MasterP interrupted after", duration(clock() - started)))
       },
       error = function(condition) {
-        write(paste("MasterP failed after", duration(clock() - started), "—",
+        write(paste("MasterP failed after", duration(clock() - started), "\u2014",
                     conditionMessage(condition)))
         # Record call names without printing survey data or large argument objects.
         calls <- vapply(sys.calls(), function(call) paste(deparse(call[[1L]]), collapse = " "),
                         character(1))
-        write(paste("Call stack:", paste(calls, collapse = " → ")), FALSE)
+        write(paste("Call stack:", paste(calls, collapse = " \u2192 ")), FALSE)
       }
     )
     write(paste("MasterP finished in", duration(clock() - started)))

@@ -53,7 +53,7 @@ rake_extended_frame <- function(extended_frame, frame, targets, by, extension_va
     stop("Extended-frame cell keys must match the original frame and cover every original cell.")
   }
   if (anyDuplicated(data.frame(cell, outcome_index))) {
-    stop("The extended frame has duplicate cell–outcome rows.")
+    stop("The extended frame has duplicate cell\u2013outcome rows.")
   }
 
   target_keys <- c(by, extension_variable)
@@ -170,7 +170,7 @@ rake_group_shares <- function(weights, cell_share, target, margin, tolerance,
   seed_row_totals <- rowSums(seed)
   if (any(seed_row_totals == 0) || any(colSums(seed) == 0)) {
     stop("Raking has no positive support for a required margin in ", group_label,
-         " (", column, "). Check zero counts and missing cell–outcome combinations.",
+         " (", column, "). Check zero counts and missing cell\u2013outcome combinations.",
          call. = FALSE)
   }
   row_target <- cell_share[active_rows]

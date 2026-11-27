@@ -1,0 +1,32 @@
+Package: synthframe
+Type: Package
+Title: Extend Population Stratification Frames with Survey Outcomes
+Version: 0.1.0
+Authors@R: c(
+    person("Roberto", "Cerina", email = "51832016+robertocerinaprojects@users.noreply.github.com",
+           role = c("aut", "cre")),
+    person("Danielius", "Jonaitis", role = "aut"))
+Description: Fits sequential multilevel logistic models to categorical survey
+    outcomes, extends population stratification frames with estimated counts,
+    and calibrates those counts to known margins. Supports posterior draws,
+    multiple outcomes, geographic batches, and calibration diagnostics.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Imports:
+    CholWishart,
+    gKRLS,
+    grDevices,
+    graphics,
+    Matrix,
+    mgcv,
+    mvtnorm,
+    reformulas,
+    SQUAREM,
+    stats,
+    utils,
+    vglmer
+Suggests:
+    data.table
+URL: https://github.com/AI-Pop-Up-Lab/synthframe
+BugReports: https://github.com/AI-Pop-Up-Lab/synthframe/issues

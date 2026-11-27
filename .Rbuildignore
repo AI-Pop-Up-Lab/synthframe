@@ -1,0 +1,9 @@
+^\.agents$
+^\.aws$
+^\.codex$
+^data$
+^dist$
+^vignettes$
+^LICENSE\.md$
+^R/us_fit_cache\.R$
+^tests/us_fit_cache\.R$

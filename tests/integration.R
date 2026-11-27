@@ -1,6 +1,7 @@
-# Run from the repository root with the vignette's R dependencies installed.
+# Run from the repository root or against the installed package in R CMD check.
 main <- function() {
-  for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
+  if (checkout) for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
+  test_file <- function(name) if (checkout) file.path("tests", name) else name
   scratch <- tempfile("synthframe-integration-")
   dir.create(scratch)
   on.exit(unlink(scratch, recursive = TRUE), add = TRUE)
@@ -66,7 +67,7 @@ main <- function() {
     "area", "vote"), frame, "vote", include_max_error = TRUE)$max_abs_error) < 1e-8)
   names(extended)[match(legacy, names(extended))] <- population[-1L]
 
-  source("tests/raking_change_shares.R", local = TRUE)
+  source(test_file("raking_change_shares.R"), local = TRUE)
   check_raking_change_shares()
   batches <- geographic_batches(frame, "area", areas_per_batch = 1L)
   parts <- function(x) lapply(batches, function(i) x[x$area %in% frame$area[i], ])
@@ -116,22 +117,22 @@ main <- function() {
     check <- check_extended_frame(full$frame, table, "area", outcome, draw_plot = FALSE)
     stopifnot(max(abs(check$comparison$estimate - check$comparison$target)) < 1e-8)
   }
-  source("tests/area_covariates.R", local = TRUE)
-  source("tests/stage_screening.R", local = TRUE)
-  source("tests/prediction_design.R", local = TRUE)
-  source("tests/stage_log.R", local = TRUE)
-  source("tests/structural_zeros.R", local = TRUE)
-  source("tests/raking_paths.R", local = TRUE)
-  source("tests/benchmark_validation.R", local = TRUE)
-  source("tests/data_table_inputs.R", local = TRUE)
-  source("tests/data_table_raking.R", local = TRUE)
-  source("tests/us_fit_cache.R", local = TRUE)
-  source("tests/prediction_exports.R", local = TRUE)
+  source(test_file("area_covariates.R"), local = TRUE)
+  source(test_file("stage_screening.R"), local = TRUE)
+  source(test_file("prediction_design.R"), local = TRUE)
+  source(test_file("stage_log.R"), local = TRUE)
+  source(test_file("structural_zeros.R"), local = TRUE)
+  source(test_file("raking_paths.R"), local = TRUE)
+  source(test_file("benchmark_validation.R"), local = TRUE)
+  source(test_file("data_table_inputs.R"), local = TRUE)
+  source(test_file("data_table_raking.R"), local = TRUE)
+  if (checkout) source(test_file("us_fit_cache.R"), local = TRUE)
+  source(test_file("prediction_exports.R"), local = TRUE)
   if (requireNamespace("data.table", quietly = TRUE)) {
     check_data_table_inputs(scratch)
     check_data_table_raking(scratch)
   } else message("Skipping data.table input checks. Install data.table to run them.")
-  check_us_fit_cache()
+  if (checkout) check_us_fit_cache()
   check_prediction_exports(scratch)
   check_structural_zeros()
   check_raking_paths()
@@ -142,5 +143,14 @@ main <- function() {
   check_stage_log()
 
   cat("SynthFrame integration checks passed.\n")
+}
+checkout <- file.exists("R/MasterP.R")
+if (!checkout) {
+  library(synthframe)
+  # Keep test expressions in a regular R environment for data.table dispatch.
+  bindings <- as.list(asNamespace("synthframe"), all.names = TRUE)
+  test_env <- list2env(Filter(is.function, bindings), parent = globalenv())
+  test_env$checkout <- FALSE
+  environment(main) <- test_env
 }
 main()

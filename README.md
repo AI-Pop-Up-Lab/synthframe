@@ -1,12 +1,60 @@
-# SynthFrame
+# SynthFrame <img src="man/figures/logo.png" align="right" width="180" alt="SynthFrame logo, an automaton assembling a geometric grid">
 
 SynthFrame extends population stratification frames with categorical survey outcomes.
+
+## Suggested citation
+
+**APA**
+
+Cerina, R., & Jonaitis, D. (2026). *SynthFrame* (Version 0.1.0) [Computer software]. [GitHub](https://github.com/AI-Pop-Up-Lab/synthframe)
+
+**BibTeX**
+
+```bibtex
+@Manual{cerina_jonaitis_2026_synthframe,
+  title   = {{SynthFrame}},
+  author  = {Roberto Cerina and Danielius Jonaitis},
+  year    = {2026},
+  note    = {R package version 0.1.0},
+  url     = {https://github.com/AI-Pop-Up-Lab/synthframe}
+}
+```
+
+## Overview
 
 $$
 \text{sequential multilevel fits} \longrightarrow
 \text{outcome counts by population cell} \longrightarrow
 \text{counts calibrated to known margins}
 $$
+
+## Install the R package
+
+Download the `synthframe_0.1.0.tar.gz` source package and run the following
+in R from the folder containing the archive. SynthFrame requires R 4.1 or
+later.
+
+```r
+install.packages(c("CholWishart", "gKRLS", "Matrix", "mgcv", "mvtnorm",
+                   "reformulas", "SQUAREM", "vglmer"),
+                 repos = "https://cloud.r-project.org")
+install.packages("synthframe_0.1.0.tar.gz", repos = NULL, type = "source")
+library(synthframe)
+help("MasterP", package = "synthframe")
+```
+
+The repository includes the case-study inputs and reports. The source
+package contains the modeling, prediction, and calibration functions and
+their R help pages.
+
+## License
+
+The SynthFrame software and its documentation are available under the
+[MIT License](LICENSE.md). This grant covers the software and documentation
+authored for the project. The case-study datasets, released data and model
+outputs, and logo are outside its scope.
+
+## Development checks
 
 After installing dependencies or editing code, run `Rscript --vanilla tests/integration.R`
 from the repository root before a long run. It fits a small model, extends a
@@ -125,7 +173,7 @@ diagnostics alongside the models. Each saved fit contains its stage log in
 
 ### Run the full pipeline with `MasterP()`
 
-Source the files in `R/` and pass a named list of extension specifications in
+Load `synthframe` and pass a named list of extension specifications in
 the order they should be added to the mother frame. Each name becomes a new
 outcome column. An extension can use one auxiliary survey or pool a list of
 surveys by stacking respondents. The selected columns must have harmonized
@@ -236,7 +284,7 @@ each stage at 100 iterations.
 *Snippet 4. Fit a single sequential-logit extension using the Denmark inputs.*
 
 ```r
-for (file in list.files("R", pattern = "[.]R$", full.names = TRUE)) source(file)
+library(synthframe)
 
 country <- "data/input/denmark 2026"
 survey <- read.csv(file.path(country, "auxiliary_survey.csv"))
