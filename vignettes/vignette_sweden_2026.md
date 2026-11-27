@@ -154,17 +154,14 @@ knitr::kable(fit$fit_log[fields])
 |MP      |          577|            1|              1|                            71|             0|                   167|                         0|              0|              8.396833|              26|            0.0012906|returned |
 |L       |          431|            1|              1|                            67|             0|                   152|                         0|              0|              8.191447|              13|            0.0042818|returned |
 |V       |          289|            1|              1|                            63|             0|                   131|                         0|              0|              8.034208|              11|            0.0048167|returned |
-|KD      |          158|            1|              1|                            49|             0|                    97|                         0|              0|              8.021605|              20|            0.0079681|returned |
-|Other   |           31|            1|              1|                            17|             0|                    29|                         0|              0|              9.159624|              22|            0.0067292|returned |
+|KD      |          158|            1|              1|                            48|             0|                    98|                         0|              0|              8.021605|              20|            0.0066682|returned |
+|Other   |           31|            1|              1|                            16|             0|                    30|                         0|              0|              9.159624|              17|            0.0061083|returned |
 
 *Table 1. Fitted stages, with sample sizes, retained design, screened coefficients, and convergence diagnostics.*
 
-The published fit predates the rule requiring two supported levels for
-a random effect. In that fit, the No Vote, S, M, and SD stages kept age
-curves by sex, education, and supported municipalities. Each reached the
-100-iteration cap above the 0.01 threshold. The other six stages met the
-threshold and kept a global age curve. The joint smooth of age and
-municipal vote share did not survive screening in any stage.
+To see which age curves survived screening, inspect the fitted formula
+for the stage of interest, for example `fit$stages[["No Vote"]]$formula`
+for nonvoting.
 
 ## Predict and check municipal vote shares before raking
 
@@ -236,18 +233,18 @@ knitr::kable(before$metrics, digits = 4)
 
 |        | bias_pp| RMSE_pp| spearman| coverage_90_pct|
 |:-------|-------:|-------:|--------:|---------------:|
-|Overall |  0.0000|  2.5092|   0.9719|         99.4483|
-|No Vote | -9.6354|  9.8640|   0.9294|          0.0000|
-|S       |  4.1614|  4.4728|   0.9421|        100.0000|
-|M       |  1.0779|  1.9764|   0.9003|        100.0000|
-|SD      | -5.1936|  5.5445|   0.9537|         97.5862|
-|C       | -0.5103|  1.1522|   0.8290|        100.0000|
-|MP      |  0.1507|  0.5842|   0.9268|        100.0000|
-|L       |  1.1738|  1.2251|   0.9620|         99.3103|
-|V       |  0.4695|  1.1389|   0.8142|         98.9655|
-|KD      | -1.0412|  1.8459|   0.6893|         98.9655|
-|Other   |  0.0614|  0.4589|   0.0789|         99.6552|
-|Invalid | -0.3497|  0.4732|   0.0714|        100.0000|
+|Overall |  0.0000|  2.4988|   0.9750|         94.5172|
+|No Vote | -9.6405|  9.8690|   0.9326|          0.0000|
+|S       |  4.1382|  4.4393|   0.9449|        100.0000|
+|M       |  1.1113|  2.0227|   0.8940|         99.6552|
+|SD      | -5.2180|  5.5678|   0.9484|         97.5862|
+|C       | -0.5131|  1.1570|   0.8262|         99.6552|
+|MP      |  0.1645|  0.5871|   0.9341|        100.0000|
+|L       |  1.1753|  1.2296|   0.9617|         99.6552|
+|V       |  0.4812|  1.1130|   0.8407|         99.6552|
+|KD      | -0.3609|  1.5497|   0.7061|         98.9655|
+|Other   | -0.3643|  0.5693|  -0.0146|         91.0345|
+|Invalid | -0.6142|  0.6922|  -0.0468|         58.9655|
 
 *Table 2. Before-rake municipal vote-share errors and 90% interval coverage against the election benchmarks.*
 
@@ -351,10 +348,6 @@ eligible population in that group. Total variation is half the sum of
 the absolute changes in these shares, population-weighted across groups.
 Its dots show paired draws and its square uses the mean counts.
 
-The archived Figure 4 below uses the earlier voter denominator for party
-shares and total variation. Running Snippet 10 with the current code produces
-the eligible-population comparison described above.
-
 *Snippet 10. Compare pre-rake and post-rake vote shares across demographic groupings.*
 
 
@@ -390,105 +383,105 @@ knitr::kable(preview, digits = 2, row.names = FALSE)
 |municipality  |sex   | age|education                           |vote_choice_2022 |     N| N_draw_1| N_draw_2|
 |:-------------|:-----|---:|:-----------------------------------|:----------------|-----:|--------:|--------:|
 |Arvidsjaur    |Men   |  45|Compulsory education, under 9 years |MP               |  0.00|     0.00|     0.01|
-|Hammarö       |Men   |  84|Post-secondary, 3 years or more     |Invalid          |  0.26|     0.31|     0.34|
-|Karlshamn     |Men   |  26|Post-secondary, under 3 years       |C                |  1.15|     1.68|     0.94|
-|Lilla Edet    |Women |  18|Unknown                             |SD               |  0.21|     0.37|     0.30|
+|Hammarö       |Men   |  84|Post-secondary, 3 years or more     |Invalid          |  0.32|     0.57|     0.55|
+|Karlshamn     |Men   |  26|Post-secondary, under 3 years       |C                |  1.13|     1.64|     0.95|
+|Lilla Edet    |Women |  18|Unknown                             |SD               |  0.22|     0.36|     0.27|
 |Eslöv         |Men   |  28|Compulsory education, under 9 years |Invalid          |  0.01|     0.00|     0.02|
-|Stockholm     |Men   |  40|Post-secondary, under 3 years       |L                | 78.56|    73.99|    60.69|
+|Stockholm     |Men   |  40|Post-secondary, under 3 years       |L                | 78.60|    73.12|    62.42|
 |Dorotea       |Women |  37|Upper secondary, up to 2 years      |SD               |  0.00|     0.00|     0.00|
-|Arvika        |Women |  26|Upper secondary, 3 years            |SD               |  7.61|     6.85|    11.02|
+|Arvika        |Women |  26|Upper secondary, 3 years            |SD               |  7.61|     5.31|    12.13|
 |Tjörn         |Men   |  23|Doctoral education                  |V                |  0.00|     0.00|     0.00|
-|Vilhelmina    |Men   |  38|Post-secondary, 3 years or more     |No Vote          |  0.32|     0.30|     0.33|
-|Ånge          |Women |  57|Upper secondary, 3 years            |Invalid          |  0.08|     0.16|     0.13|
-|Rättvik       |Men   |  27|Compulsory education, 9 or 10 years |MP               |  0.11|     0.07|     0.19|
-|Österåker     |Men   |  44|Unknown                             |M                |  3.51|     2.21|     2.13|
-|Ängelholm     |Women |  57|Upper secondary, 3 years            |SD               | 14.98|    13.61|    12.54|
-|Tranemo       |Women |  38|Post-secondary, 3 years or more     |KD               |  2.50|     2.29|     2.21|
-|Ljungby       |Men   |  34|Post-secondary, under 3 years       |Invalid          |  0.62|     0.00|     0.07|
-|Nynäshamn     |Women |  74|Post-secondary, 3 years or more     |SD               |  1.85|     1.31|     0.96|
+|Vilhelmina    |Men   |  38|Post-secondary, 3 years or more     |No Vote          |  0.31|     0.32|     0.36|
+|Ånge          |Women |  57|Upper secondary, 3 years            |Invalid          |  0.01|     0.01|     0.01|
+|Rättvik       |Men   |  27|Compulsory education, 9 or 10 years |MP               |  0.11|     0.07|     0.18|
+|Österåker     |Men   |  44|Unknown                             |M                |  3.59|     3.56|     1.98|
+|Ängelholm     |Women |  57|Upper secondary, 3 years            |SD               | 15.46|    21.35|    15.25|
+|Tranemo       |Women |  38|Post-secondary, 3 years or more     |KD               |  2.50|     2.49|     2.05|
+|Ljungby       |Men   |  34|Post-secondary, under 3 years       |Invalid          |  0.72|     0.03|     0.00|
+|Nynäshamn     |Women |  74|Post-secondary, 3 years or more     |SD               |  1.92|     2.41|     0.59|
 |Söderköping   |Women |  61|Compulsory education, under 9 years |M                |  0.00|     0.00|     0.00|
-|Älvdalen      |Men   |  48|Compulsory education, 9 or 10 years |V                |  0.05|     0.02|     0.02|
-|Stockholm     |Women |  71|Compulsory education, under 9 years |Invalid          |  0.25|     0.10|     1.02|
-|Karlskoga     |Women |  95|Post-secondary, 3 years or more     |No Vote          |  0.75|     1.06|     0.57|
-|Flen          |Women |  41|Compulsory education, 9 or 10 years |Invalid          |  0.02|     0.01|     0.02|
-|Forshaga      |Men   |  50|Post-secondary, under 3 years       |C                |  0.42|     0.37|     0.41|
-|Hörby         |Women |  74|Post-secondary, under 3 years       |C                |  1.18|     0.40|     1.40|
-|Sundsvall     |Men   |  50|Upper secondary, up to 2 years      |S                | 26.38|    20.69|    20.56|
-|Laxå          |Women |  21|Post-secondary, under 3 years       |V                |  0.39|     0.35|     0.38|
+|Älvdalen      |Men   |  48|Compulsory education, 9 or 10 years |V                |  0.05|     0.06|     0.06|
+|Stockholm     |Women |  71|Compulsory education, under 9 years |Invalid          |  0.14|     0.01|     0.47|
+|Karlskoga     |Women |  95|Post-secondary, 3 years or more     |No Vote          |  0.74|     1.14|     0.58|
+|Flen          |Women |  41|Compulsory education, 9 or 10 years |Invalid          |  0.01|     0.01|     0.01|
+|Forshaga      |Men   |  50|Post-secondary, under 3 years       |C                |  0.41|     0.38|     0.21|
+|Hörby         |Women |  74|Post-secondary, under 3 years       |C                |  1.14|     0.93|     2.20|
+|Sundsvall     |Men   |  50|Upper secondary, up to 2 years      |S                | 26.08|    18.19|    23.27|
+|Laxå          |Women |  21|Post-secondary, under 3 years       |V                |  0.37|     0.27|     0.28|
 |Karlsborg     |Men   |  89|Unknown                             |MP               |  0.00|     0.00|     0.00|
-|Hylte         |Men   |  41|Upper secondary, 3 years            |Other            |  0.55|     0.46|     1.11|
-|Smedjebacken  |Women |  48|Post-secondary, under 3 years       |Other            |  0.07|     0.01|     0.00|
-|Köping        |Men   |  45|Compulsory education, under 9 years |KD               |  0.40|     0.43|     0.48|
-|Kinda         |Men   |  39|Compulsory education, under 9 years |V                |  0.03|     0.04|     0.02|
-|Östra Göinge  |Men   |  61|Compulsory education, 9 or 10 years |C                |  0.26|     0.29|     0.28|
+|Hylte         |Men   |  41|Upper secondary, 3 years            |Other            |  0.60|     0.60|     0.28|
+|Smedjebacken  |Women |  48|Post-secondary, under 3 years       |Other            |  0.03|     0.04|     0.04|
+|Köping        |Men   |  45|Compulsory education, under 9 years |KD               |  0.43|     0.43|     0.37|
+|Kinda         |Men   |  39|Compulsory education, under 9 years |V                |  0.03|     0.03|     0.02|
+|Östra Göinge  |Men   |  61|Compulsory education, 9 or 10 years |C                |  0.26|     0.44|     0.42|
 |Gagnef        |Women |  35|Unknown                             |L                |  0.02|     0.01|     0.00|
-|Söderköping   |Women |  65|Compulsory education, 9 or 10 years |M                |  1.84|     1.61|     2.07|
-|Falkenberg    |Men   |  52|Doctoral education                  |Other            |  0.01|     0.01|     0.02|
-|Falun         |Women |  65|Post-secondary, under 3 years       |S                | 20.18|    24.54|    15.75|
+|Söderköping   |Women |  65|Compulsory education, 9 or 10 years |M                |  1.93|     2.15|     3.37|
+|Falkenberg    |Men   |  52|Doctoral education                  |Other            |  0.01|     0.00|     0.01|
+|Falun         |Women |  65|Post-secondary, under 3 years       |S                | 20.41|    22.45|    18.99|
 |Haninge       |Women |  20|Doctoral education                  |V                |  0.00|     0.00|     0.00|
-|Skövde        |Men   |  34|Post-secondary, 3 years or more     |C                |  8.00|     7.35|     9.85|
-|Varberg       |Women |  70|Upper secondary, up to 2 years      |S                | 44.93|    41.42|    54.84|
-|Ale           |Men   |  75|Upper secondary, 3 years            |MP               |  0.35|     0.39|     0.64|
+|Skövde        |Men   |  34|Post-secondary, 3 years or more     |C                |  7.91|     9.27|     7.25|
+|Varberg       |Women |  70|Upper secondary, up to 2 years      |S                | 45.65|    45.71|    57.00|
+|Ale           |Men   |  75|Upper secondary, 3 years            |MP               |  0.34|     0.27|     0.30|
 |Storuman      |Men   |  52|Doctoral education                  |No Vote          |  0.00|     0.00|     0.00|
-|Klippan       |Men   |  32|Upper secondary, 3 years            |MP               |  0.38|     0.52|     0.26|
-|Vårgårda      |Men   |  25|Compulsory education, 9 or 10 years |MP               |  0.10|     0.06|     0.15|
+|Klippan       |Men   |  32|Upper secondary, 3 years            |MP               |  0.37|     0.30|     0.25|
+|Vårgårda      |Men   |  25|Compulsory education, 9 or 10 years |MP               |  0.10|     0.07|     0.18|
 |Vårgårda      |Men   |  74|Unknown                             |Invalid          |  0.01|     0.00|     0.00|
 |Surahammar    |Women |  48|Doctoral education                  |V                |  0.00|     0.00|     0.00|
-|Varberg       |Women |  76|Compulsory education, under 9 years |L                |  1.28|     1.35|     1.97|
-|Ale           |Men   |  53|Upper secondary, up to 2 years      |M                | 12.76|    14.42|     9.04|
-|Norberg       |Men   |  65|Upper secondary, 3 years            |M                |  0.54|     0.49|     0.65|
-|Sundsvall     |Women |  43|Compulsory education, under 9 years |KD               |  0.43|     0.62|     0.54|
-|Vännäs        |Men   |  39|Post-secondary, under 3 years       |Invalid          |  0.14|     0.00|     0.01|
-|Vindeln       |Men   |  75|Upper secondary, 3 years            |C                |  0.22|     0.13|     0.16|
+|Varberg       |Women |  76|Compulsory education, under 9 years |L                |  1.33|     0.66|     1.43|
+|Ale           |Men   |  53|Upper secondary, up to 2 years      |M                | 12.37|    12.26|     7.41|
+|Norberg       |Men   |  65|Upper secondary, 3 years            |M                |  0.55|     0.39|     0.51|
+|Sundsvall     |Women |  43|Compulsory education, under 9 years |KD               |  0.44|     0.34|     0.58|
+|Vännäs        |Men   |  39|Post-secondary, under 3 years       |Invalid          |  0.26|     0.00|     0.00|
+|Vindeln       |Men   |  75|Upper secondary, 3 years            |C                |  0.22|     0.19|     0.26|
 |Lekeberg      |Women |  94|Doctoral education                  |MP               |  0.00|     0.00|     0.00|
-|Mariestad     |Women |  52|Post-secondary, 3 years or more     |MP               |  3.29|     3.23|     3.40|
+|Mariestad     |Women |  52|Post-secondary, 3 years or more     |MP               |  3.35|     2.87|     3.01|
 |Dals-Ed       |Men   |  85|Compulsory education, 9 or 10 years |S                |  0.00|     0.00|     0.00|
-|Lysekil       |Men   |  75|Post-secondary, 3 years or more     |V                |  0.61|     0.62|     0.58|
+|Lysekil       |Men   |  75|Post-secondary, 3 years or more     |V                |  0.60|     0.48|     0.86|
 |Ragunda       |Women |  18|Upper secondary, 3 years            |V                |  0.00|     0.00|     0.00|
-|Emmaboda      |Women |  25|Upper secondary, up to 2 years      |C                |  0.04|     0.05|     0.02|
-|Huddinge      |Men   |  45|Upper secondary, up to 2 years      |C                |  3.32|     3.39|     2.76|
-|Lysekil       |Women |  36|Post-secondary, under 3 years       |Invalid          |  0.20|     0.05|     0.16|
-|Bjuv          |Women |  87|Compulsory education, 9 or 10 years |L                |  0.02|     0.01|     0.04|
-|Varberg       |Men   |  28|Compulsory education, 9 or 10 years |KD               |  0.81|     0.76|     0.67|
-|Tjörn         |Women |  87|Compulsory education, 9 or 10 years |V                |  0.03|     0.01|     0.03|
-|Flen          |Women |  34|Upper secondary, up to 2 years      |Invalid          |  0.03|     0.02|     0.01|
-|Härnösand     |Men   |  89|Compulsory education, 9 or 10 years |No Vote          |  0.14|     0.13|     0.11|
-|Essunga       |Men   |  21|Unknown                             |S                |  0.11|     0.08|     0.10|
-|Nykvarn       |Men   |  68|Post-secondary, under 3 years       |Invalid          |  0.04|     0.00|     0.02|
+|Emmaboda      |Women |  25|Upper secondary, up to 2 years      |C                |  0.04|     0.03|     0.03|
+|Huddinge      |Men   |  45|Upper secondary, up to 2 years      |C                |  3.26|     2.34|     2.22|
+|Lysekil       |Women |  36|Post-secondary, under 3 years       |Invalid          |  0.12|     0.00|     0.00|
+|Bjuv          |Women |  87|Compulsory education, 9 or 10 years |L                |  0.02|     0.01|     0.03|
+|Varberg       |Men   |  28|Compulsory education, 9 or 10 years |KD               |  0.78|     0.82|     0.61|
+|Tjörn         |Women |  87|Compulsory education, 9 or 10 years |V                |  0.02|     0.01|     0.03|
+|Flen          |Women |  34|Upper secondary, up to 2 years      |Invalid          |  0.02|     0.02|     0.00|
+|Härnösand     |Men   |  89|Compulsory education, 9 or 10 years |No Vote          |  0.14|     0.13|     0.08|
+|Essunga       |Men   |  21|Unknown                             |S                |  0.10|     0.05|     0.09|
+|Nykvarn       |Men   |  68|Post-secondary, under 3 years       |Invalid          |  0.02|     0.00|     0.00|
 |Åsele         |Women |  29|Post-secondary, 3 years or more     |S                |  0.00|     0.00|     0.00|
-|Valdemarsvik  |Men   |  52|Upper secondary, up to 2 years      |SD               |  9.92|    11.94|    12.19|
+|Valdemarsvik  |Men   |  52|Upper secondary, up to 2 years      |SD               |  9.80|    11.28|    10.24|
 |Krokom        |Women |  91|Unknown                             |L                |  0.00|     0.00|     0.00|
-|Strängnäs     |Women |  49|Compulsory education, under 9 years |No Vote          |  1.14|     1.35|     1.22|
-|Vellinge      |Women |  22|Compulsory education, 9 or 10 years |L                |  0.29|     0.15|     0.37|
-|Österåker     |Women |  83|Compulsory education, 9 or 10 years |MP               |  0.15|     0.14|     0.35|
-|Mark          |Men   |  28|Post-secondary, 3 years or more     |M                |  1.51|     2.18|     1.74|
-|Hallstahammar |Women |  68|Compulsory education, under 9 years |KD               |  0.10|     0.07|     0.09|
+|Strängnäs     |Women |  49|Compulsory education, under 9 years |No Vote          |  1.15|     1.12|     1.06|
+|Vellinge      |Women |  22|Compulsory education, 9 or 10 years |L                |  0.30|     0.34|     0.35|
+|Österåker     |Women |  83|Compulsory education, 9 or 10 years |MP               |  0.14|     0.12|     0.43|
+|Mark          |Men   |  28|Post-secondary, 3 years or more     |M                |  1.47|     1.48|     2.02|
+|Hallstahammar |Women |  68|Compulsory education, under 9 years |KD               |  0.11|     0.07|     0.07|
 |Karlsborg     |Men   |  37|Doctoral education                  |C                |  0.00|     0.00|     0.00|
-|Lomma         |Women |  73|Post-secondary, 3 years or more     |C                |  2.68|     2.79|     2.44|
-|Hörby         |Women |  39|Compulsory education, 9 or 10 years |S                |  1.23|     0.99|     0.84|
+|Lomma         |Women |  73|Post-secondary, 3 years or more     |C                |  2.63|     2.62|     2.58|
+|Hörby         |Women |  39|Compulsory education, 9 or 10 years |S                |  1.23|     0.69|     1.06|
 |Karlshamn     |Women |  72|Doctoral education                  |L                |  0.03|     0.02|     0.02|
-|Håbo          |Women |  54|Compulsory education, under 9 years |S                |  0.48|     0.55|     0.39|
-|Munkfors      |Women |  59|Upper secondary, up to 2 years      |SD               |  1.58|     1.41|     1.42|
-|Kumla         |Women |  26|Unknown                             |MP               |  0.10|     0.05|     0.11|
-|Sjöbo         |Women |  72|Post-secondary, under 3 years       |S                |  3.89|     5.44|     3.68|
-|Malung-Sälen  |Women |  86|Unknown                             |No Vote          |  0.22|     0.27|     0.18|
-|Norrköping    |Men   |  23|Compulsory education, under 9 years |L                |  0.05|     0.08|     0.04|
-|Hedemora      |Men   |  32|Upper secondary, 3 years            |SD               | 11.18|    11.42|    12.22|
-|Luleå         |Men   |  69|Unknown                             |L                |  0.06|     0.04|     0.02|
-|Mark          |Men   |  59|Unknown                             |C                |  0.06|     0.03|     0.02|
-|Mora          |Men   |  72|Upper secondary, 3 years            |V                |  0.26|     0.12|     0.37|
+|Håbo          |Women |  54|Compulsory education, under 9 years |S                |  0.47|     0.53|     0.47|
+|Munkfors      |Women |  59|Upper secondary, up to 2 years      |SD               |  1.65|     1.79|     1.38|
+|Kumla         |Women |  26|Unknown                             |MP               |  0.11|     0.05|     0.08|
+|Sjöbo         |Women |  72|Post-secondary, under 3 years       |S                |  3.84|     4.31|     2.79|
+|Malung-Sälen  |Women |  86|Unknown                             |No Vote          |  0.22|     0.21|     0.15|
+|Norrköping    |Men   |  23|Compulsory education, under 9 years |L                |  0.05|     0.05|     0.04|
+|Hedemora      |Men   |  32|Upper secondary, 3 years            |SD               | 10.85|     9.65|    12.03|
+|Luleå         |Men   |  69|Unknown                             |L                |  0.06|     0.02|     0.03|
+|Mark          |Men   |  59|Unknown                             |C                |  0.05|     0.03|     0.02|
+|Mora          |Men   |  72|Upper secondary, 3 years            |V                |  0.27|     0.25|     0.30|
 |Borgholm      |Men   |  94|Post-secondary, 3 years or more     |L                |  0.00|     0.00|     0.00|
-|Laholm        |Women |  81|Upper secondary, up to 2 years      |L                |  1.18|     0.52|     1.51|
-|Degerfors     |Women |  43|Compulsory education, 9 or 10 years |No Vote          |  0.14|     0.21|     0.13|
-|Vindeln       |Women |  81|Compulsory education, 9 or 10 years |C                |  0.12|     0.07|     0.18|
-|Pajala        |Women |  74|Post-secondary, under 3 years       |KD               |  0.38|     0.39|     0.73|
+|Laholm        |Women |  81|Upper secondary, up to 2 years      |L                |  1.14|     0.77|     1.50|
+|Degerfors     |Women |  43|Compulsory education, 9 or 10 years |No Vote          |  0.14|     0.22|     0.12|
+|Vindeln       |Women |  81|Compulsory education, 9 or 10 years |C                |  0.13|     0.08|     0.24|
+|Pajala        |Women |  74|Post-secondary, under 3 years       |KD               |  0.38|     0.19|     0.42|
 |Ale           |Men   |  93|Upper secondary, 3 years            |M                |  0.00|     0.00|     0.00|
-|Skara         |Men   |  34|Upper secondary, 3 years            |KD               |  2.79|     5.69|     1.81|
-|Årjäng        |Women |  20|Upper secondary, 3 years            |KD               |  4.69|     5.15|     5.97|
-|Svenljunga    |Women |  49|Upper secondary, up to 2 years      |KD               |  0.40|     0.30|     0.60|
+|Skara         |Men   |  34|Upper secondary, 3 years            |KD               |  2.73|     3.66|     2.63|
+|Årjäng        |Women |  20|Upper secondary, 3 years            |KD               |  4.95|     5.63|     4.41|
+|Svenljunga    |Women |  49|Upper secondary, up to 2 years      |KD               |  0.38|     0.42|     0.46|
 |Filipstad     |Women |  78|Doctoral education                  |SD               |  0.00|     0.00|     0.00|
 |Gislaved      |Women |  94|Post-secondary, 3 years or more     |M                |  0.00|     0.00|     0.00|
-|Hudiksvall    |Women |  64|Post-secondary, 3 years or more     |V                |  3.48|     3.29|     3.70|
+|Hudiksvall    |Women |  64|Post-secondary, 3 years or more     |V                |  3.50|     2.98|     4.02|
 
 *Table 4. Sample of 100 raked joint rows with their calibrated mean and two posterior draws.*
 
