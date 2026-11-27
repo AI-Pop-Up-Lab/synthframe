@@ -315,8 +315,8 @@ aggregation. Respondents counts the people represented by those rows.*
 been screened for a candidate depth, SynthFrame checks which eligible
 overall curves are still supplied by a grouped spline. If no retained
 grouped spline supplies an eligible overall curve, it fits that curve on
-its own. This check runs once per candidate depth, after pruning. No
-spline columns were added back in this audit.
+its own. This check runs once per candidate depth, after pruning. The
+six stages added back 0 spline columns.
 
 The biggest cut came from dropping district-specific curves for vote
 shares. Everyone in a district is assigned the same district vote share,
@@ -545,6 +545,8 @@ subdirectory of your `SYNTHFRAME_US_OUTPUT_DIR`. Set both
 The vignette reuses each model whose inputs, settings and fitting code match.
 A missing or unverified file starts a fresh fit for that model. Reusing the
 fits still runs prediction and, by default, calibration.
+
+
 
 ### Read the fitted formulas and coefficient counts
 
@@ -816,8 +818,9 @@ for (stage in names(pres_fit$stages)) {
 ##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup)
 ```
 
-The three presidential stages met the maximum parameter-change tolerance
-of 0.01 in the saved national fit.
+In the presidential fit, 3
+of 3 stages recorded a final maximum parameter
+change below 0.01.
 
 *Snippet 7. Expand presidential choice within one state and reuse the same coefficient draws across states.*
 
@@ -970,25 +973,14 @@ for (stage in names(house_fit$stages)) {
 ##     v_s(house_share, by = lineup) + v_s(pres_share, by = lineup)
 ```
 
-In the saved national House fit, No Vote and Democratic reached the
-100-iteration cap with maximum parameter changes of 0.43108 and 0.30709.
-Republican met the 0.01 tolerance after 95 iterations.
+In the House fit, 1
+of 3 stages recorded a final maximum parameter
+change below 0.01. Table 10 gives the iteration count
+and final change for each stage.
 
 ### Retained coefficients by predictor combination
 
-Each column is one fitted stage. For example, the House No Vote column
-has **1,117** coefficients for `district_id × vote_pres_2024`. Each is a
-random intercept for one district and presidential-choice combination.
-The House Republican stage has **448** such intercepts. It fits a smaller
-set of respondents because the No Vote and Democratic stages have
-already been handled.
-
-The `state_fips × house_share` row illustrates why a smooth can account
-for many coefficients. In House No Vote, its **1,836** coefficients
-consist of 51 state and DC slopes and 1,785 coefficients for state and
-DC departures from the national curve. The bottom row adds up the fitted
-coefficients in each stage. Use the table to see which terms account for
-most of the model's size.
+Each column is one fitted stage. The bottom row totals its fitted coefficients.
 
 
 |Combination                   | Pres. No Vote| Pres. Democratic| Pres. Republican| House No Vote| House Democratic| House Republican|
@@ -1075,6 +1067,14 @@ most of the model's size.
 |**Total**                     |        13,489|           13,135|            9,450|        14,943|           14,040|            9,991|
 
 *Table 11. Actual fitted coefficients by predictor combination and stage.*
+
+The House No Vote stage has **1,117**
+district-by-presidential-choice random intercepts. The House Republican stage
+has **448**
+after the earlier stages have removed respondents from its risk set.
+For `state_fips × house_share`, the House No Vote stage retains
+**1,836** coefficients,
+counting both state-specific slopes and any fitted spline deviations.
 
 *Snippet 10. Expand House choice within each presidential category while keeping draw indices paired.*
 
@@ -1206,6 +1206,8 @@ if (storage$mode == "keep") {
 storage$cleanup()
 ```
 
+
+
 ## 11. Compare predictions with election benchmarks
 
 The panels compare the pre-rake predictions to the selected benchmarks,
@@ -1222,6 +1224,7 @@ The default benchmarks also enter model fitting as area predictors, so
 agreement with them measures calibration.
 
 *Snippet 12. Compare the predicted shares and draw intervals with election benchmarks before and after calibration.*
+
 
 ``` r
 figure_dir <- file.path("vignettes", "assets", "us-2026")
@@ -1256,6 +1259,8 @@ for (phase in c("before", if (run_rake) "after")) {
 }
 ```
 
+
+
 |           |  bias_pp| RMSE_pp| spearman| coverage_90_pct|
 |:----------|--------:|-------:|--------:|---------------:|
 |Overall    |   0.0000|  6.8196|   0.8898|         11.7647|
@@ -1265,6 +1270,8 @@ for (phase in c("before", if (run_rake) "after")) {
 |Other      |   2.0082|  2.1371|   0.6831|         11.7647|
 
 *Table 12. Presidential vote before raking – errors and 90% interval coverage against the election benchmarks.*
+
+
 ![Presidential vote before raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_pres_2024_before_rake.png)
 
 *Figure 3. Presidential vote before raking – benchmark shares versus predictions and 90% intervals.*
@@ -1280,6 +1287,8 @@ for (phase in c("before", if (run_rake) "after")) {
 |Other      |   0.7244|  2.8768|   0.6328|         17.8899|
 
 *Table 13. House vote before raking – errors and 90% interval coverage against the election benchmarks.*
+
+
 ![House vote before raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_house_2024_before_rake.png)
 
 *Figure 4. House vote before raking – benchmark shares versus predictions and 90% intervals.*
@@ -1295,6 +1304,8 @@ for (phase in c("before", if (run_rake) "after")) {
 |Other      |       0|       0|        1|             100|
 
 *Table 14. Presidential vote after raking – errors and 90% interval coverage against the election benchmarks.*
+
+
 ![Presidential vote after raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_pres_2024_after_rake.png)
 
 *Figure 5. Presidential vote after raking – benchmark shares versus predictions and 90% intervals.*
@@ -1310,6 +1321,8 @@ for (phase in c("before", if (run_rake) "after")) {
 |Other      |       0|       0|        1|             100|
 
 *Table 15. House vote after raking – errors and 90% interval coverage against the election benchmarks.*
+
+
 ![House vote after raking – benchmark shares versus predictions and 90% intervals.](assets/us-2026/vote_house_2024_after_rake.png)
 
 *Figure 6. House vote after raking – benchmark shares versus predictions and 90% intervals.*
@@ -1322,6 +1335,7 @@ mother frame. The plot shows the mean and 90% draw interval against the
 original count. The maximum error also checks every draw outside that interval.
 
 *Snippet 13. Combine the checks for all mother-frame cells and report the largest count discrepancy.*
+
 
 ``` r
 if (run_rake) {
@@ -1341,17 +1355,20 @@ if (run_rake) {
 }
 ```
 
+
+
 |                   | bias_count| RMSE_count|  spearman| coverage_90_pct| cells_checked| max_abs_count_error|
 |:------------------|----------:|----------:|---------:|---------------:|-------------:|-------------------:|
 |All original cells |          0|          0| 0.9999999|             100|        497550|             1.5e-11|
 
 *Table 16. Agreement between raked and original population counts in every mother-frame cell.*
+
+
 ![Original cell counts versus raked totals and 90% intervals after summing over both votes.](assets/us-2026/original-cell-totals.png)
 
 *Figure 7. Original cell counts versus raked totals and 90% intervals after summing over both votes.*
 
 ## 13. Measure how raking changes vote shares
-
 
 Each row shows a demographic or district grouping. The outcome panels
 show subgroup changes in percentage points as dots and population-weighted
@@ -1364,11 +1381,8 @@ The presidential plot includes districts because that calibration
 target is statewide. The House plot includes district-by-demographic
 groups because the district target covers all demographics together.
 
-Figures 8 and 9 below come from the earlier run. Their party panels use
-voters as the denominator. The No Vote and total-variation panels already
-use CVAP. Running Snippet 14 with the current code uses CVAP for every panel.
-
 *Snippet 14. Plot before-to-after vote-share changes by demographic group and district using paired draws.*
+
 
 ``` r
 if (run_rake) {
@@ -1394,6 +1408,7 @@ if (run_rake) {
 }
 ```
 
+
 ![Presidential vote share changes across demographic and district groupings.](assets/us-2026/vote_pres_2024_raking_changes.png)
 
 *Figure 8. Presidential vote share changes across demographic and district groupings. Each total-variation dot measures the change for one paired posterior draw. The square measures the change between the mean-count frames before and after raking. In those frames, increases in some draws can offset decreases in others before absolute differences are taken. This can put the square below every draw.*
@@ -1414,6 +1429,7 @@ three draw counts.
 
 *Snippet 15. Sample 100 rows from the saved joint frame and record where the partitions are stored.*
 
+
 ``` r
 if (run_rake) {
   set.seed(2029)
@@ -1430,6 +1446,8 @@ if (run_rake) {
   cat("\n*Table 17. Sample of 100 raked joint rows with the calibrated mean and three draws.*\n\n")
 }
 ```
+
+
 
 |state_fips |district_id |age_cat |gender_cat |race_cat        |hispanic_cat |educ_cat     |vote_pres_2024 |vote_house_2024 |       N| N_draw_1| N_draw_63| N_draw_125|
 |:----------|:-----------|:-------|:----------|:---------------|:------------|:------------|:--------------|:---------------|-------:|--------:|---------:|----------:|

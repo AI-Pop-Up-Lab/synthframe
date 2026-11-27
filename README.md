@@ -104,6 +104,12 @@ Each render updates the figures it produces under the matching
 Set `SYNTHFRAME_PRE_RAKE_STORAGE=keep` to retain `extended_frame/` partitions and
 `SYNTHFRAME_US_RAKED_DIR` to put the US raked frame on another disk.
 
+The [2026 case study output release](https://github.com/AI-Pop-Up-Lab/synthframe/releases/tag/case-study-outputs-2026-11-27)
+provides precomputed model and frame RDS files. Extract the country archives
+from the repository root to restore their `data/output/` paths. The
+[file manifest](data/output/case-study-outputs-2026-11-27.csv) lists sizes and
+SHA-256 checksums. Fresh runs generate their own output files from the tracked inputs.
+
 ### Reuse completed US fits
 
 The US run saves each completed model under `data/output/us 2026/models/` as
