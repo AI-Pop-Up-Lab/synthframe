@@ -361,7 +361,11 @@ plot_partitioned_raking_changes(
 
 ![Changes in vote shares after raking across demographic and municipal groupings.](assets/sweden-2026/raking-changes.png)
 
-*Figure 4. Changes in vote shares after raking across demographic and municipal groupings.*
+*Figure 4. Changes in vote shares after raking across demographic and municipal groupings.
+Each total-variation dot measures the change for one paired posterior draw.
+The square measures the change between the mean-count frames before and after raking.
+In those frames, increases in some draws can offset decreases in others before absolute
+differences are taken. This can put the square below every draw.*
 
 ## Inspect the extended frame
 

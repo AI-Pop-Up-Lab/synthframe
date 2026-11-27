@@ -1381,20 +1381,27 @@ if (run_rake) {
     figure <- file.path(figure_dir, paste0(outcome, "_raking_changes.png"))
     change_summaries[[outcome]]$plot(figure)
     caption <- captions[[outcome]]
+    tv_caption <- paste(
+      "Each total-variation dot measures the change for one paired posterior draw.",
+      "The square measures the change between the mean-count frames before and after raking.",
+      "In those frames, increases in some draws can offset decreases in others before absolute",
+      "differences are taken. This can put the square below every draw."
+    )
     cat("\n![", caption, "](", sub("^vignettes/", "", figure), ")\n\n",
-        "*Figure ", 7L + match(outcome, c(pres, house)), ". ", caption, "*\n\n", sep = "")
+        "*Figure ", 7L + match(outcome, c(pres, house)), ". ", caption, " ",
+        tv_caption, "*\n\n", sep = "")
   }
 }
 ```
 
 ![Presidential vote share changes across demographic and district groupings.](assets/us-2026/vote_pres_2024_raking_changes.png)
 
-*Figure 8. Presidential vote share changes across demographic and district groupings.*
+*Figure 8. Presidential vote share changes across demographic and district groupings. Each total-variation dot measures the change for one paired posterior draw. The square measures the change between the mean-count frames before and after raking. In those frames, increases in some draws can offset decreases in others before absolute differences are taken. This can put the square below every draw.*
 
 
 ![House vote share changes across demographic and district-by-demographic groupings.](assets/us-2026/vote_house_2024_raking_changes.png)
 
-*Figure 9. House vote share changes across demographic and district-by-demographic groupings.*
+*Figure 9. House vote share changes across demographic and district-by-demographic groupings. Each total-variation dot measures the change for one paired posterior draw. The square measures the change between the mean-count frames before and after raking. In those frames, increases in some draws can offset decreases in others before absolute differences are taken. This can put the square below every draw.*
 
 ## 14. Inspect the final frame
 

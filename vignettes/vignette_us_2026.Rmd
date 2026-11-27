@@ -1220,8 +1220,15 @@ if (run_rake) {
     figure <- file.path(figure_dir, paste0(outcome, "_raking_changes.png"))
     change_summaries[[outcome]]$plot(figure)
     caption <- captions[[outcome]]
+    tv_caption <- paste(
+      "Each total-variation dot measures the change for one paired posterior draw.",
+      "The square measures the change between the mean-count frames before and after raking.",
+      "In those frames, increases in some draws can offset decreases in others before absolute",
+      "differences are taken. This can put the square below every draw."
+    )
     cat("\n![", caption, "](", sub("^vignettes/", "", figure), ")\n\n",
-        "*Figure ", 7L + match(outcome, c(pres, house)), ". ", caption, "*\n\n", sep = "")
+        "*Figure ", 7L + match(outcome, c(pres, house)), ". ", caption, " ",
+        tv_caption, "*\n\n", sep = "")
   }
 }
 ```
